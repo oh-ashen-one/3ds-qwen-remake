@@ -49,7 +49,7 @@ Status meanings:
 | Clean native artifact/SMDH/RomFS/link/package verification | Local pass | `make clean`, `make verify-build`, `make package-sd`, `3dsxdump`, hashes in `BUILD_EVIDENCE.md` |
 | Honest milestone and video-production workflow | Local pass for documentation | `MILESTONES.md`, `VIDEO_OUTLINE.md`, `PLAYTHROUGH_ROUTE.md`; real footage must still be captured as milestones occur |
 | Wi-Fi netload, offline SD launch, sleep/wake, Select return | Pending | Requires connected console and `HARDWARE_TEST.md` evidence |
-| Three cold-boot 5–8-minute runs at required FPS/memory/audio/stability thresholds | Pending | Empty physical-run table in `HARDWARE_TEST.md`; this is the controlling completion blocker |
+| Three cold-boot 5–8-minute runs at required FPS/memory/audio/stability thresholds | Pending | `HARDWARE_REPORT_TEMPLATE.json` and `validate_hardware_report.py` encode the gate, but the measured `HARDWARE_REPORT.json` does not exist; this is the controlling completion blocker |
 | Uncut physical-console proof shot | Pending | Must show console body, both screens, Homebrew Launcher, launch, and gameplay |
 
 ## Current completion decision

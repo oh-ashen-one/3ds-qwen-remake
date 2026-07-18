@@ -13,6 +13,7 @@ The complete project contract is preserved in [MASTER_GOAL_PROMPT.md](MASTER_GOA
 - Static props use generated fixed-size data, an indexed VBO, coarse-grid and view/distance culling, baked colors, a directional tint, fog-gate masking, blob shadows, and distant panorama panels.
 - Repository policy audit, asset validation, deterministic host smoke flows, native artifact verification, and private GitHub Actions are implemented; see [BUILD_EVIDENCE.md](docs/BUILD_EVIDENCE.md).
 - The requirement-by-requirement state is maintained in [COMPLETION_AUDIT.md](docs/COMPLETION_AUDIT.md), with the intended 6:40 acceptance route in [PLAYTHROUGH_ROUTE.md](docs/PLAYTHROUGH_ROUTE.md).
+- The physical gate has a deliberately failing-until-tested [hardware report template](docs/HARDWARE_REPORT_TEMPLATE.json) and validator; see [HARDWARE_TEST.md](docs/HARDWARE_TEST.md).
 - Physical New Nintendo 3DS-family verification remains required. A local build or emulator boot is deliberately not called completion.
 
 ## Architecture

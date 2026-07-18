@@ -2,6 +2,19 @@
 
 Compilation and emulator behavior do not satisfy this checklist.
 
+When physical testing begins, copy `HARDWARE_REPORT_TEMPLATE.json` to
+`HARDWARE_REPORT.json` and replace every placeholder with measured evidence.
+After the tested `.3dsx` is still present at the repository root, run:
+
+```sh
+make validate-hardware-report
+```
+
+The validator checks the artifact hash, all three cold-boot runs, the 5–8-minute
+duration, 30 FPS target, sustained-drop rule, per-zone 20% memory headroom,
+zero crashes/audio underruns/unmasked loads, edge cases, both deployment paths,
+and the uncut physical-console proof. A missing report intentionally fails.
+
 ## Console readiness
 
 - [ ] Record exact model: New 3DS, New 3DS XL, or New 2DS XL.

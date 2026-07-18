@@ -15,6 +15,16 @@ ROOT = Path(__file__).resolve().parents[1]
 TARGET = "elden-ring-3ds-demake"
 OUTPUT_SUFFIXES = (".3dsx", ".elf", ".lst", ".map", ".smdh")
 LOCAL_TOOLCHAIN_ROOT = Path.home() / ".local" / "share" / "elden-ring-3ds-devkit"
+GENERATED_BUILD_INPUTS = (
+    Path("data/environment_atlas.t3x"),
+    Path("include/demake/generated/asset_registry_data.hpp"),
+    Path("include/demake/generated/scene_asset_data.hpp"),
+    Path("include/demake/generated/scene_assets.stamp"),
+    Path("romfs/audio/ambient.pcm"),
+    Path("romfs/zones/interior.bin"),
+    Path("romfs/zones/vista.bin"),
+    Path("romfs/zones/arena.bin"),
+)
 
 
 def clean() -> None:
@@ -54,15 +64,46 @@ def clean() -> None:
     print("cleaned generated build outputs")
 
 
-def ignored(_: str, names: list[str]) -> set[str]:
-    ignored_names = {
-        ".git",
-        ".DS_Store",
-        "build",
-        "build-host",
-    }
-    ignored_names.update(name for name in names if name.startswith(f"{TARGET}.") or name == TARGET)
-    return ignored_names
+def repository_inventory() -> list[Path]:
+    result = subprocess.run(
+        [
+            "git",
+            "-c",
+            f"safe.directory={ROOT}",
+            "ls-files",
+            "-z",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+        ],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.decode("utf-8", errors="replace").strip()
+        raise SystemExit(f"cannot inventory build inputs: {detail or 'unknown git error'}")
+    return [Path(os.fsdecode(raw)) for raw in result.stdout.split(b"\0") if raw]
+
+
+def copy_build_input(relative: Path, staging: Path) -> None:
+    if relative.is_absolute() or ".." in relative.parts:
+        raise SystemExit(f"unsafe build input path: {relative}")
+    source = ROOT / relative
+    if not source.is_file():
+        raise SystemExit(f"build input is missing or not a file: {relative}")
+    destination = staging / relative
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, destination)
+
+
+def stage_source_tree(staging: Path) -> None:
+    staging.mkdir(parents=True)
+    inventory = repository_inventory()
+    for relative in inventory:
+        copy_build_input(relative, staging)
+    for relative in GENERATED_BUILD_INPUTS:
+        copy_build_input(relative, staging)
 
 
 def collect_artifacts(source_root: Path) -> None:
@@ -111,17 +152,12 @@ def run_build() -> None:
             "; install devkitPro's 3ds-dev group or set ASHEN_3DS_TOOLS"
         )
 
-    if " " not in str(ROOT):
-        subprocess.run(["make", "-f", "Makefile", "-j4"], cwd=ROOT,
+    with tempfile.TemporaryDirectory(prefix="ashen-rift-3ds-") as temporary:
+        staging = Path(temporary) / "source"
+        stage_source_tree(staging)
+        subprocess.run(["make", "-f", "Makefile", "-j4"], cwd=staging,
                        env=environment, check=True)
-        collect_artifacts(ROOT)
-    else:
-        with tempfile.TemporaryDirectory(prefix="ashen-rift-3ds-") as temporary:
-            staging = Path(temporary) / "source"
-            shutil.copytree(ROOT, staging, ignore=ignored)
-            subprocess.run(["make", "-f", "Makefile", "-j4"], cwd=staging,
-                           env=environment, check=True)
-            collect_artifacts(staging)
+        collect_artifacts(staging)
 
     required = ROOT / f"{TARGET}.3dsx"
     if not required.is_file():

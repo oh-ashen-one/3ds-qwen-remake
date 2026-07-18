@@ -18,7 +18,7 @@ REGISTRY_INPUTS := assets/manifest.json assets/animation_clips.json \
 SCENE_INPUTS := assets/scene_source.json tools/convert_scene_assets.py
 TEXTURE_INPUTS := gfx/environment.t3s gfx/environment.ppm
 
-.PHONY: all assets validate-assets audit-repo test-host verify-build package-sd check-netload run clean
+.PHONY: all assets validate-assets audit-repo test-host validate-hardware-report verify-build package-sd check-netload run clean
 
 all: assets
 	@$(PYTHON) tools/build_3ds.py
@@ -46,6 +46,13 @@ audit-repo:
 
 test-host: $(HOST_BUILD)/core_tests
 	@$(HOST_BUILD)/core_tests
+	@$(PYTHON) tests/hardware_report_tests.py
+
+HARDWARE_REPORT ?= docs/HARDWARE_REPORT.json
+HARDWARE_ARTIFACT ?= $(TARGET).3dsx
+
+validate-hardware-report:
+	@$(PYTHON) tools/validate_hardware_report.py "$(HARDWARE_REPORT)" --artifact "$(HARDWARE_ARTIFACT)"
 
 $(HOST_BUILD)/core_tests: $(HOST_SOURCES) include/demake/core.hpp \
                          include/demake/asset_registry.hpp include/demake/rigid_animation.hpp \

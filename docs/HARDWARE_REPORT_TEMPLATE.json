@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "tested_at": null,
+  "console": {
+    "model": null,
+    "system_version": null,
+    "luma3ds_version": null,
+    "homebrew_launcher_version": null,
+    "new_3ds_mode_confirmed": false,
+    "sd_backup_completed": false,
+    "sd_health_checked": false,
+    "known_homebrew_launch_passed": false
+  },
+  "build": {
+    "source_commit": null,
+    "artifact_filename": "elden-ring-3ds-demake.3dsx",
+    "artifact_sha256": null,
+    "ci_run_url": null
+  },
+  "deployment": {
+    "netload_launch_passed": false,
+    "sd_launch_mac_disconnected_passed": false,
+    "select_return_passed": false,
+    "sleep_wake_passed": false
+  },
+  "playthroughs": [
+    {
+      "run": 1,
+      "cold_boot": false,
+      "duration_seconds": null,
+      "completed": false,
+      "average_fps": null,
+      "minimum_fps": null,
+      "sustained_below_24_fps": null,
+      "zone_memory_headroom_percent": {
+        "interior": null,
+        "vista": null,
+        "arena": null
+      },
+      "peak_linear_memory_bytes": {
+        "interior": null,
+        "vista": null,
+        "arena": null
+      },
+      "audio_underruns": null,
+      "visible_unmasked_loads": null,
+      "crashes": null,
+      "restart_passed": false
+    },
+    {
+      "run": 2,
+      "cold_boot": false,
+      "duration_seconds": null,
+      "completed": false,
+      "average_fps": null,
+      "minimum_fps": null,
+      "sustained_below_24_fps": null,
+      "zone_memory_headroom_percent": {
+        "interior": null,
+        "vista": null,
+        "arena": null
+      },
+      "peak_linear_memory_bytes": {
+        "interior": null,
+        "vista": null,
+        "arena": null
+      },
+      "audio_underruns": null,
+      "visible_unmasked_loads": null,
+      "crashes": null,
+      "restart_passed": false
+    },
+    {
+      "run": 3,
+      "cold_boot": false,
+      "duration_seconds": null,
+      "completed": false,
+      "average_fps": null,
+      "minimum_fps": null,
+      "sustained_below_24_fps": null,
+      "zone_memory_headroom_percent": {
+        "interior": null,
+        "vista": null,
+        "arena": null
+      },
+      "peak_linear_memory_bytes": {
+        "interior": null,
+        "vista": null,
+        "arena": null
+      },
+      "audio_underruns": null,
+      "visible_unmasked_loads": null,
+      "crashes": null,
+      "restart_passed": false
+    }
+  ],
+  "edge_cases": {
+    "pause_resume_each_zone": false,
+    "dialogue_abort_repeat": false,
+    "lock_on_loss_boss_death": false,
+    "death_during_slash_restart": false,
+    "death_during_slam_restart": false,
+    "victory_restart": false,
+    "zone_transition_cycles": 0
+  },
+  "proof": {
+    "uncut_video_evidence": null,
+    "physical_console_visible": false,
+    "both_screens_visible": false,
+    "homebrew_launcher_visible": false,
+    "launch_visible": false,
+    "gameplay_visible": false,
+    "uncut": false
+  },
+  "notes": []
+}
