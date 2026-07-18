@@ -131,6 +131,8 @@ def main() -> None:
     required_symbols = (
         "AssetRegistry",
         "GameSession",
+        "PlayerController",
+        "BossController",
         "SceneAssets",
         "samplePlayerPose",
         "AudioStreamer",

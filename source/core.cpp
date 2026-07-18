@@ -216,13 +216,13 @@ void GameSimulation::step(const InputFrame& input, float dt) {
     }
 
     zones_.update(world_, input, dt);
-    updatePlayer(input, dt);
+    player_controller_.update(world_, input, dt);
     if (world_.zone == Zone::Arena) {
-        updateBoss(dt);
+        boss_controller_.update(world_, dt);
     }
 }
 
-void GameSimulation::updatePlayer(const InputFrame& input, float dt) {
+void PlayerController::update(WorldState& world_, const InputFrame& input, float dt) const {
     Player& player = world_.player;
     if (player.state_timer > 0.0f) {
         player.state_timer = std::max(0.0f, player.state_timer - dt);
@@ -233,21 +233,21 @@ void GameSimulation::updatePlayer(const InputFrame& input, float dt) {
         const Vec2 hit_center = offset(player.position, forwardOf(player.facing), 1.25f);
         if (world_.zone == Zone::Arena &&
             circlesOverlap(hit_center, 1.25f, world_.boss.position, 0.9f)) {
-            damageBoss(16.0f);
+            BossController::damage(world_, 16.0f);
         }
     } else if (player.state == PlayerState::HeavyAttack && !player.action_applied && player.state_timer <= 0.30f) {
         player.action_applied = true;
         const Vec2 hit_center = offset(player.position, forwardOf(player.facing), 1.45f);
         if (world_.zone == Zone::Arena &&
             circlesOverlap(hit_center, 1.55f, world_.boss.position, 0.9f)) {
-            damageBoss(30.0f);
+            BossController::damage(world_, 30.0f);
         }
     } else if (player.state == PlayerState::Heal && !player.action_applied && player.state_timer <= 0.25f) {
         player.action_applied = true;
         player.health = std::min(100.0f, player.health + 48.0f);
     }
 
-    finishTimedPlayerState();
+    finishTimedState(world_);
 
     if (!playerCanAct(player.state)) {
         return;
@@ -337,7 +337,7 @@ void GameSimulation::updatePlayer(const InputFrame& input, float dt) {
     }
 }
 
-void GameSimulation::finishTimedPlayerState() {
+void PlayerController::finishTimedState(WorldState& world_) {
     Player& player = world_.player;
     if (player.state_timer > 0.0f) {
         return;
@@ -357,7 +357,7 @@ void GameSimulation::finishTimedPlayerState() {
     }
 }
 
-void GameSimulation::updateBoss(float dt) {
+void BossController::update(WorldState& world_, float dt) const {
     Boss& boss = world_.boss;
     Player& player = world_.player;
     if (boss.state == BossState::Dead) {
@@ -397,7 +397,7 @@ void GameSimulation::updateBoss(float dt) {
                 const Vec2 hit_center = offset(boss.position, forwardOf(boss.facing), 1.45f);
                 if (circlesOverlap(hit_center, 1.35f, player.position, 0.55f) &&
                     player.state != PlayerState::Dodge) {
-                    damagePlayer(24.0f);
+                    PlayerController::damage(world_, 24.0f);
                 }
             }
             break;
@@ -407,7 +407,7 @@ void GameSimulation::updateBoss(float dt) {
                 boss.state_timer = 0.25f;
                 if (circlesOverlap(boss.position, 3.25f, player.position, 0.55f) &&
                     player.state != PlayerState::Dodge) {
-                    damagePlayer(34.0f);
+                    PlayerController::damage(world_, 34.0f);
                 }
             }
             break;
@@ -428,7 +428,7 @@ void GameSimulation::updateBoss(float dt) {
     }
 }
 
-void GameSimulation::damagePlayer(float amount) {
+void PlayerController::damage(WorldState& world_, float amount) {
     Player& player = world_.player;
     if (player.state == PlayerState::Dodge || player.state == PlayerState::Dead) {
         return;
@@ -444,7 +444,7 @@ void GameSimulation::damagePlayer(float amount) {
     }
 }
 
-void GameSimulation::damageBoss(float amount) {
+void BossController::damage(WorldState& world_, float amount) {
     Boss& boss = world_.boss;
     if (boss.state == BossState::Dead) {
         return;

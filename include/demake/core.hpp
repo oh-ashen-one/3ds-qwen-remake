@@ -120,6 +120,21 @@ private:
     static void enter(WorldState& world, Zone zone);
 };
 
+class PlayerController {
+public:
+    void update(WorldState& world, const InputFrame& input, float dt) const;
+    static void damage(WorldState& world, float amount);
+
+private:
+    static void finishTimedState(WorldState& world);
+};
+
+class BossController {
+public:
+    void update(WorldState& world, float dt) const;
+    static void damage(WorldState& world, float amount);
+};
+
 class GameSimulation {
 public:
     GameSimulation();
@@ -130,14 +145,10 @@ public:
     WorldState& mutableWorld() { return world_; }
 
 private:
-    void updatePlayer(const InputFrame& input, float dt);
-    void updateBoss(float dt);
-    void damagePlayer(float amount);
-    void damageBoss(float amount);
-    void finishTimedPlayerState();
-
     WorldState world_{};
     ZoneManager zones_{};
+    PlayerController player_controller_{};
+    BossController boss_controller_{};
 };
 
 enum class SessionMode : std::uint8_t {

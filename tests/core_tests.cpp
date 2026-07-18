@@ -83,6 +83,23 @@ void testMovementAndStamina() {
     assert(game.world().player.stamina < 100.0f);
 }
 
+void testControllerDamageBoundaries() {
+    WorldState world{};
+    PlayerController::damage(world, 25.0f);
+    assert(world.player.health == 75.0f);
+    assert(world.player.state == PlayerState::Hurt);
+
+    world.player.state = PlayerState::Dodge;
+    PlayerController::damage(world, 25.0f);
+    assert(world.player.health == 75.0f);
+
+    BossController::damage(world, 60.0f);
+    assert(world.boss.health == 200.0f);
+    BossController::damage(world, 250.0f);
+    assert(world.boss.health == 0.0f);
+    assert(world.boss.state == BossState::Dead);
+}
+
 void testQuickItemSelection() {
     GameSimulation game;
     InputFrame next{};
@@ -342,6 +359,7 @@ int main() {
     testGeneratedSceneData();
     testRigidPoseSampling();
     testMovementAndStamina();
+    testControllerDamageBoundaries();
     testQuickItemSelection();
     testZoneHandoffs();
     testDialogueAbortAndRetry();
