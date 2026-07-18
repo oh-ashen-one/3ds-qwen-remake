@@ -8,6 +8,7 @@ The playable sequence connects three memory-bounded zones: a sunken interior, an
 
 - Native gameplay simulation and procedural renderer implemented.
 - Host-side deterministic tests and asset validation implemented.
+- Reproducible private GitHub Actions build passing; see [BUILD_EVIDENCE.md](docs/BUILD_EVIDENCE.md).
 - Physical New Nintendo 3DS verification is required before this project can be called complete.
 
 ## Build
