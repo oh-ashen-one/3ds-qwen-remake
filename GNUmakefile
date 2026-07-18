@@ -16,7 +16,7 @@ REGISTRY_INPUTS := assets/manifest.json assets/animation_clips.json \
 SCENE_INPUTS := assets/scene_source.json tools/convert_scene_assets.py
 TEXTURE_INPUTS := gfx/environment.t3s gfx/environment.ppm
 
-.PHONY: all assets validate-assets audit-repo test-host verify-build run clean
+.PHONY: all assets validate-assets audit-repo test-host verify-build package-sd run clean
 
 all: assets
 	@$(PYTHON) tools/build_3ds.py
@@ -56,6 +56,9 @@ run: all
 
 verify-build: all
 	@$(PYTHON) tools/verify_build.py
+
+package-sd: verify-build
+	@$(PYTHON) tools/package_sd.py
 
 clean:
 	@$(PYTHON) tools/build_3ds.py --clean

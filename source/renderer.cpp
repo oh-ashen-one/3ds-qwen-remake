@@ -455,11 +455,11 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
                           20.0f, 34.0f, C2D_Color32(190, 108, 28, 255));
     }
     if (world.debug_overlay) {
-        char diagnostics[192];
+        char diagnostics[224];
         std::snprintf(diagnostics, sizeof(diagnostics),
-                      "%s  %.1f ms  visible %u  culled %u\nzone %lu KB  peak linear %u KB\nlinear free %lu KB  audio %s  underruns %u",
+                      "%s  %.1f ms  draws %u  visible %u  culled %u\nzone %lu KB  peak linear %u KB\nlinear free %lu KB  audio %s  underruns %u",
                       hardware_model_,
-                      frame_ms, visible_objects_, culled_objects_,
+                      frame_ms, draw_calls_, visible_objects_, culled_objects_,
                       static_cast<unsigned long>(world.zone_resident_bytes / 1024U), zone_memory_kb,
                       static_cast<unsigned long>(linearSpaceFree() / 1024U),
                       audio_available ? "streaming" : "unavailable", audio_underruns);

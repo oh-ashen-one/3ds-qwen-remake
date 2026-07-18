@@ -26,9 +26,10 @@ export DEVKITARM=/opt/devkitpro/devkitARM
 make validate-assets
 make test-host
 make verify-build
+make package-sd
 ```
 
-The output is `elden-ring-3ds-demake.3dsx`. See [BUILDING.md](docs/BUILDING.md) for installation and netloading.
+The native output is `elden-ring-3ds-demake.3dsx`. `make package-sd` also creates a verified `dist/ashen-rift-sd-bundle.zip` whose paths can be copied directly to the SD-card root. See [BUILDING.md](docs/BUILDING.md) for installation and netloading.
 
 ## Original-asset policy
 

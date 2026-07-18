@@ -1,5 +1,17 @@
 # Build evidence
 
+## Packaging and telemetry candidate
+
+- Date: 2026-07-18
+- Source commit: `bc5935f7df9681db3185793f4e81cb64ebcc7a8d`
+- Local source-built-toolchain `.3dsx`: `578,316` bytes; SHA-256 `2f8f7cd90329c4de2ac5e1a6a78986e1cf167d70bba490b3ca327a5898ef9ebe`.
+- Deterministic SD bundle: `409,667` bytes; SHA-256 `cb53379eac49c79ef344ebabfb493c7f0d226bd298f97d392bd7b2a7db8fad23`.
+- Verified install entry: `sdmc:/3ds/elden-ring-3ds-demake/elden-ring-3ds-demake.3dsx`, with the source commit and artifact hash embedded alongside it in `build-info.json`.
+- Zone-budget report: 53 static props and 15 rigid bones; declared RomFS headroom is 138,003 bytes for interior, 187,866 bytes for vista, and 163,013 bytes for arena.
+- Full clean local gate passed: repository audit, original-asset generation and validation, budget-report validation, deterministic host tests, native cross-build, build verification, and SD archive re-open/hash verification.
+
+The diagnostics now display draw-call count alongside frame time, visible/culled objects, declared zone residency, measured linear-memory peak/free space, audio state, and underruns. This proves packaging structure and traceability, not a physical SD launch or hardware performance result.
+
 ## Indexed-renderer correction
 
 - Date: 2026-07-18

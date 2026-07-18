@@ -17,6 +17,7 @@ from convert_scene_assets import expand_zone, generate as generate_scene
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "assets" / "manifest.json"
 CLIPS = ROOT / "assets" / "animation_clips.json"
+BUDGET_REPORT = ROOT / "asset-budget-report.json"
 ALLOWED_LICENSES = {"project-original", "public-domain", "cc0"}
 KIND_SUFFIXES = {
     "audio_pcm16_mono": {".pcm"},
@@ -53,7 +54,7 @@ def read_json(path: Path, label: str) -> dict:
     return value
 
 
-def validate_clips() -> None:
+def validate_clips() -> int:
     data = read_json(CLIPS, "animation clip manifest")
     bones = data.get("bones", [])
     if data.get("rig_type") != "rigid_hierarchy" or not 12 <= len(bones) <= 16:
@@ -73,6 +74,7 @@ def validate_clips() -> None:
         expected = int(duration * rate + 0.999)
         if abs(keyframes - expected) > 1:
             fail(f"clip {clip.get('id')} keyframe count does not match duration and rate")
+    return len(bones)
 
 
 def main() -> None:
@@ -149,6 +151,7 @@ def main() -> None:
     if tuple(zone_paths.keys()) != ZONE_ORDER:
         fail("zone manifests must be ordered interior, vista, arena")
     referenced_assets: set[str] = set()
+    zone_budget_rows: list[dict[str, object]] = []
     for zone_id in ZONE_ORDER:
         zone_path = ROOT / str(zone_paths[zone_id])
         if not inside_root(zone_path) or not zone_path.is_file():
@@ -177,12 +180,24 @@ def main() -> None:
             referenced_assets.add(asset_id)
         if actual_bytes > romfs_budget:
             fail(f"{zone_id} uses {actual_bytes} bytes over its {romfs_budget}-byte budget")
+        zone_budget_rows.append(
+            {
+                "id": zone_id,
+                "display_name": zone.get("display_name"),
+                "runtime_budget_bytes": int(zone["runtime_budget_bytes"]),
+                "romfs_budget_bytes": romfs_budget,
+                "actual_romfs_bytes": actual_bytes,
+                "romfs_headroom_bytes": romfs_budget - actual_bytes,
+                "draw_call_budget": int(zone["draw_call_budget"]),
+                "grid_cell_size": float(zone.get("grid_cell_size", 0.0)),
+            }
+        )
 
     required_runtime_assets = {asset_id for asset_id, asset in by_id.items() if asset.get("runtime", True)}
     if not required_runtime_assets.issubset(referenced_assets):
         fail(f"unreferenced runtime assets: {sorted(required_runtime_assets - referenced_assets)}")
 
-    validate_clips()
+    rigid_bone_count = validate_clips()
     expected_registry = generate_registry()
     if not REGISTRY_OUTPUT.is_file() or REGISTRY_OUTPUT.read_text(encoding="utf-8") != expected_registry:
         fail("generated C++ asset registry is stale")
@@ -194,10 +209,29 @@ def main() -> None:
     if any(count < 10 for count in scene_counts.values()):
         fail(f"authored zones are unexpectedly sparse: {scene_counts}")
 
+    for row in zone_budget_rows:
+        row["static_prop_count"] = scene_counts[str(row["id"])]
+    report = {
+        "schema_version": 1,
+        "project": data.get("project"),
+        "asset_count": len(by_id),
+        "rigid_bone_count": rigid_bone_count,
+        "zones": zone_budget_rows,
+        "totals": {
+            "static_prop_count": sum(scene_counts.values()),
+            "actual_romfs_bytes_across_zone_manifests": sum(
+                int(row["actual_romfs_bytes"]) for row in zone_budget_rows
+            ),
+        },
+    }
+    BUDGET_REPORT.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+
     print(
         f"asset validation passed: {len(by_id)} original assets, "
         f"{len(ZONE_ORDER)} authored zones/{sum(scene_counts.values())} static props, "
-        "15-bone rigid clips"
+        f"{rigid_bone_count}-bone rigid clips; budget report {BUDGET_REPORT.name}"
     )
 
 

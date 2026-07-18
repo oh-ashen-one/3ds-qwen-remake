@@ -21,13 +21,13 @@ Compilation and emulator behavior do not satisfy this checklist.
 
 Run three consecutive cold-boot playthroughs. For each run record:
 
-| Run | Boot | Interior/reveal | NPC/fog gate | Boss | Restart | Minimum FPS | Peak linear memory | Audio underruns | Result |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 |  |  |  |  |  |  |  |  |  |
-| 2 |  |  |  |  |  |  |  |  |  |
-| 3 |  |  |  |  |  |  |  |  |  |
+| Run | Duration | Boot | Interior/reveal | NPC/fog gate | Boss | Restart | Minimum FPS | Peak linear memory | Audio underruns | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 |  |  |  |  |  |  |  |  |  |  |
+| 2 |  |  |  |  |  |  |  |  |  |  |
+| 3 |  |  |  |  |  |  |  |  |  |  |
 
-Required: no crash, no audio underrun, no sustained performance below 24 FPS, no visible unmasked loading, and at least 20% measured memory headroom at every zone's peak.
+Required: a coherent 5–8 minute sequence, no crash, no audio underrun, no sustained performance below 24 FPS, no visible unmasked loading, and at least 20% measured memory headroom at every zone's peak.
 
 ## Edge cases
 

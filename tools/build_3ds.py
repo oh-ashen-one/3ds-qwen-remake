@@ -24,7 +24,7 @@ def clean() -> None:
         artifact = ROOT / f"{TARGET}{suffix}"
         if artifact.is_file():
             artifact.unlink()
-    for report_name in ("build-validation.json", "build-report.txt"):
+    for report_name in ("asset-budget-report.json", "build-validation.json", "build-report.txt"):
         report = ROOT / report_name
         if report.is_file():
             report.unlink()
@@ -40,6 +40,9 @@ def clean() -> None:
     generated_scene = ROOT / "include" / "demake" / "generated" / "scene_asset_data.hpp"
     if generated_scene.is_file():
         generated_scene.unlink()
+    distribution = ROOT / "dist"
+    if distribution.is_dir():
+        shutil.rmtree(distribution)
     print("cleaned generated build outputs")
 
 

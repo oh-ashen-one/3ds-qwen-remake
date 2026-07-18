@@ -78,8 +78,38 @@ def verify_renderer_index_type() -> str:
     return index_type
 
 
+def verify_asset_budget_report() -> dict[str, object]:
+    path = ROOT / "asset-budget-report.json"
+    if not path.is_file():
+        fail("asset-budget-report.json is missing; run make validate-assets")
+    try:
+        budget = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        fail(f"asset budget report is unreadable: {error}")
+    zones = budget.get("zones", [])
+    if [zone.get("id") for zone in zones] != ["interior", "vista", "arena"]:
+        fail("asset budget report must contain the three ordered runtime zones")
+    for zone in zones:
+        actual = int(zone.get("actual_romfs_bytes", -1))
+        budget_bytes = int(zone.get("romfs_budget_bytes", -1))
+        headroom = int(zone.get("romfs_headroom_bytes", -1))
+        if actual < 0 or budget_bytes <= 0 or actual > budget_bytes:
+            fail(f"zone {zone.get('id')} exceeds or omits its RomFS budget")
+        if headroom != budget_bytes - actual:
+            fail(f"zone {zone.get('id')} has inconsistent RomFS headroom")
+        if int(zone.get("draw_call_budget", 0)) <= 0:
+            fail(f"zone {zone.get('id')} omits its draw-call budget")
+    return {
+        "path": path.name,
+        "bytes": path.stat().st_size,
+        "sha256": sha256(path),
+        "zones": zones,
+    }
+
+
 def main() -> None:
     renderer_index_type = verify_renderer_index_type()
+    asset_budget_report = verify_asset_budget_report()
     paths = {suffix: ROOT / f"{TARGET}.{suffix}" for suffix in ("3dsx", "elf", "map", "smdh")}
     missing = [path.name for path in paths.values() if not path.is_file() or path.stat().st_size == 0]
     if missing:
@@ -128,6 +158,7 @@ def main() -> None:
         "linked_subsystems": list(required_symbols),
         "embedded_runtime_data": list(required_embedded_data),
         "renderer_index_type": renderer_index_type,
+        "asset_budget_report": asset_budget_report,
     }
     REPORT.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(

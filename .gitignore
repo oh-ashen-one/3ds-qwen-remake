@@ -8,6 +8,8 @@ build-host/
 compile_commands.json
 build-validation.json
 build-report.txt
+asset-budget-report.json
+dist/
 romfs/audio/*.pcm
 data/*.t3x
 include/demake/generated/

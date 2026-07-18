@@ -71,7 +71,7 @@ export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 export _3DSXDEPS := $(OUTPUT).smdh
 export _3DSXFLAGS += --smdh=$(OUTPUT).smdh --romfs=$(CURDIR)/$(ROMFS)
 
-.PHONY: all assets validate-assets audit-repo test-host verify-build run clean
+.PHONY: all assets validate-assets audit-repo test-host verify-build package-sd run clean
 
 all: assets $(BUILD)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
@@ -112,12 +112,15 @@ run: all
 verify-build: all
 	@$(PYTHON) tools/verify_build.py
 
+package-sd: verify-build
+	@$(PYTHON) tools/package_sd.py
+
 $(BUILD):
 	@mkdir -p $@
 
 clean:
 	@echo clean ...
-	@rm -rf $(BUILD) $(HOST_BUILD) $(TARGET).3dsx $(TARGET).smdh $(TARGET).elf $(TARGET).lst $(TARGET).map romfs/audio/ambient.pcm $(TEXTURE_ATLAS) $(GENERATED_REGISTRY) $(GENERATED_SCENE) build-validation.json build-report.txt
+	@rm -rf $(BUILD) $(HOST_BUILD) $(TARGET).3dsx $(TARGET).smdh $(TARGET).elf $(TARGET).lst $(TARGET).map romfs/audio/ambient.pcm $(TEXTURE_ATLAS) $(GENERATED_REGISTRY) $(GENERATED_SCENE) asset-budget-report.json build-validation.json build-report.txt dist
 
 else
 

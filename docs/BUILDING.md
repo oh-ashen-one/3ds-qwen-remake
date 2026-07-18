@@ -23,6 +23,7 @@ make audit-repo
 make validate-assets
 make test-host
 make verify-build
+make package-sd
 ```
 
 `make verify-build` performs the native build and validates the 3DSX header, SMDH metadata, embedded RomFS markers, linked subsystems, and artifact hashes. The build creates `elden-ring-3ds-demake.3dsx`, plus ELF, map, list, SMDH, and JSON validation files.
@@ -52,7 +53,22 @@ This is a transient launch for rapid iteration. A successful transfer is not pro
 
 ## Persistent SD installation
 
-Copy the application to:
+Build the deterministic bundle after native verification:
+
+```sh
+make package-sd
+```
+
+The command verifies the `.3dsx` against `build-validation.json`, writes the exact source commit and SHA-256 into `build-info.json`, and creates:
+
+```text
+dist/ashen-rift-sd-bundle.zip
+dist/sdmc/3ds/elden-ring-3ds-demake/elden-ring-3ds-demake.3dsx
+dist/sdmc/3ds/elden-ring-3ds-demake/build-info.json
+dist/sd-bundle-validation.json
+```
+
+Extract the ZIP at the SD-card root, or copy the contents of `dist/sdmc/` to the root. The resulting application path must be:
 
 ```text
 sdmc:/3ds/elden-ring-3ds-demake/elden-ring-3ds-demake.3dsx
@@ -60,4 +76,4 @@ sdmc:/3ds/elden-ring-3ds-demake/elden-ring-3ds-demake.3dsx
 
 Launch it from Homebrew Launcher with the Mac disconnected. Do not hot-swap the SD card while Homebrew Launcher is running. Use a safe eject or a trusted FTP homebrew workflow.
 
-Record the exact commit and SHA-256 before either deployment path. Follow [HARDWARE_TEST.md](HARDWARE_TEST.md); a transfer alone is not a pass.
+Record the exact commit and SHA-256 from the generated metadata before either deployment path. Follow [HARDWARE_TEST.md](HARDWARE_TEST.md); a transfer alone is not a pass.

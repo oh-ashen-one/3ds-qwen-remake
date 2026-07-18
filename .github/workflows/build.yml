@@ -22,6 +22,8 @@ jobs:
         run: make
       - name: Verify 3DSX, RomFS, SMDH, and linked subsystems
         run: make verify-build
+      - name: Build and verify persistent SD-card bundle
+        run: make package-sd
       - name: Record hashes and sizes
         run: |
           "${DEVKITARM}/bin/arm-none-eabi-g++" --version > build-report.txt
@@ -29,6 +31,8 @@ jobs:
           sha256sum elden-ring-3ds-demake.3dsx >> build-report.txt
           stat --printf='%n %s bytes\n' elden-ring-3ds-demake.3dsx >> build-report.txt
           cat build-validation.json >> build-report.txt
+          cat asset-budget-report.json >> build-report.txt
+          cat dist/sd-bundle-validation.json >> build-report.txt
           cat build-report.txt
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -39,5 +43,8 @@ jobs:
             elden-ring-3ds-demake.elf
             elden-ring-3ds-demake.map
             elden-ring-3ds-demake.smdh
+            asset-budget-report.json
             build-validation.json
             build-report.txt
+            dist/ashen-rift-sd-bundle.zip
+            dist/sd-bundle-validation.json
