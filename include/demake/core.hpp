@@ -59,6 +59,7 @@ struct InputFrame {
     bool heal = false;
     bool lock_toggle = false;
     bool debug_toggle = false;
+    int item_delta = 0;
 };
 
 struct Player {
@@ -67,11 +68,14 @@ struct Player {
     float health = 100.0f;
     float stamina = 100.0f;
     int flasks = 3;
+    int selected_item = 0;
     PlayerState state = PlayerState::Idle;
     float state_timer = 0.0f;
     bool action_applied = false;
     bool lock_on = false;
 };
+
+const char* quickItemName(int selected_item);
 
 struct Boss {
     Vec2 position{0.0f, 5.0f};

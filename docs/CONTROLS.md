@@ -10,7 +10,7 @@
 | B | Dodge; hold with movement to sprint |
 | A | Interact, advance dialogue, restart |
 | X | Use healing flask |
-| D-pad | Reserved for item selection |
+| D-pad | Cycle the quick-item slot |
 | Y | Toggle diagnostics |
 | Start | Pause |
 | Select | Exit to Homebrew Launcher |

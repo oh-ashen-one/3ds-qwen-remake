@@ -15,7 +15,7 @@ public:
     bool initialize();
     void render(const WorldState& world, bool title_screen, bool paused,
                 float frame_ms, unsigned audio_underruns, bool audio_available,
-                float camera_yaw);
+                float camera_yaw, unsigned zone_memory_kb);
     void shutdown();
 
     unsigned drawCalls() const { return draw_calls_; }
@@ -34,7 +34,8 @@ private:
     void drawBox(float x, float y, float z, float sx, float sy, float sz,
                  float rotation_y, float red, float green, float blue, bool always = false);
     void renderUi(const WorldState& world, bool title_screen, bool paused,
-                  float frame_ms, unsigned audio_underruns, bool audio_available);
+                  float frame_ms, unsigned audio_underruns, bool audio_available,
+                  unsigned zone_memory_kb);
     void drawText(const char* value, float x, float y, float scale, u32 color,
                   float wrap_width = 0.0f);
 
@@ -46,11 +47,14 @@ private:
     int model_view_location_ = -1;
     C3D_Mtx projection_{};
     C3D_Mtx view_{};
+    C3D_AttrInfo attr_info_{};
+    C3D_BufInfo buf_info_{};
     void* vbo_data_ = nullptr;
     C2D_TextBuf text_buffer_ = nullptr;
     Vec2 camera_ground_{};
     float camera_yaw_ = 0.0f;
     unsigned draw_calls_ = 0;
+    unsigned visible_objects_ = 0;
     unsigned culled_objects_ = 0;
 };
 

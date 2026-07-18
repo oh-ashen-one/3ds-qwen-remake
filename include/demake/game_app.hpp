@@ -4,6 +4,8 @@
 #include "demake/core.hpp"
 #include "demake/renderer.hpp"
 
+#include <cstddef>
+
 namespace demake {
 
 class GameApp {
@@ -22,6 +24,8 @@ private:
     bool title_screen_ = true;
     bool paused_ = false;
     float camera_yaw_ = 0.0f;
+    std::size_t linear_baseline_ = 0;
+    std::size_t zone_peak_bytes_[3]{};
 };
 
 } // namespace demake

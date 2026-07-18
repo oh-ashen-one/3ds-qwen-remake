@@ -50,6 +50,15 @@ float sampleRigidSwing(float normalized_time) {
     return std::sin(phase * kPi) * 1.45f;
 }
 
+const char* quickItemName(int selected_item) {
+    switch (selected_item) {
+        case 0: return "Crimson Flask";
+        case 1: return "Warden Effigy";
+        case 2: return "Pale Moss";
+        default: return "Unknown";
+    }
+}
+
 void ZoneManager::reset(WorldState& world) const {
     world.zone = Zone::Interior;
     world.door_progress = 0.0f;
@@ -133,6 +142,11 @@ void GameSimulation::step(const InputFrame& input, float dt) {
     world_.elapsed += dt;
     if (input.debug_toggle) {
         world_.debug_overlay = !world_.debug_overlay;
+    }
+    if (input.item_delta != 0) {
+        constexpr int kQuickItemCount = 3;
+        world_.player.selected_item =
+            (world_.player.selected_item + input.item_delta + kQuickItemCount) % kQuickItemCount;
     }
 
     if (world_.player.state == PlayerState::Dead || world_.player.state == PlayerState::Victory) {

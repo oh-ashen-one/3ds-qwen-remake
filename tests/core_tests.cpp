@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstring>
 #include <iostream>
 
 using namespace demake;
@@ -31,6 +32,22 @@ void testMovementAndStamina() {
     stepMany(game, move, 20);
     assert(game.world().player.position.z > -4.0f);
     assert(game.world().player.stamina < 100.0f);
+}
+
+void testQuickItemSelection() {
+    GameSimulation game;
+    InputFrame next{};
+    next.item_delta = 1;
+    game.step(next, kFixedStep);
+    assert(game.world().player.selected_item == 1);
+    assert(std::strcmp(quickItemName(game.world().player.selected_item), "Warden Effigy") == 0);
+
+    InputFrame previous{};
+    previous.item_delta = -1;
+    game.step(previous, kFixedStep);
+    assert(game.world().player.selected_item == 0);
+    game.step(previous, kFixedStep);
+    assert(game.world().player.selected_item == 2);
 }
 
 void testZoneHandoffs() {
@@ -148,6 +165,7 @@ void testDeathAndRestart() {
 int main() {
     testMathAndCollision();
     testMovementAndStamina();
+    testQuickItemSelection();
     testZoneHandoffs();
     testCombatAndLockOn();
     testDodgeInvulnerability();

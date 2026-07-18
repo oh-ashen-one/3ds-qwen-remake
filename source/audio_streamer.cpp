@@ -59,16 +59,20 @@ void AudioStreamer::fillAmbient(int index) {
     }
     s16* destination = ambient_samples_ + index * kSamplesPerBuffer;
     std::size_t written = 0;
+    unsigned empty_reads = 0;
     while (written < kSamplesPerBuffer) {
         const std::size_t count = std::fread(destination + written, sizeof(s16),
                                              kSamplesPerBuffer - written, ambient_file_);
         written += count;
         if (count == 0) {
+            ++empty_reads;
             std::rewind(ambient_file_);
-            if (std::ferror(ambient_file_)) {
+            if (std::ferror(ambient_file_) || empty_reads >= 2) {
                 std::clearerr(ambient_file_);
                 break;
             }
+        } else {
+            empty_reads = 0;
         }
     }
     if (written < kSamplesPerBuffer) {

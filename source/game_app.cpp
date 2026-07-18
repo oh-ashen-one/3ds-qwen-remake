@@ -9,6 +9,7 @@ bool GameApp::initialize() {
     if (R_FAILED(romfsInit())) {
         return false;
     }
+    linear_baseline_ = linearSpaceFree();
     if (!renderer_.initialize()) {
         romfsExit();
         return false;
@@ -42,6 +43,11 @@ InputFrame GameApp::readInput(u32 keys_down, u32 keys_held) {
     input.heal = (keys_down & KEY_X) != 0;
     input.lock_toggle = (keys_down & KEY_L) != 0;
     input.debug_toggle = (keys_down & KEY_Y) != 0;
+    if ((keys_down & (KEY_DLEFT | KEY_DDOWN)) != 0) {
+        input.item_delta = -1;
+    } else if ((keys_down & (KEY_DRIGHT | KEY_DUP)) != 0) {
+        input.item_delta = 1;
+    }
     return input;
 }
 
@@ -87,6 +93,7 @@ void GameApp::run() {
                     step_input.heal = false;
                     step_input.lock_toggle = false;
                     step_input.debug_toggle = false;
+                    step_input.item_delta = 0;
                 }
                 simulation_.step(step_input, kFixedStep);
                 consumed_edges = true;
@@ -103,8 +110,15 @@ void GameApp::run() {
         previous_boss_health = world.boss.health;
         previous_player_health = world.player.health;
         audio_.update();
+        const std::size_t current_free = linearSpaceFree();
+        const std::size_t current_used = linear_baseline_ > current_free
+                                             ? linear_baseline_ - current_free
+                                             : 0;
+        const unsigned zone_index = static_cast<unsigned>(world.zone);
+        zone_peak_bytes_[zone_index] = std::max(zone_peak_bytes_[zone_index], current_used);
         renderer_.render(world, title_screen_, paused_, frame_ms,
-                         audio_.underruns(), audio_.ambientAvailable(), camera_yaw_);
+                         audio_.underruns(), audio_.ambientAvailable(), camera_yaw_,
+                         static_cast<unsigned>(zone_peak_bytes_[zone_index] / 1024U));
     }
 }
 

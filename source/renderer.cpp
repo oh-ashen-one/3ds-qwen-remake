@@ -64,6 +64,10 @@ bool Renderer::initialize() {
     vertex_shader_ = DVLB_ParseFile(
         reinterpret_cast<u32*>(const_cast<std::uint8_t*>(vshader_shbin)),
         vshader_shbin_size);
+    if (!vertex_shader_) {
+        shutdown();
+        return false;
+    }
     shaderProgramInit(&program_);
     shaderProgramSetVsh(&program_, &vertex_shader_->DVLE[0]);
     projection_location_ = shaderInstanceGetUniformLocation(program_.vertexShader, "projection");
@@ -77,19 +81,23 @@ bool Renderer::initialize() {
         return false;
     }
     std::memcpy(vbo_data_, kCube, sizeof(kCube));
+    AttrInfo_Init(&attr_info_);
+    AttrInfo_AddLoader(&attr_info_, 0, GPU_FLOAT, 3);
+    AttrInfo_AddFixed(&attr_info_, 1);
+    BufInfo_Init(&buf_info_);
+    BufInfo_Add(&buf_info_, vbo_data_, sizeof(Vertex), 1, 0x0);
     text_buffer_ = C2D_TextBufNew(4096);
-    return text_buffer_ != nullptr;
+    if (!text_buffer_) {
+        shutdown();
+        return false;
+    }
+    return true;
 }
 
 void Renderer::bind3DState() {
     C3D_BindProgram(&program_);
-    C3D_AttrInfo* attributes = C3D_GetAttrInfo();
-    AttrInfo_Init(attributes);
-    AttrInfo_AddLoader(attributes, 0, GPU_FLOAT, 3);
-    AttrInfo_AddFixed(attributes, 1);
-    C3D_BufInfo* buffers = C3D_GetBufInfo();
-    BufInfo_Init(buffers);
-    BufInfo_Add(buffers, vbo_data_, sizeof(Vertex), 1, 0x0);
+    C3D_SetAttrInfo(&attr_info_);
+    C3D_SetBufInfo(&buf_info_);
     C3D_TexEnv* environment = C3D_GetTexEnv(0);
     C3D_TexEnvInit(environment);
     C3D_TexEnvSrc(environment, C3D_Both, GPU_PRIMARY_COLOR);
@@ -119,8 +127,9 @@ void Renderer::updateCamera(const WorldState& world) {
 
 void Renderer::render(const WorldState& world, bool title_screen, bool paused,
                       float frame_ms, unsigned audio_underruns, bool audio_available,
-                      float camera_yaw) {
+                      float camera_yaw, unsigned zone_memory_kb) {
     draw_calls_ = 0;
+    visible_objects_ = 0;
     culled_objects_ = 0;
     if (!world.player.lock_on) {
         camera_yaw_ = camera_yaw;
@@ -133,7 +142,8 @@ void Renderer::render(const WorldState& world, bool title_screen, bool paused,
     C3D_FrameDrawOn(top_target_);
     bind3DState();
     renderWorld(world);
-    renderUi(world, title_screen, paused, frame_ms, audio_underruns, audio_available);
+    renderUi(world, title_screen, paused, frame_ms, audio_underruns, audio_available,
+             zone_memory_kb);
     C3D_FrameEnd(0);
 }
 
@@ -199,20 +209,47 @@ void Renderer::renderHumanoid(Vec2 position, float facing, float scale, float sw
     const float side_z = -std::sin(facing);
     const float forward_x = std::sin(facing);
     const float forward_z = std::cos(facing);
-    drawBox(position.x, 1.25f * scale, position.z, 0.75f * scale, 1.05f * scale,
+    const float gait = std::sin(position.x * 0.7f + position.z * 0.5f) * 0.16f;
+    drawBox(position.x, 0.98f * scale, position.z, 0.72f * scale, 0.34f * scale,
+            0.44f * scale, facing, red * 0.78f, green * 0.78f, blue * 0.82f);
+    drawBox(position.x, 1.48f * scale, position.z, 0.75f * scale, 0.78f * scale,
             0.45f * scale, facing, red, green, blue);
     drawBox(position.x, 2.05f * scale, position.z, 0.48f * scale, 0.52f * scale,
             0.48f * scale, facing, red * 0.85f, green * 0.78f, blue * 0.72f);
     for (int side = -1; side <= 1; side += 2) {
-        drawBox(position.x + side_x * side * 0.23f * scale, 0.42f * scale,
-                position.z + side_z * side * 0.23f * scale,
-                0.22f * scale, 0.82f * scale, 0.25f * scale,
-                facing, red * 0.7f, green * 0.7f, blue * 0.75f);
-        drawBox(position.x + side_x * side * 0.58f * scale + forward_x * swing * 0.18f,
-                1.28f * scale,
-                position.z + side_z * side * 0.58f * scale + forward_z * swing * 0.18f,
-                0.22f * scale, 0.78f * scale, 0.22f * scale,
-                facing + swing * 0.4f * side, red * 0.72f, green * 0.72f, blue * 0.78f);
+        const float leg_stride = gait * static_cast<float>(side);
+        drawBox(position.x + side_x * side * 0.22f * scale + forward_x * leg_stride,
+                0.65f * scale,
+                position.z + side_z * side * 0.22f * scale + forward_z * leg_stride,
+                0.24f * scale, 0.48f * scale, 0.27f * scale,
+                facing, red * 0.72f, green * 0.72f, blue * 0.77f);
+        drawBox(position.x + side_x * side * 0.22f * scale - forward_x * leg_stride * 0.6f,
+                0.25f * scale,
+                position.z + side_z * side * 0.22f * scale - forward_z * leg_stride * 0.6f,
+                0.21f * scale, 0.40f * scale, 0.23f * scale,
+                facing, red * 0.66f, green * 0.66f, blue * 0.72f);
+        drawBox(position.x + side_x * side * 0.22f * scale + forward_x * 0.10f * scale,
+                0.05f * scale,
+                position.z + side_z * side * 0.22f * scale + forward_z * 0.10f * scale,
+                0.24f * scale, 0.12f * scale, 0.42f * scale,
+                facing, red * 0.58f, green * 0.58f, blue * 0.64f);
+
+        const float arm_reach = swing * 0.12f * static_cast<float>(side);
+        drawBox(position.x + side_x * side * 0.53f * scale + forward_x * arm_reach,
+                1.52f * scale,
+                position.z + side_z * side * 0.53f * scale + forward_z * arm_reach,
+                0.23f * scale, 0.44f * scale, 0.24f * scale,
+                facing + swing * 0.22f * side, red * 0.76f, green * 0.76f, blue * 0.81f);
+        drawBox(position.x + side_x * side * 0.58f * scale + forward_x * swing * 0.22f,
+                1.16f * scale,
+                position.z + side_z * side * 0.58f * scale + forward_z * swing * 0.22f,
+                0.20f * scale, 0.40f * scale, 0.21f * scale,
+                facing + swing * 0.34f * side, red * 0.68f, green * 0.68f, blue * 0.75f);
+        drawBox(position.x + side_x * side * 0.60f * scale + forward_x * swing * 0.34f,
+                0.91f * scale,
+                position.z + side_z * side * 0.60f * scale + forward_z * swing * 0.34f,
+                0.18f * scale, 0.20f * scale, 0.18f * scale,
+                facing, red * 0.82f, green * 0.72f, blue * 0.68f);
     }
     if (weapon) {
         drawBox(position.x + side_x * 0.72f * scale + forward_x * 0.8f * scale,
@@ -249,9 +286,17 @@ void Renderer::renderBoss(const Boss& boss, float elapsed) {
 
 void Renderer::drawBox(float x, float y, float z, float sx, float sy, float sz,
                        float rotation_y, float red, float green, float blue, bool always) {
-    if (!always && distance(camera_ground_, {x, z}) > 52.0f) {
-        ++culled_objects_;
-        return;
+    if (!always) {
+        const Vec2 to_object{x - camera_ground_.x, z - camera_ground_.z};
+        const float object_distance = length(to_object);
+        const float forward_dot = object_distance > 0.001f
+                                      ? (to_object.x * std::sin(camera_yaw_) +
+                                         to_object.z * std::cos(camera_yaw_)) / object_distance
+                                      : 1.0f;
+        if (object_distance > 52.0f || (object_distance > 6.0f && forward_dot < 0.12f)) {
+            ++culled_objects_;
+            return;
+        }
     }
     C3D_Mtx model;
     C3D_Mtx model_view;
@@ -264,6 +309,7 @@ void Renderer::drawBox(float x, float y, float z, float sx, float sy, float sz,
     C3D_FixedAttribSet(1, red, green, blue, 1.0f);
     C3D_DrawArrays(GPU_TRIANGLES, 0, kCubeVertexCount);
     ++draw_calls_;
+    ++visible_objects_;
 }
 
 void Renderer::drawText(const char* value, float x, float y, float scale, u32 color,
@@ -280,7 +326,11 @@ void Renderer::drawText(const char* value, float x, float y, float scale, u32 co
 }
 
 void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
-                        float frame_ms, unsigned audio_underruns, bool audio_available) {
+                        float frame_ms, unsigned audio_underruns, bool audio_available,
+                        unsigned zone_memory_kb) {
+    // Raw citro3d world rendering replaces citro2d's shader and vertex state.
+    // Restore it before queuing either screen's overlay batches.
+    C2D_Prepare();
     C2D_TextBufClear(text_buffer_);
     C2D_SceneBegin(top_target_);
     if (title_screen) {
@@ -319,6 +369,11 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
             C2D_DrawRectSolid(0.0f, 0.0f, 0.6f, 400.0f, 240.0f, C2D_Color32(0, 0, 0, 155));
             drawText("PAUSED", 163.0f, 96.0f, 0.78f, C2D_Color32(245, 245, 245, 255));
         }
+        if (world.arena_transition && world.transition_timer > 0.0f) {
+            const float progress = 1.0f - world.transition_timer / 0.85f;
+            const u8 alpha = static_cast<u8>(std::fmax(0.0f, std::fmin(220.0f, progress * 255.0f)));
+            C2D_DrawRectSolid(0.0f, 0.0f, 0.8f, 400.0f, 240.0f, C2D_Color32(8, 6, 10, alpha));
+        }
     }
 
     C2D_TargetClear(bottom_target_, C2D_Color32(17, 15, 21, 255));
@@ -326,8 +381,9 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
     drawText(ZoneManager::name(world.zone), 16.0f, 12.0f, 0.50f, C2D_Color32(222, 188, 112, 255));
     char status[192];
     std::snprintf(status, sizeof(status),
-                  "HP %.0f   ST %.0f   FLASKS %d\nA interact  B dodge/run  X heal\nR light  ZR heavy  L lock  START pause\nSELECT exit  Y diagnostics",
-                  world.player.health, world.player.stamina, world.player.flasks);
+                  "HP %.0f   ST %.0f   FLASKS %d\nQUICK: %s  (D-pad)\nA interact  B dodge/run  X heal\nR light  ZR heavy  L lock  START pause\nSELECT exit  Y diagnostics",
+                  world.player.health, world.player.stamina, world.player.flasks,
+                  quickItemName(world.player.selected_item));
     drawText(status, 16.0f, 43.0f, 0.42f, C2D_Color32(222, 222, 228, 255), 292.0f);
     for (int index = 0; index < world.player.flasks; ++index) {
         C2D_DrawRectSolid(20.0f + static_cast<float>(index) * 28.0f, 178.0f, 0.2f,
@@ -336,12 +392,12 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
     if (world.debug_overlay) {
         char diagnostics[192];
         std::snprintf(diagnostics, sizeof(diagnostics),
-                      "%.1f ms  draw %u  culled %u\nlinear free %lu KB  audio %s  underruns %u",
-                      frame_ms, draw_calls_, culled_objects_,
+                      "%.1f ms  visible %u  culled %u\nzone peak %u KB  linear free %lu KB\naudio %s  underruns %u",
+                      frame_ms, visible_objects_, culled_objects_, zone_memory_kb,
                       static_cast<unsigned long>(linearSpaceFree() / 1024U),
                       audio_available ? "streaming" : "unavailable", audio_underruns);
-        C2D_DrawRectSolid(8.0f, 202.0f, 0.3f, 304.0f, 36.0f, C2D_Color32(4, 4, 6, 235));
-        drawText(diagnostics, 12.0f, 205.0f, 0.34f, C2D_Color32(116, 230, 152, 255));
+        C2D_DrawRectSolid(8.0f, 193.0f, 0.3f, 304.0f, 45.0f, C2D_Color32(4, 4, 6, 235));
+        drawText(diagnostics, 12.0f, 196.0f, 0.32f, C2D_Color32(116, 230, 152, 255));
     }
 }
 
