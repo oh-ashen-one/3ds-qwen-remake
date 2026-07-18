@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import struct
 import sys
 from pathlib import Path
@@ -59,7 +60,26 @@ def read_smdh(path: Path) -> dict[str, str]:
     return expected
 
 
+def verify_renderer_index_type() -> str:
+    renderer = (ROOT / "source" / "renderer.cpp").read_text(encoding="utf-8")
+    draw_call = re.search(
+        r"C3D_DrawElements\s*\(\s*GPU_TRIANGLES\s*,\s*kCubeIndexCount\s*,\s*"
+        r"([A-Z0-9_]+)\s*,\s*index_data_\s*\)",
+        renderer,
+    )
+    if not draw_call:
+        fail("indexed cube draw call is missing or no longer matches the validated layout")
+    index_type = draw_call.group(1)
+    if index_type != "C3D_UNSIGNED_BYTE":
+        fail(
+            "indexed cube draw must use Citro3D's C3D_UNSIGNED_BYTE; "
+            f"found {index_type}"
+        )
+    return index_type
+
+
 def main() -> None:
+    renderer_index_type = verify_renderer_index_type()
     paths = {suffix: ROOT / f"{TARGET}.{suffix}" for suffix in ("3dsx", "elf", "map", "smdh")}
     missing = [path.name for path in paths.values() if not path.is_file() or path.stat().st_size == 0]
     if missing:
@@ -107,6 +127,7 @@ def main() -> None:
         "romfs_markers": [marker.decode("ascii") for marker in required_romfs_markers],
         "linked_subsystems": list(required_symbols),
         "embedded_runtime_data": list(required_embedded_data),
+        "renderer_index_type": renderer_index_type,
     }
     REPORT.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(

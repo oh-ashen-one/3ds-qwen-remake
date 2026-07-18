@@ -1,5 +1,16 @@
 # Build evidence
 
+## Indexed-renderer correction
+
+- Date: 2026-07-18
+- Source branch: `codex/fix-native-rendering`
+- Local source-built-toolchain `.3dsx`: `578,292` bytes; SHA-256 `f1288a591d27f9ca7f3490055799dd7efb7946e041c01a4d94d68126508624e5`.
+- Full local gate passed: repository audit, original-asset validation, deterministic host tests, native cross-build, metadata/RomFS/link verification, and the renderer source regression check.
+
+The first post-M4 Azahar smoke exposed a native draw bug: the cube indices are bytes, but `C3D_DrawElements` was passed `GPU_UNSIGNED_BYTE`. That unrelated GPU enum has value `1`, which Citro3D interprets as its 16-bit index type. The renderer therefore consumed adjacent index bytes as invalid 16-bit vertex indices and produced only the clear color plus Citro2D overlays. The corrected call uses `C3D_UNSIGNED_BYTE`; `tools/verify_build.py` now rejects future changes to the wrong enum.
+
+After rebuilding, official Azahar 2125.1.3 was restarted against the corrected artifact. The title boot rendered the vestibule geometry and player silhouette behind the translucent title panel, both-screen overlays remained present, and the emulator continued presenting frames. Computer-driven key taps remained unreliable, so this is a corrected boot/render smoke—not a gameplay, performance, or hardware acceptance claim.
+
 ## M4 content/architecture candidate
 
 - Date: 2026-07-18

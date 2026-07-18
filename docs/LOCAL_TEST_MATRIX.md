@@ -6,6 +6,7 @@ This matrix separates deterministic proof from hardware-only claims.
 | --- | --- | --- |
 | Clean asset pipeline | Manifest/reference/license/format/size/zone-budget checks; generated registry and scene freshness; T3X v1/RGB565 descriptor checks | Visual texture correctness and load-time behavior |
 | Boot and metadata | 3DSX header, SMDH fields, RomFS markers, linked subsystem symbols, hashes | Homebrew Launcher boot on the exact console |
+| Indexed world rendering | Native verifier enforces Citro3D's byte-index enum; corrected artifact renders vestibule geometry in Azahar | Exact textures, winding, depth, and culling on PICA200 hardware |
 | Title to play | `GameSession` title confirmation test | Real A-button timing and both-screen presentation |
 | Interior to vista | Door preload, masked reveal, enter, prior-zone unload, counters | No visible loading and frame-time behavior |
 | Dialogue | Start, abort with B, retry, complete | Subtitle readability and input feel |

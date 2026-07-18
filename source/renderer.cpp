@@ -368,7 +368,7 @@ void Renderer::drawBox(float x, float y, float z, float sx, float sy, float sz,
                               0.18f * std::fmax(0.0f, std::cos(rotation_y - 0.65f));
     C3D_FixedAttribSet(1, red * directional, green * directional,
                       blue * directional, 1.0f);
-    C3D_DrawElements(GPU_TRIANGLES, kCubeIndexCount, GPU_UNSIGNED_BYTE, index_data_);
+    C3D_DrawElements(GPU_TRIANGLES, kCubeIndexCount, C3D_UNSIGNED_BYTE, index_data_);
     ++draw_calls_;
     ++visible_objects_;
 }
