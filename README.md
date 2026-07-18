@@ -4,17 +4,19 @@ Ashen Rift is an original, low-poly action-RPG homebrew demo for the New Nintend
 
 The playable sequence connects three memory-bounded zones: a sunken interior, an outdoor reveal with an NPC encounter, and a boss arena. It includes third-person movement, C-stick camera control, lock-on, stamina combat, healing, dialogue, a scripted boss, dual-screen UI, generated original audio, and performance diagnostics.
 
+The complete project contract is preserved in [MASTER_GOAL_PROMPT.md](MASTER_GOAL_PROMPT.md); [GOAL_PROMPT.md](GOAL_PROMPT.md) is its reusable sub-4,000-character `/goal` launcher.
+
 ## Status
 
 - Native fixed-step gameplay, three-zone streaming state, combat, lifecycle handling, dual-screen UI, and NDSP audio are implemented.
-- The original-content pipeline includes generated asset IDs, per-zone manifests and budgets, a Blender-editable scene source, 15-bone rigid animation clips, and an RGB565 `tex3ds` atlas.
+- The original-content pipeline includes generated asset IDs, per-zone manifests and budgets, independently loadable RomFS scene blobs, a Blender-editable scene source, 15-bone rigid animation clips, and an RGB565 `tex3ds` atlas.
 - Static props use generated fixed-size data, an indexed VBO, coarse-grid and view/distance culling, baked colors, a directional tint, fog-gate masking, blob shadows, and distant panorama panels.
 - Repository policy audit, asset validation, deterministic host smoke flows, native artifact verification, and private GitHub Actions are implemented; see [BUILD_EVIDENCE.md](docs/BUILD_EVIDENCE.md).
 - Physical New Nintendo 3DS-family verification remains required. A local build or emulator boot is deliberately not called completion.
 
 ## Architecture
 
-`GameApp` owns fixed-step input/lifecycle, `GameSession` owns title/pause/suspend state, `ZoneManager` owns preload/enter/unload handoffs, `PlayerController` and `BossController` own their independent combat state machines, `Renderer` owns citro3d/citro2d output and counters, `AudioStreamer` owns NDSP double buffers, and generated `AssetRegistry` data connects runtime assets to each zone without per-frame allocation.
+`GameApp` owns fixed-step input/lifecycle, `GameSession` owns title/pause/suspend state, `ZoneManager` owns logical preload/enter/unload handoffs, `ZoneResources` mirrors that mask with real RomFS loads and linear-memory frees, `PlayerController` and `BossController` own their independent combat state machines, `Renderer` owns citro3d/citro2d output and counters, `AudioStreamer` owns NDSP double buffers, and generated `AssetRegistry` data connects runtime assets to each zone without per-frame allocation.
 
 ## Build
 

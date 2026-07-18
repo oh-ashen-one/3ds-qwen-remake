@@ -14,6 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = "elden-ring-3ds-demake"
 OUTPUT_SUFFIXES = (".3dsx", ".elf", ".lst", ".map", ".smdh")
+LOCAL_TOOLCHAIN_ROOT = Path.home() / ".local" / "share" / "elden-ring-3ds-devkit"
 
 
 def clean() -> None:
@@ -40,6 +41,13 @@ def clean() -> None:
     generated_scene = ROOT / "include" / "demake" / "generated" / "scene_asset_data.hpp"
     if generated_scene.is_file():
         generated_scene.unlink()
+    generated_scene_stamp = ROOT / "include" / "demake" / "generated" / "scene_assets.stamp"
+    if generated_scene_stamp.is_file():
+        generated_scene_stamp.unlink()
+    for zone_id in ("interior", "vista", "arena"):
+        zone_blob = ROOT / "romfs" / "zones" / f"{zone_id}.bin"
+        if zone_blob.is_file():
+            zone_blob.unlink()
     distribution = ROOT / "dist"
     if distribution.is_dir():
         shutil.rmtree(distribution)
@@ -73,6 +81,35 @@ def run_build() -> None:
     environment = os.environ.copy()
     if not environment.get("DEVKITPRO") or not environment.get("DEVKITARM"):
         raise SystemExit("DEVKITPRO and DEVKITARM must be set before building")
+
+    local_toolchain_root = Path(environment.get("ASHEN_3DS_ROOT", LOCAL_TOOLCHAIN_ROOT))
+    local_libctru = local_toolchain_root / "libctru"
+    if "CTRULIB" not in environment and (local_libctru / "lib" / "libctru.a").is_file():
+        environment["CTRULIB"] = str(local_libctru)
+    tool_paths = [Path(environment["DEVKITPRO"]) / "tools" / "bin"]
+    override = environment.get("ASHEN_3DS_TOOLS")
+    if override:
+        tool_paths.insert(0, Path(override))
+    local_toolchain_bin = local_toolchain_root / "tools" / "bin"
+    local_portlibs_bin = local_toolchain_root / "portlibs" / "3ds" / "bin"
+    if local_toolchain_bin.is_dir():
+        tool_paths.append(local_toolchain_bin)
+    if local_portlibs_bin.is_dir():
+        tool_paths.append(local_portlibs_bin)
+    existing_path = environment.get("PATH", "")
+    environment["PATH"] = os.pathsep.join(
+        [str(path) for path in tool_paths if path.is_dir()] + [existing_path]
+    )
+    required_tools = ("picasso", "3dsxtool", "smdhtool")
+    missing_tools = [
+        tool for tool in required_tools
+        if shutil.which(tool, path=environment["PATH"]) is None
+    ]
+    if missing_tools:
+        raise SystemExit(
+            "missing official 3DS build tools: " + ", ".join(missing_tools) +
+            "; install devkitPro's 3ds-dev group or set ASHEN_3DS_TOOLS"
+        )
 
     if " " not in str(ROOT):
         subprocess.run(["make", "-f", "Makefile", "-j4"], cwd=ROOT,

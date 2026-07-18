@@ -8,7 +8,11 @@
 #include <citro3d.h>
 #include <tex3ds.h>
 
+#include <cstddef>
+
 namespace demake {
+
+struct SceneBox;
 
 class Renderer {
 public:
@@ -18,7 +22,9 @@ public:
     void setHardwareInfo(const char* model_name, bool new_family);
     void render(const WorldState& world, bool title_screen, bool paused,
                 float frame_ms, unsigned audio_underruns, bool audio_available,
-                float camera_yaw, unsigned zone_memory_kb);
+                float camera_yaw, const SceneBox* scene_boxes,
+                std::size_t scene_box_count, unsigned zone_resource_bytes,
+                unsigned zone_memory_kb);
     void shutdown();
 
     unsigned drawCalls() const { return draw_calls_; }
@@ -27,9 +33,10 @@ public:
 private:
     void bind3DState();
     void updateCamera(const WorldState& world);
-    void renderWorld(const WorldState& world);
+    void renderWorld(const WorldState& world, const SceneBox* scene_boxes,
+                     std::size_t scene_box_count);
     void renderPanorama(Zone zone);
-    void renderStaticScene(Zone zone);
+    void renderStaticScene(const SceneBox* boxes, std::size_t count);
     void renderInterior(const WorldState& world);
     void renderVista(const WorldState& world);
     void renderArena(const WorldState& world);
@@ -41,7 +48,7 @@ private:
                  float rotation_y, float red, float green, float blue, bool always = false);
     void renderUi(const WorldState& world, bool title_screen, bool paused,
                   float frame_ms, unsigned audio_underruns, bool audio_available,
-                  unsigned zone_memory_kb);
+                  unsigned zone_resource_bytes, unsigned zone_memory_kb);
     void drawText(const char* value, float x, float y, float scale, u32 color,
                   float wrap_width = 0.0f);
 

@@ -10,6 +10,8 @@ Use the official devkitPro setup and install the `3ds-dev` package group. The pr
 
 CI pins the official `devkitpro/devkitarm` image by OCI digest and records the compiler and `tex3ds` versions in its private artifact report. Updating that digest is an intentional toolchain change and requires a clean local/CI gate.
 
+If the official 3DS libraries and host tools were installed in a user-writable prefix instead of the system devkitPro prefix, set `ASHEN_3DS_ROOT` to that prefix, or set `CTRULIB` and `ASHEN_3DS_TOOLS` separately. The local bootstrap used for this project is detected automatically at `~/.local/share/elden-ring-3ds-devkit`.
+
 On this Mac, the system installation command is:
 
 ```sh
@@ -28,7 +30,7 @@ make package-sd
 
 `make verify-build` performs the native build and validates the 3DSX header, SMDH metadata, embedded RomFS markers, linked subsystems, and artifact hashes. The build creates `elden-ring-3ds-demake.3dsx`, plus ELF, map, list, SMDH, and JSON validation files.
 
-The asset phase runs before compilation. It generates the asset registry, expands the authored scene into compact fixed-size arrays, synthesizes original PCM audio, and invokes `tex3ds --atlas` for the original RGB565 environment texture. Generated files are ignored and recreated by `make clean && make validate-assets`.
+The asset phase runs before compilation. It generates the asset registry, expands the authored scene into host-test arrays plus three compact RomFS zone blobs, synthesizes original PCM audio, and invokes `tex3ds --atlas` for the original RGB565 environment texture. On hardware, `ZoneResources` allocates the requested blob on preload and frees the prior zone after entry; the static arrays are excluded from the native build and retained only for host validation. Generated files are ignored and recreated by `make clean && make validate-assets`.
 
 ## Blender source workflow
 

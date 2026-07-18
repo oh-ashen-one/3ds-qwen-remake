@@ -3,6 +3,7 @@
 #include "demake/audio_streamer.hpp"
 #include "demake/core.hpp"
 #include "demake/renderer.hpp"
+#include "demake/zone_resources.hpp"
 
 #include <cstddef>
 
@@ -22,6 +23,7 @@ private:
 
     GameSession session_{};
     Renderer renderer_{};
+    ZoneResources zone_resources_{};
     AudioStreamer audio_{};
     InputFrame pending_edges_{};
     aptHookCookie apt_hook_cookie_{};

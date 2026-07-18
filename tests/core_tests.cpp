@@ -2,6 +2,7 @@
 #include "demake/asset_registry.hpp"
 #include "demake/rigid_animation.hpp"
 #include "demake/scene_assets.hpp"
+#include "demake/zone_resources.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -28,7 +29,7 @@ void testMathAndCollision() {
 }
 
 void testGeneratedAssetRegistry() {
-    assert(AssetRegistry::assetCount() == 9);
+    assert(AssetRegistry::assetCount() == 12);
     const AssetRecord* ambient = AssetRegistry::find("ambient_sable_expanse");
     assert(ambient != nullptr);
     assert(AssetRegistry::assetBelongsToZone(*ambient, Zone::Interior));
@@ -42,6 +43,10 @@ void testGeneratedAssetRegistry() {
     assert(texture != nullptr);
     assert(std::strcmp(texture->kind, "texture_atlas") == 0);
     assert(AssetRegistry::assetBelongsToZone(*texture, Zone::Arena));
+    const AssetRecord* interior_blob = AssetRegistry::find("interior_scene_blob");
+    assert(interior_blob != nullptr);
+    assert(AssetRegistry::assetBelongsToZone(*interior_blob, Zone::Interior));
+    assert(!AssetRegistry::assetBelongsToZone(*interior_blob, Zone::Vista));
     assert(AssetRegistry::zone(Zone::Arena).draw_call_budget == 84);
     assert(AssetRegistry::find("missing") == nullptr);
 }
@@ -54,6 +59,54 @@ void testGeneratedSceneData() {
     const SceneBox* arena = SceneAssets::boxes(Zone::Arena, count);
     assert(arena != nullptr && count == 13);
     assert(arena[0].sx > 0.0f && arena[0].sy > 0.0f && arena[0].sz > 0.0f);
+}
+
+void testZoneResourceStreaming() {
+    ZoneResources resources;
+    assert(resources.loadedMask() == 0);
+    assert(resources.residentBytes() == 0);
+
+    assert(resources.sync(1U << static_cast<unsigned>(Zone::Interior)));
+    assert(resources.loadedMask() == 0x01U);
+    assert(resources.loadCount() == 1);
+    assert(resources.unloadCount() == 0);
+    std::size_t count = 0;
+    const SceneBox* interior = resources.boxes(Zone::Interior, count);
+    assert(interior != nullptr && count == SceneAssets::boxCount(Zone::Interior));
+    assert(resources.residentBytes() == count * sizeof(SceneBox));
+
+    assert(resources.sync(0x03U));
+    assert(resources.loadedMask() == 0x03U);
+    assert(resources.loadCount() == 2);
+    const std::uint32_t overlap_bytes = resources.residentBytes();
+    assert(overlap_bytes ==
+           (SceneAssets::boxCount(Zone::Interior) + SceneAssets::boxCount(Zone::Vista)) *
+               sizeof(SceneBox));
+
+    assert(resources.sync(1U << static_cast<unsigned>(Zone::Vista)));
+    assert(resources.loadedMask() == 0x02U);
+    assert(resources.loadCount() == 2);
+    assert(resources.unloadCount() == 1);
+    assert(resources.boxes(Zone::Interior, count) == nullptr && count == 0);
+    assert(resources.residentBytes() == SceneAssets::boxCount(Zone::Vista) * sizeof(SceneBox));
+
+    const std::uint8_t stable_mask = resources.loadedMask();
+    const std::uint32_t stable_bytes = resources.residentBytes();
+    assert(!resources.sync(0x80U));
+    assert(resources.loadedMask() == stable_mask);
+    assert(resources.residentBytes() == stable_bytes);
+
+    assert(resources.sync(1U << static_cast<unsigned>(Zone::Arena)));
+    assert(resources.loadedMask() == 0x04U);
+    assert(resources.boxes(Zone::Arena, count) != nullptr);
+    assert(count == SceneAssets::boxCount(Zone::Arena));
+    assert(resources.loadCount() == 3);
+    assert(resources.unloadCount() == 2);
+
+    resources.shutdown();
+    assert(resources.loadedMask() == 0);
+    assert(resources.residentBytes() == 0);
+    assert(resources.unloadCount() == 3);
 }
 
 void testRigidPoseSampling() {
@@ -357,6 +410,7 @@ int main() {
     testMathAndCollision();
     testGeneratedAssetRegistry();
     testGeneratedSceneData();
+    testZoneResourceStreaming();
     testRigidPoseSampling();
     testMovementAndStamina();
     testControllerDamageBoundaries();

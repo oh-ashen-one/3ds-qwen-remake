@@ -147,7 +147,9 @@ void Renderer::updateCamera(const WorldState& world) {
 
 void Renderer::render(const WorldState& world, bool title_screen, bool paused,
                       float frame_ms, unsigned audio_underruns, bool audio_available,
-                      float camera_yaw, unsigned zone_memory_kb) {
+                      float camera_yaw, const SceneBox* scene_boxes,
+                      std::size_t scene_box_count, unsigned zone_resource_bytes,
+                      unsigned zone_memory_kb) {
     draw_calls_ = 0;
     visible_objects_ = 0;
     culled_objects_ = 0;
@@ -161,15 +163,16 @@ void Renderer::render(const WorldState& world, bool title_screen, bool paused,
     C3D_RenderTargetClear(top_target_, C3D_CLEAR_ALL, clear_color, 0);
     C3D_FrameDrawOn(top_target_);
     bind3DState();
-    renderWorld(world);
+    renderWorld(world, scene_boxes, scene_box_count);
     renderUi(world, title_screen, paused, frame_ms, audio_underruns, audio_available,
-             zone_memory_kb);
+             zone_resource_bytes, zone_memory_kb);
     C3D_FrameEnd(0);
 }
 
-void Renderer::renderWorld(const WorldState& world) {
+void Renderer::renderWorld(const WorldState& world, const SceneBox* scene_boxes,
+                           std::size_t scene_box_count) {
     renderPanorama(world.zone);
-    renderStaticScene(world.zone);
+    renderStaticScene(scene_boxes, scene_box_count);
     switch (world.zone) {
         case Zone::Interior: renderInterior(world); break;
         case Zone::Vista: renderVista(world); break;
@@ -196,9 +199,7 @@ void Renderer::renderPanorama(Zone zone) {
             0.0f, red * 0.78f, green * 0.78f, blue * 0.88f, true);
 }
 
-void Renderer::renderStaticScene(Zone zone) {
-    std::size_t count = 0;
-    const SceneBox* boxes = SceneAssets::boxes(zone, count);
+void Renderer::renderStaticScene(const SceneBox* boxes, std::size_t count) {
     for (std::size_t index = 0; index < count; ++index) {
         const SceneBox& box = boxes[index];
         if (!box.always) {
@@ -388,7 +389,7 @@ void Renderer::drawText(const char* value, float x, float y, float scale, u32 co
 
 void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
                         float frame_ms, unsigned audio_underruns, bool audio_available,
-                        unsigned zone_memory_kb) {
+                        unsigned zone_resource_bytes, unsigned zone_memory_kb) {
     // Raw citro3d world rendering replaces citro2d's shader and vertex state.
     // Restore it before queuing either screen's overlay batches.
     C2D_Prepare();
@@ -455,11 +456,12 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
                           20.0f, 34.0f, C2D_Color32(190, 108, 28, 255));
     }
     if (world.debug_overlay) {
-        char diagnostics[224];
+        char diagnostics[256];
         std::snprintf(diagnostics, sizeof(diagnostics),
-                      "%s  %.1f ms  draws %u  visible %u  culled %u\nzone %lu KB  peak linear %u KB\nlinear free %lu KB  audio %s  underruns %u",
+                      "%s  %.1f ms  draws %u  visible %u  culled %u\nzone data %u KB  declared %lu KB  peak %u KB\nlinear free %lu KB  audio %s  underruns %u",
                       hardware_model_,
                       frame_ms, draw_calls_, visible_objects_, culled_objects_,
+                      (zone_resource_bytes + 1023U) / 1024U,
                       static_cast<unsigned long>(world.zone_resident_bytes / 1024U), zone_memory_kb,
                       static_cast<unsigned long>(linearSpaceFree() / 1024U),
                       audio_available ? "streaming" : "unavailable", audio_underruns);

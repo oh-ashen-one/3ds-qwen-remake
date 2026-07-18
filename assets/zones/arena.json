@@ -11,6 +11,7 @@
   "assets": [
     "ambient_sable_expanse",
     "generated_low_poly_geometry",
+    "arena_scene_blob",
     "environment_texture_atlas",
     "rigid_animation_clips",
     "arena_zone_manifest"

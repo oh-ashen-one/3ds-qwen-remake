@@ -43,6 +43,12 @@ bool GameApp::initialize() {
     renderer_.setHardwareInfo(modelName(system_model), isNewFamily(system_model));
     audio_.initialize();
     session_.resetToTitle();
+    if (!zone_resources_.sync(session_.simulation().world().loaded_zone_mask)) {
+        audio_.shutdown();
+        renderer_.shutdown();
+        romfsExit();
+        return false;
+    }
     aptHook(&apt_hook_cookie_, &GameApp::aptEventHook, this);
     apt_hooked_ = true;
     running_ = true;
@@ -177,6 +183,10 @@ void GameApp::run() {
         }
 
         const WorldState& world = session_.simulation().world();
+        if (!zone_resources_.sync(world.loaded_zone_mask)) {
+            running_ = false;
+            break;
+        }
         if (world.boss.health < previous_boss_health) {
             audio_.playHit(1.2f);
         } else if (world.player.health < previous_player_health) {
@@ -191,8 +201,11 @@ void GameApp::run() {
                                              : 0;
         const unsigned zone_index = static_cast<unsigned>(world.zone);
         zone_peak_bytes_[zone_index] = std::max(zone_peak_bytes_[zone_index], current_used);
+        std::size_t scene_box_count = 0;
+        const SceneBox* scene_boxes = zone_resources_.boxes(world.zone, scene_box_count);
         renderer_.render(world, session_.titleScreen(), session_.paused(), frame_ms,
                          audio_.underruns(), audio_.ambientAvailable(), camera_yaw_,
+                         scene_boxes, scene_box_count, zone_resources_.residentBytes(),
                          static_cast<unsigned>(zone_peak_bytes_[zone_index] / 1024U));
     }
 }
@@ -203,6 +216,7 @@ void GameApp::shutdown() {
         apt_hooked_ = false;
     }
     audio_.shutdown();
+    zone_resources_.shutdown();
     renderer_.shutdown();
     romfsExit();
 }

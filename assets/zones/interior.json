@@ -11,6 +11,7 @@
   "assets": [
     "ambient_sable_expanse",
     "generated_low_poly_geometry",
+    "interior_scene_blob",
     "environment_texture_atlas",
     "rigid_animation_clips",
     "interior_zone_manifest"

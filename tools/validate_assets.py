@@ -10,8 +10,8 @@ from pathlib import Path
 
 from generate_asset_registry import OUTPUT as REGISTRY_OUTPUT
 from generate_asset_registry import ZONE_ORDER, generate as generate_registry
-from convert_scene_assets import OUTPUT as SCENE_OUTPUT
-from convert_scene_assets import expand_zone, generate as generate_scene
+from convert_scene_assets import BLOB_OUTPUTS, OUTPUT as SCENE_OUTPUT
+from convert_scene_assets import expand_zone, generate as generate_scene, generate_blobs
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,6 +23,7 @@ KIND_SUFFIXES = {
     "audio_pcm16_mono": {".pcm"},
     "dialogue_text": {".txt"},
     "generated_scene_meshes": {".hpp"},
+    "zone_scene_blob": {".bin"},
     "blender_source": {".blend"},
     "texture_atlas": {".t3x"},
     "rigid_animation_clips": {".json"},
@@ -204,6 +205,11 @@ def main() -> None:
     expected_scene = generate_scene()
     if not SCENE_OUTPUT.is_file() or SCENE_OUTPUT.read_text(encoding="utf-8") != expected_scene:
         fail("generated compact scene data is stale")
+    expected_blobs = generate_blobs()
+    for zone_id, expected_blob in expected_blobs.items():
+        blob_path = BLOB_OUTPUTS[zone_id]
+        if not blob_path.is_file() or blob_path.read_bytes() != expected_blob:
+            fail(f"generated {zone_id} RomFS scene blob is stale")
     scene_source = read_json(ROOT / "assets" / "scene_source.json", "scene source")
     scene_counts = {zone: len(expand_zone(scene_source["zones"][zone])) for zone in ZONE_ORDER}
     if any(count < 10 for count in scene_counts.values()):

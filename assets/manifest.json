@@ -34,7 +34,38 @@
       "provenance": "Original Blender-readable scene descriptor converted to compact fixed-size runtime data",
       "license": "project-original",
       "max_bytes": 100000,
+      "runtime": false,
       "zones": ["interior", "vista", "arena"]
+    },
+    {
+      "id": "interior_scene_blob",
+      "kind": "zone_scene_blob",
+      "source": "assets/scene_source.json",
+      "output": "romfs/zones/interior.bin",
+      "provenance": "Original interior scene converted to an independently loadable runtime blob",
+      "license": "project-original",
+      "max_bytes": 4096,
+      "zones": ["interior"]
+    },
+    {
+      "id": "vista_scene_blob",
+      "kind": "zone_scene_blob",
+      "source": "assets/scene_source.json",
+      "output": "romfs/zones/vista.bin",
+      "provenance": "Original vista scene converted to an independently loadable runtime blob",
+      "license": "project-original",
+      "max_bytes": 4096,
+      "zones": ["vista"]
+    },
+    {
+      "id": "arena_scene_blob",
+      "kind": "zone_scene_blob",
+      "source": "assets/scene_source.json",
+      "output": "romfs/zones/arena.bin",
+      "provenance": "Original arena scene converted to an independently loadable runtime blob",
+      "license": "project-original",
+      "max_bytes": 4096,
+      "zones": ["arena"]
     },
     {
       "id": "blender_authoring_source",

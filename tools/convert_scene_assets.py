@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import math
+import struct
 from pathlib import Path
 
 
@@ -12,6 +13,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "assets" / "scene_source.json"
 OUTPUT = ROOT / "include" / "demake" / "generated" / "scene_asset_data.hpp"
 ZONE_ORDER = ("interior", "vista", "arena")
+BLOB_OUTPUTS = {zone: ROOT / "romfs" / "zones" / f"{zone}.bin" for zone in ZONE_ORDER}
+BLOB_HEADER = struct.Struct("<4sHHI")
+BLOB_RECORD = struct.Struct("<10fbbB")
 
 
 def normalize_box(raw: dict, name: str, x_offset: float = 0.0, z_offset: float = 0.0,
@@ -117,12 +121,40 @@ def generate() -> str:
     return "\n".join(lines)
 
 
+def generate_blob(zone_id: str, boxes: list[dict]) -> bytes:
+    payload = bytearray(BLOB_HEADER.pack(b"ASZN", 1, BLOB_RECORD.size, len(boxes)))
+    for box in boxes:
+        payload.extend(
+            BLOB_RECORD.pack(
+                box["x"], box["y"], box["z"], box["sx"], box["sy"], box["sz"],
+                box["rotation"], box["red"], box["green"], box["blue"],
+                box["cell_x"], box["cell_z"], 1 if box["always"] else 0,
+            )
+        )
+    return bytes(payload)
+
+
+def generate_blobs() -> dict[str, bytes]:
+    data = json.loads(SOURCE.read_text(encoding="utf-8"))
+    return {
+        zone_id: generate_blob(zone_id, expand_zone(data["zones"][zone_id]))
+        for zone_id in ZONE_ORDER
+    }
+
+
 def main() -> None:
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     payload = generate()
     if not OUTPUT.exists() or OUTPUT.read_text(encoding="utf-8") != payload:
         OUTPUT.write_text(payload, encoding="utf-8")
-    print(f"generated {OUTPUT.relative_to(ROOT)}")
+    blobs = generate_blobs()
+    for zone_id, blob in blobs.items():
+        output = BLOB_OUTPUTS[zone_id]
+        output.parent.mkdir(parents=True, exist_ok=True)
+        if not output.exists() or output.read_bytes() != blob:
+            output.write_bytes(blob)
+    outputs = ", ".join(str(BLOB_OUTPUTS[zone].relative_to(ROOT)) for zone in ZONE_ORDER)
+    print(f"generated {OUTPUT.relative_to(ROOT)} and {outputs}")
 
 
 if __name__ == "__main__":

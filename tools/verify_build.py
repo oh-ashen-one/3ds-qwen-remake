@@ -121,7 +121,14 @@ def main() -> None:
     header_size, reloc_header_size = struct.unpack_from("<HH", binary, 4)
     if header_size < 32 or reloc_header_size == 0:
         fail("3DSX header sizes are invalid")
-    required_romfs_markers = (b"ambient.pcm", b"keeper.txt", b"romfs:/audio/ambient.pcm")
+    required_romfs_markers = (
+        b"ambient.pcm",
+        b"keeper.txt",
+        b"romfs:/audio/ambient.pcm",
+        b"romfs:/zones/interior.bin",
+        b"romfs:/zones/vista.bin",
+        b"romfs:/zones/arena.bin",
+    )
     missing_markers = [marker.decode("ascii") for marker in required_romfs_markers if marker not in binary]
     if missing_markers:
         fail(f"RomFS or runtime path markers are missing: {missing_markers}")
@@ -133,7 +140,7 @@ def main() -> None:
         "GameSession",
         "PlayerController",
         "BossController",
-        "SceneAssets",
+        "ZoneResources",
         "samplePlayerPose",
         "AudioStreamer",
         "Tex3DS_TextureImport",

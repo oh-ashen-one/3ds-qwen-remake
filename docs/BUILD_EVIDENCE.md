@@ -1,5 +1,16 @@
 # Build evidence
 
+## Runtime-zone-resource candidate
+
+- Date: 2026-07-18
+- Source branch: `codex/runtime-zone-resources`
+- Local source-built-toolchain `.3dsx`: `580,492` bytes; SHA-256 `d01f14de9829291c6e644f96aa6dee00555c811b4e47fdc1bcb81504dfee2667`.
+- The native map links `ZoneResources::{load,unload,sync,boxes,shutdown}` and does not contain the host-only `kInteriorBoxes`, `kVistaBoxes`, or `kArenaBoxes` arrays.
+- The 3DSX contains all three `romfs:/zones/*.bin` runtime paths and embedded `ASZN` containers. `3dsxdump` accepted the artifact and reported 47 code pages, 3 read-only-data pages, 2 data pages, and 7 BSS pages.
+- A clean local gate regenerated and byte-validated 700-byte interior, 1,044-byte vista, and 571-byte arena blobs from the original scene descriptor. The host test binary now executes the same parser and verifies single-zone load, two-zone overlap during preload, prior-zone unload, resident-byte accounting, invalid-mask rejection, and shutdown cleanup.
+
+The prior implementation proved logical zone-mask transitions but retained all three scenes as native static arrays. This candidate makes the handoff materially real: the requested zone is parsed from RomFS into linear memory before the old zone is freed. Fresh emulator playthrough and all physical transition, frame-pacing, and memory-headroom claims remain pending.
+
 ## Packaging and telemetry candidate
 
 - Date: 2026-07-18

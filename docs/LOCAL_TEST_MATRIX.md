@@ -9,7 +9,7 @@ This matrix separates deterministic proof from hardware-only claims.
 | Persistent SD bundle | Deterministic ZIP layout, embedded commit/hash metadata, and archived 3DSX hash verification | Launch from SD with the Mac disconnected |
 | Indexed world rendering | Native verifier enforces Citro3D's byte-index enum; corrected artifact renders vestibule geometry in Azahar | Exact textures, winding, depth, and culling on PICA200 hardware |
 | Title to play | `GameSession` title confirmation test | Real A-button timing and both-screen presentation |
-| Interior to vista | Door preload, masked reveal, enter, prior-zone unload, counters | No visible loading and frame-time behavior |
+| Interior to vista | Door preload, masked reveal, enter, prior-zone logical unload, exact generated RomFS blob validation, and native `ZoneResources` link/path verification | Real allocation/free counters, no visible loading, and frame-time behavior |
 | Dialogue | Start, abort with B, retry, complete | Subtitle readability and input feel |
 | Vista to arena | Fog-gate preload/fade/enter/unload assertions | Masking, audio continuity, and frame pacing |
 | Combat | Forward hitbox, rear-target rejection, stamina cost, dodge invulnerability, healing | Readability, latency, C-stick, L/R/ZR ergonomics |
