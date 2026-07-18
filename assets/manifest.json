@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "project": "Ashen Rift",
+  "policy": "Only original, generated, or explicitly licensed assets may enter RomFS.",
+  "assets": [
+    {
+      "id": "ambient_sable_expanse",
+      "kind": "audio_pcm16_mono",
+      "source": "tools/generate_original_assets.py",
+      "output": "romfs/audio/ambient.pcm",
+      "provenance": "Original deterministic synthesis created for this project",
+      "license": "project-original",
+      "max_bytes": 400000
+    },
+    {
+      "id": "veiled_keeper_dialogue",
+      "kind": "dialogue_text",
+      "source": "romfs/dialogue/keeper.txt",
+      "output": "romfs/dialogue/keeper.txt",
+      "provenance": "Original writing created for this project",
+      "license": "project-original",
+      "max_bytes": 512
+    },
+    {
+      "id": "procedural_low_poly_geometry",
+      "kind": "procedural_meshes",
+      "source": "source/renderer.cpp",
+      "output": "source/renderer.cpp",
+      "provenance": "Original procedural geometry created for this project",
+      "license": "project-original",
+      "max_bytes": 80000
+    }
+  ],
+  "zone_budgets": {
+    "interior": { "max_draw_calls": 42, "max_romfs_bytes": 400000 },
+    "vista": { "max_draw_calls": 64, "max_romfs_bytes": 500000 },
+    "arena": { "max_draw_calls": 72, "max_romfs_bytes": 500000 }
+  }
+}

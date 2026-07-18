@@ -1,0 +1,14 @@
+build/
+build-host/
+*.3dsx
+*.elf
+*.lst
+*.map
+*.smdh
+compile_commands.json
+romfs/audio/*.pcm
+.DS_Store
+__pycache__/
+*.pyc
+.idea/
+.vscode/

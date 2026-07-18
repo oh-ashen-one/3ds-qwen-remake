@@ -1,0 +1,32 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  native-3ds:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkitarm:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate and validate original assets
+        run: make validate-assets
+      - name: Run deterministic host tests
+        run: make test-host HOST_CXX=g++
+      - name: Build 3DSX
+        run: make
+      - name: Record hashes and sizes
+        run: |
+          sha256sum elden-ring-3ds-demake.3dsx > build-report.txt
+          stat --printf='%n %s bytes\n' elden-ring-3ds-demake.3dsx >> build-report.txt
+          cat build-report.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ashen-rift-3ds
+          if-no-files-found: error
+          path: |
+            elden-ring-3ds-demake.3dsx
+            elden-ring-3ds-demake.elf
+            elden-ring-3ds-demake.map
+            build-report.txt
