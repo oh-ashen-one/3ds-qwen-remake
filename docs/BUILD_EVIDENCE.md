@@ -1,5 +1,23 @@
 # Build evidence
 
+## M4 content/architecture candidate
+
+- Date: 2026-07-18
+- Source commit: `4f8865195bdeeee6c093612c7500fee02ca3d38f`
+- Private repository: `oh-ashen-one/elden-ring-3ds-demake`
+- Draft PR: `https://github.com/oh-ashen-one/elden-ring-3ds-demake/pull/1`
+- GitHub Actions PR run: `https://github.com/oh-ashen-one/elden-ring-3ds-demake/actions/runs/29657762838`
+- GitHub Actions push run: `https://github.com/oh-ashen-one/elden-ring-3ds-demake/actions/runs/29657761443`
+- CI result: both runs succeeded. The PR run passed repository audit, clean original-asset generation, validation, deterministic host tests, native build, 3DSX/SMDH/RomFS/link verification, report generation, and private artifact upload.
+- Pinned CI toolchain: official `devkitpro/devkitarm` OCI digest `sha256:116afba8df8453961de2936ffab20dd441edf4d682856c1ec8b0e53d7ed0bbf5`; devkitARM GCC 16.1.0; `tex3ds` 2.3.0.
+- CI artifact: `ashen-rift-3ds`, artifact id `8433385115`, archive size `1,199,658` bytes.
+- CI `.3dsx`: `571,132` bytes; SHA-256 `e308ba55a388ed5a70b4beaefb4435323df6e6918556815f392645bea3abbf6e`.
+- CI verifier also hashed the ELF (`3d0060da...`), map (`ff04094e...`), and SMDH (`b00b518f...`) and confirmed the generated registry/scene systems, rigid pose sampler, NDSP streamer, RGB565 T3X importer, model detection, indexed draws, RomFS markers, and SMDH identity.
+- Local source-built-toolchain `.3dsx`: `578,300` bytes; SHA-256 `be55cb14b3508d91a69a9b5cbbb56c941dd4113b212b633ac43a8f51d6e0ca86`.
+- Blender 5.2.0 LTS reopened `assets/blender/ashen-rift-source.blend` and verified 53 mesh objects, one armature, and 15 bones. Metadata fingerprints tie it to the scene descriptor and authoring script.
+
+This candidate closes the non-hardware asset/architecture automation gap. It does not prove visual correctness, input feel, performance, memory headroom, audio continuity, sleep/wake, netloading, or SD launch on a physical console.
+
 ## Runtime-hardening candidate
 
 - Date: 2026-07-18

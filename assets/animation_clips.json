@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "rig_type": "rigid_hierarchy",
+  "bone_count": 15,
+  "bones": [
+    "root", "pelvis", "torso", "head",
+    "left_upper_leg", "left_lower_leg", "left_foot",
+    "right_upper_leg", "right_lower_leg", "right_foot",
+    "left_upper_arm", "left_lower_arm",
+    "right_upper_arm", "right_lower_arm", "weapon"
+  ],
+  "clips": [
+    {"id": "idle", "duration_seconds": 2.0, "sample_rate": 30, "keyframes": 60},
+    {"id": "locomotion", "duration_seconds": 0.8, "sample_rate": 30, "keyframes": 24},
+    {"id": "light_attack", "duration_seconds": 0.46, "sample_rate": 30, "keyframes": 14},
+    {"id": "heavy_attack", "duration_seconds": 0.78, "sample_rate": 30, "keyframes": 24},
+    {"id": "dodge", "duration_seconds": 0.48, "sample_rate": 30, "keyframes": 15},
+    {"id": "hurt", "duration_seconds": 0.38, "sample_rate": 30, "keyframes": 12},
+    {"id": "heal", "duration_seconds": 0.72, "sample_rate": 30, "keyframes": 22}
+  ],
+  "runtime_source": "source/rigid_animation.cpp",
+  "notes": "Transforms are sampled into fixed-size per-bone poses without blended skinning or heap allocation."
+}

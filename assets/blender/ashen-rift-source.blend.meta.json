@@ -1,0 +1,9 @@
+{
+  "author_script_sha256": "6c6c57627a79b53b6d741c013a7d6c33c61ac65c9d8a1e4fb1eb98b9cd980ffb",
+  "blender_version": "5.2.0 LTS",
+  "rig_bone_count": 15,
+  "scene_source": "assets/scene_source.json",
+  "scene_source_sha256": "cd401908397dee9c75830ce7c4334f5a179d267e6a9de0b59588742c81d871ec",
+  "schema_version": 1,
+  "static_object_count": 53
+}

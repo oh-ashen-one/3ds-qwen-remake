@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "vista",
+  "display_name": "The Sable Expanse",
+  "runtime_budget_bytes": 458752,
+  "romfs_budget_bytes": 550000,
+  "draw_call_budget": 72,
+  "grid_cell_size": 6.0,
+  "preload_trigger": "fog_gate_interact",
+  "unload_after_enter": "arena",
+  "assets": [
+    "ambient_sable_expanse",
+    "veiled_keeper_dialogue",
+    "generated_low_poly_geometry",
+    "environment_texture_atlas",
+    "rigid_animation_clips",
+    "vista_zone_manifest"
+  ]
+}

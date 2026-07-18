@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "demake/asset_registry.hpp"
+
 namespace demake {
 namespace {
 
@@ -21,6 +23,14 @@ float facingTo(Vec2 from, Vec2 to) {
 
 bool playerCanAct(PlayerState state) {
     return state == PlayerState::Idle || state == PlayerState::Move;
+}
+
+Vec2 forwardOf(float facing) {
+    return {std::sin(facing), std::cos(facing)};
+}
+
+Vec2 offset(Vec2 origin, Vec2 direction, float amount) {
+    return {origin.x + direction.x * amount, origin.z + direction.z * amount};
 }
 
 } // namespace
@@ -67,12 +77,55 @@ void ZoneManager::reset(WorldState& world) const {
     world.dialogue_active = false;
     world.dialogue_complete = false;
     world.arena_transition = false;
+    world.loaded_zone_mask = 0;
+    world.zone_resident_bytes = 0;
+    world.zone_loads = 0;
+    world.zone_unloads = 0;
+    world.zone_transitions = 0;
+    preload(world, Zone::Interior);
+}
+
+bool ZoneManager::isLoaded(const WorldState& world, Zone zone) {
+    return (world.loaded_zone_mask & (1U << static_cast<unsigned>(zone))) != 0;
+}
+
+void ZoneManager::preload(WorldState& world, Zone zone) {
+    if (isLoaded(world, zone)) {
+        return;
+    }
+    world.loaded_zone_mask |= static_cast<std::uint8_t>(1U << static_cast<unsigned>(zone));
+    world.zone_resident_bytes += AssetRegistry::zone(zone).runtime_budget_bytes;
+    ++world.zone_loads;
+}
+
+void ZoneManager::unload(WorldState& world, Zone zone) {
+    if (!isLoaded(world, zone)) {
+        return;
+    }
+    world.loaded_zone_mask &= static_cast<std::uint8_t>(~(1U << static_cast<unsigned>(zone)));
+    const std::uint32_t bytes = AssetRegistry::zone(zone).runtime_budget_bytes;
+    world.zone_resident_bytes = world.zone_resident_bytes > bytes
+                                    ? world.zone_resident_bytes - bytes
+                                    : 0;
+    ++world.zone_unloads;
+}
+
+void ZoneManager::enter(WorldState& world, Zone zone) {
+    preload(world, zone);
+    const Zone previous = world.zone;
+    if (previous == zone) {
+        return;
+    }
+    world.zone = zone;
+    ++world.zone_transitions;
+    unload(world, previous);
 }
 
 void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) const {
     if (world.zone == Zone::Interior) {
         if (input.interact && distance(world.player.position, kDoor) < 2.2f) {
             world.door_activated = true;
+            preload(world, Zone::Vista);
             world.player.state = PlayerState::Interact;
             world.player.state_timer = 0.45f;
         }
@@ -80,13 +133,18 @@ void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) c
             world.door_progress = std::min(1.0f, world.door_progress + dt * 0.65f);
         }
         if (world.door_progress >= 0.95f && world.player.position.z > 5.1f) {
-            world.zone = Zone::Vista;
+            enter(world, Zone::Vista);
             world.player.position.z = 6.2f;
         }
         return;
     }
 
     if (world.zone == Zone::Vista) {
+        if (world.dialogue_active && input.dodge_pressed) {
+            world.dialogue_active = false;
+            world.player.state = PlayerState::Idle;
+            world.player.state_timer = 0.0f;
+        }
         if (input.interact && distance(world.player.position, kNpc) < 2.3f) {
             if (!world.dialogue_active && !world.dialogue_complete) {
                 world.dialogue_active = true;
@@ -99,6 +157,7 @@ void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) c
         }
         if (input.interact && world.dialogue_complete &&
             distance(world.player.position, kFogGate) < 2.4f && !world.arena_transition) {
+            preload(world, Zone::Arena);
             world.arena_transition = true;
             world.transition_timer = 0.85f;
             world.player.state = PlayerState::Interact;
@@ -107,7 +166,7 @@ void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) c
         if (world.arena_transition) {
             world.transition_timer -= dt;
             if (world.transition_timer <= 0.0f) {
-                world.zone = Zone::Arena;
+                enter(world, Zone::Arena);
                 world.player.position = {0.0f, -5.5f};
                 world.player.facing = 0.0f;
                 world.player.state = PlayerState::Idle;
@@ -171,12 +230,16 @@ void GameSimulation::updatePlayer(const InputFrame& input, float dt) {
 
     if (player.state == PlayerState::Attack && !player.action_applied && player.state_timer <= 0.22f) {
         player.action_applied = true;
-        if (world_.zone == Zone::Arena && distance(player.position, world_.boss.position) < 2.6f) {
+        const Vec2 hit_center = offset(player.position, forwardOf(player.facing), 1.25f);
+        if (world_.zone == Zone::Arena &&
+            circlesOverlap(hit_center, 1.25f, world_.boss.position, 0.9f)) {
             damageBoss(16.0f);
         }
     } else if (player.state == PlayerState::HeavyAttack && !player.action_applied && player.state_timer <= 0.30f) {
         player.action_applied = true;
-        if (world_.zone == Zone::Arena && distance(player.position, world_.boss.position) < 3.0f) {
+        const Vec2 hit_center = offset(player.position, forwardOf(player.facing), 1.45f);
+        if (world_.zone == Zone::Arena &&
+            circlesOverlap(hit_center, 1.55f, world_.boss.position, 0.9f)) {
             damageBoss(30.0f);
         }
     } else if (player.state == PlayerState::Heal && !player.action_applied && player.state_timer <= 0.25f) {
@@ -188,6 +251,12 @@ void GameSimulation::updatePlayer(const InputFrame& input, float dt) {
 
     if (!playerCanAct(player.state)) {
         return;
+    }
+
+    if (player.lock_on &&
+        (world_.zone != Zone::Arena || world_.boss.state == BossState::Dead ||
+         distance(player.position, world_.boss.position) > 14.0f)) {
+        player.lock_on = false;
     }
 
     if (input.lock_toggle && world_.zone == Zone::Arena && world_.boss.state != BossState::Dead) {
@@ -325,7 +394,9 @@ void GameSimulation::updateBoss(float dt) {
             if (boss.state_timer <= 0.0f) {
                 boss.state = BossState::Slash;
                 boss.state_timer = 0.18f;
-                if (gap < 3.1f && player.state != PlayerState::Dodge) {
+                const Vec2 hit_center = offset(boss.position, forwardOf(boss.facing), 1.45f);
+                if (circlesOverlap(hit_center, 1.35f, player.position, 0.55f) &&
+                    player.state != PlayerState::Dodge) {
                     damagePlayer(24.0f);
                 }
             }
@@ -334,7 +405,8 @@ void GameSimulation::updateBoss(float dt) {
             if (boss.state_timer <= 0.0f) {
                 boss.state = BossState::Slam;
                 boss.state_timer = 0.25f;
-                if (gap < 3.8f && player.state != PlayerState::Dodge) {
+                if (circlesOverlap(boss.position, 3.25f, player.position, 0.55f) &&
+                    player.state != PlayerState::Dodge) {
                     damagePlayer(34.0f);
                 }
             }
@@ -382,6 +454,47 @@ void GameSimulation::damageBoss(float amount) {
         boss.state = BossState::Dead;
         boss.state_timer = 0.0f;
         world_.player.lock_on = false;
+    }
+}
+
+void GameSession::resetToTitle() {
+    simulation_.reset();
+    mode_ = SessionMode::Title;
+    mode_before_suspend_ = SessionMode::Playing;
+}
+
+void GameSession::step(const InputFrame& input, float dt) {
+    if (mode_ == SessionMode::Suspended) {
+        return;
+    }
+    if (input.pause_toggle && mode_ != SessionMode::Title) {
+        mode_ = mode_ == SessionMode::Paused ? SessionMode::Playing : SessionMode::Paused;
+        return;
+    }
+    if (mode_ == SessionMode::Title) {
+        if (input.interact) {
+            simulation_.reset();
+            mode_ = SessionMode::Playing;
+        }
+        return;
+    }
+    if (mode_ == SessionMode::Paused) {
+        return;
+    }
+    simulation_.step(input, dt);
+}
+
+void GameSession::suspend() {
+    if (mode_ == SessionMode::Suspended) {
+        return;
+    }
+    mode_before_suspend_ = mode_;
+    mode_ = SessionMode::Suspended;
+}
+
+void GameSession::resume() {
+    if (mode_ == SessionMode::Suspended) {
+        mode_ = mode_before_suspend_;
     }
 }
 

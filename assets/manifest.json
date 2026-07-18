@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "project": "Ashen Rift",
   "policy": "Only original, generated, or explicitly licensed assets may enter RomFS.",
   "assets": [
@@ -10,7 +10,11 @@
       "output": "romfs/audio/ambient.pcm",
       "provenance": "Original deterministic synthesis created for this project",
       "license": "project-original",
-      "max_bytes": 400000
+      "max_bytes": 400000,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "zones": ["interior", "vista", "arena"]
     },
     {
       "id": "veiled_keeper_dialogue",
@@ -19,21 +23,84 @@
       "output": "romfs/dialogue/keeper.txt",
       "provenance": "Original writing created for this project",
       "license": "project-original",
-      "max_bytes": 512
+      "max_bytes": 512,
+      "zones": ["vista"]
     },
     {
-      "id": "procedural_low_poly_geometry",
-      "kind": "procedural_meshes",
-      "source": "source/renderer.cpp",
-      "output": "source/renderer.cpp",
-      "provenance": "Original procedural geometry created for this project",
+      "id": "generated_low_poly_geometry",
+      "kind": "generated_scene_meshes",
+      "source": "assets/scene_source.json",
+      "output": "include/demake/generated/scene_asset_data.hpp",
+      "provenance": "Original Blender-readable scene descriptor converted to compact fixed-size runtime data",
       "license": "project-original",
-      "max_bytes": 80000
+      "max_bytes": 100000,
+      "zones": ["interior", "vista", "arena"]
+    },
+    {
+      "id": "blender_authoring_source",
+      "kind": "blender_source",
+      "source": "assets/blender/author_lowpoly.py",
+      "output": "assets/blender/ashen-rift-source.blend",
+      "provenance": "Original editable Blender scene for the three zones and 15-bone rigid rig",
+      "license": "project-original",
+      "max_bytes": 262144,
+      "runtime": false,
+      "zones": ["interior", "vista", "arena"]
+    },
+    {
+      "id": "environment_texture_atlas",
+      "kind": "texture_atlas",
+      "source": "gfx/environment.t3s",
+      "output": "data/environment_atlas.t3x",
+      "provenance": "Original hand-authored stone-and-ash palette converted offline by tex3ds",
+      "license": "project-original",
+      "max_bytes": 4096,
+      "zones": ["interior", "vista", "arena"]
+    },
+    {
+      "id": "rigid_animation_clips",
+      "kind": "rigid_animation_clips",
+      "source": "source/rigid_animation.cpp",
+      "output": "assets/animation_clips.json",
+      "provenance": "Original 15-bone rigid transform clips created for this project",
+      "license": "project-original",
+      "max_bytes": 8192,
+      "zones": ["interior", "vista", "arena"]
+    },
+    {
+      "id": "interior_zone_manifest",
+      "kind": "zone_manifest",
+      "source": "assets/zones/interior.json",
+      "output": "assets/zones/interior.json",
+      "provenance": "Original authored zone metadata",
+      "license": "project-original",
+      "max_bytes": 2048,
+      "zones": ["interior"]
+    },
+    {
+      "id": "vista_zone_manifest",
+      "kind": "zone_manifest",
+      "source": "assets/zones/vista.json",
+      "output": "assets/zones/vista.json",
+      "provenance": "Original authored zone metadata",
+      "license": "project-original",
+      "max_bytes": 2048,
+      "zones": ["vista"]
+    },
+    {
+      "id": "arena_zone_manifest",
+      "kind": "zone_manifest",
+      "source": "assets/zones/arena.json",
+      "output": "assets/zones/arena.json",
+      "provenance": "Original authored zone metadata",
+      "license": "project-original",
+      "max_bytes": 2048,
+      "zones": ["arena"]
     }
   ],
-  "zone_budgets": {
-    "interior": { "max_draw_calls": 42, "max_romfs_bytes": 400000 },
-    "vista": { "max_draw_calls": 64, "max_romfs_bytes": 500000 },
-    "arena": { "max_draw_calls": 72, "max_romfs_bytes": 500000 }
+  "zone_manifests": {
+    "interior": "assets/zones/interior.json",
+    "vista": "assets/zones/vista.json",
+    "arena": "assets/zones/arena.json"
   }
 }

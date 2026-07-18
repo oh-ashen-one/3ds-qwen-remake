@@ -6,9 +6,14 @@ build-host/
 *.map
 *.smdh
 compile_commands.json
+build-validation.json
+build-report.txt
 romfs/audio/*.pcm
+data/*.t3x
+include/demake/generated/
 .DS_Store
 __pycache__/
 *.pyc
+*.blend1
 .idea/
 .vscode/

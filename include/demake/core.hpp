@@ -59,6 +59,7 @@ struct InputFrame {
     bool heal = false;
     bool lock_toggle = false;
     bool debug_toggle = false;
+    bool pause_toggle = false;
     int item_delta = 0;
 };
 
@@ -99,6 +100,11 @@ struct WorldState {
     bool dialogue_complete = false;
     bool arena_transition = false;
     bool debug_overlay = false;
+    std::uint8_t loaded_zone_mask = 0;
+    std::uint32_t zone_resident_bytes = 0;
+    unsigned zone_loads = 0;
+    unsigned zone_unloads = 0;
+    unsigned zone_transitions = 0;
 };
 
 class ZoneManager {
@@ -106,6 +112,12 @@ public:
     void reset(WorldState& world) const;
     void update(WorldState& world, const InputFrame& input, float dt) const;
     static const char* name(Zone zone);
+    static bool isLoaded(const WorldState& world, Zone zone);
+
+private:
+    static void preload(WorldState& world, Zone zone);
+    static void unload(WorldState& world, Zone zone);
+    static void enter(WorldState& world, Zone zone);
 };
 
 class GameSimulation {
@@ -126,6 +138,32 @@ private:
 
     WorldState world_{};
     ZoneManager zones_{};
+};
+
+enum class SessionMode : std::uint8_t {
+    Title,
+    Playing,
+    Paused,
+    Suspended,
+};
+
+class GameSession {
+public:
+    void resetToTitle();
+    void step(const InputFrame& input, float dt);
+    void suspend();
+    void resume();
+
+    SessionMode mode() const { return mode_; }
+    bool titleScreen() const { return mode_ == SessionMode::Title; }
+    bool paused() const { return mode_ == SessionMode::Paused || mode_ == SessionMode::Suspended; }
+    GameSimulation& simulation() { return simulation_; }
+    const GameSimulation& simulation() const { return simulation_; }
+
+private:
+    GameSimulation simulation_{};
+    SessionMode mode_ = SessionMode::Title;
+    SessionMode mode_before_suspend_ = SessionMode::Playing;
 };
 
 } // namespace demake

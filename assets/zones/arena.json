@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": "arena",
+  "display_name": "Warden's Hollow",
+  "runtime_budget_bytes": 425984,
+  "romfs_budget_bytes": 525000,
+  "draw_call_budget": 84,
+  "grid_cell_size": 5.0,
+  "preload_trigger": "fog_gate_fade",
+  "unload_after_enter": null,
+  "assets": [
+    "ambient_sable_expanse",
+    "generated_low_poly_geometry",
+    "environment_texture_atlas",
+    "rigid_animation_clips",
+    "arena_zone_manifest"
+  ]
+}

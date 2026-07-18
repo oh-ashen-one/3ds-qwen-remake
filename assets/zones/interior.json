@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": "interior",
+  "display_name": "Sunken Vestibule",
+  "runtime_budget_bytes": 393216,
+  "romfs_budget_bytes": 500000,
+  "draw_call_budget": 56,
+  "grid_cell_size": 4.0,
+  "preload_trigger": "door_interact",
+  "unload_after_enter": "vista",
+  "assets": [
+    "ambient_sable_expanse",
+    "generated_low_poly_geometry",
+    "environment_texture_atlas",
+    "rigid_animation_clips",
+    "interior_zone_manifest"
+  ]
+}

@@ -114,6 +114,24 @@ void AudioStreamer::playHit(float pitch) {
     ndspChnWaveBufAdd(1, &hit_wave_);
 }
 
+void AudioStreamer::suspend() {
+    if (!ndsp_ready_ || suspended_) {
+        return;
+    }
+    ndspChnSetPaused(0, true);
+    ndspChnSetPaused(1, true);
+    suspended_ = true;
+}
+
+void AudioStreamer::resume() {
+    if (!ndsp_ready_ || !suspended_) {
+        return;
+    }
+    ndspChnSetPaused(0, false);
+    ndspChnSetPaused(1, false);
+    suspended_ = false;
+}
+
 void AudioStreamer::shutdown() {
     if (ambient_file_) {
         std::fclose(ambient_file_);
@@ -124,6 +142,7 @@ void AudioStreamer::shutdown() {
         ndspChnReset(1);
         ndspExit();
         ndsp_ready_ = false;
+        suspended_ = false;
     }
     if (ambient_samples_) {
         linearFree(ambient_samples_);

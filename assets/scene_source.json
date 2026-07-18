@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "coordinate_system": "y_up_meters",
+  "zones": {
+    "interior": {
+      "boxes": [
+        {"name": "floor", "position": [0.0, -0.35, -1.0], "scale": [10.0, 0.6, 18.0], "color": [0.20, 0.18, 0.24], "always": true},
+        {"name": "left_wall", "position": [-5.0, 2.0, -1.0], "scale": [0.6, 4.8, 18.0], "color": [0.16, 0.14, 0.18], "always": true},
+        {"name": "right_wall", "position": [5.0, 2.0, -1.0], "scale": [0.6, 4.8, 18.0], "color": [0.16, 0.14, 0.18], "always": true},
+        {"name": "ceiling", "position": [0.0, 4.2, -1.0], "scale": [10.0, 0.5, 18.0], "color": [0.12, 0.10, 0.14], "always": true}
+      ],
+      "generators": [
+        {
+          "type": "mirrored_line",
+          "name": "vestibule_columns",
+          "x": 3.8,
+          "z_values": [-6.0, -2.0, 2.0],
+          "templates": [
+            {"position": [0.0, 1.4, 0.0], "scale": [0.75, 3.0, 0.75], "color": [0.30, 0.25, 0.28]},
+            {"position": [0.0, 2.4, 0.0], "scale": [0.20, 0.20, 0.20], "color": [0.95, 0.52, 0.18]}
+          ]
+        }
+      ]
+    },
+    "vista": {
+      "boxes": [
+        {"name": "valley_floor", "position": [0.0, -0.45, 17.0], "scale": [24.0, 0.8, 28.0], "color": [0.28, 0.31, 0.18], "always": true},
+        {"name": "reveal_ledge", "position": [0.0, -0.25, 8.0], "scale": [7.0, 0.4, 7.0], "color": [0.34, 0.31, 0.24], "always": true},
+        {"name": "distant_tower", "position": [-8.0, 8.0, 55.0], "scale": [2.8, 16.0, 2.8], "color": [0.42, 0.28, 0.16], "always": true},
+        {"name": "distant_crown", "position": [-8.0, 18.0, 55.0], "scale": [16.0, 8.0, 16.0], "color": [0.62, 0.50, 0.20], "always": true}
+      ],
+      "generators": [
+        {
+          "type": "alternating_path",
+          "name": "sable_trees",
+          "count": 10,
+          "start_z": 8.0,
+          "step_z": 2.0,
+          "x_base": 5.0,
+          "x_modulus": 5,
+          "templates": [
+            {"position": [0.0, 1.2, 0.0], "scale": [0.45, 2.6, 0.45], "color": [0.27, 0.18, 0.12]},
+            {"position": [0.0, 3.0, 0.0], "scale": [2.2, 2.0, 2.2], "color": [0.20, 0.30, 0.12]}
+          ]
+        }
+      ]
+    },
+    "arena": {
+      "boxes": [
+        {"name": "arena_floor", "position": [0.0, -0.45, 0.0], "scale": [19.0, 0.8, 19.0], "color": [0.24, 0.20, 0.17], "always": true}
+      ],
+      "generators": [
+        {
+          "type": "radial",
+          "name": "warden_columns",
+          "count": 12,
+          "radius": 9.2,
+          "template": {"position": [0.0, 2.0, 0.0], "scale": [0.7, 4.2, 0.7], "color": [0.28, 0.24, 0.22]}
+        }
+      ]
+    }
+  }
+}

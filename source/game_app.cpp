@@ -4,6 +4,25 @@
 #include <cmath>
 
 namespace demake {
+namespace {
+
+const char* modelName(u8 model) {
+    switch (model) {
+        case CFG_MODEL_3DS: return "Nintendo 3DS";
+        case CFG_MODEL_3DSXL: return "Nintendo 3DS XL";
+        case CFG_MODEL_N3DS: return "New Nintendo 3DS";
+        case CFG_MODEL_2DS: return "Nintendo 2DS";
+        case CFG_MODEL_N3DSXL: return "New Nintendo 3DS XL";
+        case CFG_MODEL_N2DSXL: return "New Nintendo 2DS XL";
+        default: return "Unknown 3DS";
+    }
+}
+
+bool isNewFamily(u8 model) {
+    return model == CFG_MODEL_N3DS || model == CFG_MODEL_N3DSXL || model == CFG_MODEL_N2DSXL;
+}
+
+} // namespace
 
 bool GameApp::initialize() {
     if (R_FAILED(romfsInit())) {
@@ -14,7 +33,18 @@ bool GameApp::initialize() {
         romfsExit();
         return false;
     }
+    u8 system_model = 0xFF;
+    if (R_SUCCEEDED(cfguInit())) {
+        if (R_FAILED(CFGU_GetSystemModel(&system_model))) {
+            system_model = 0xFF;
+        }
+        cfguExit();
+    }
+    renderer_.setHardwareInfo(modelName(system_model), isNewFamily(system_model));
     audio_.initialize();
+    session_.resetToTitle();
+    aptHook(&apt_hook_cookie_, &GameApp::aptEventHook, this);
+    apt_hooked_ = true;
     running_ = true;
     return true;
 }
@@ -43,6 +73,7 @@ InputFrame GameApp::readInput(u32 keys_down, u32 keys_held) {
     input.heal = (keys_down & KEY_X) != 0;
     input.lock_toggle = (keys_down & KEY_L) != 0;
     input.debug_toggle = (keys_down & KEY_Y) != 0;
+    input.pause_toggle = (keys_down & KEY_START) != 0;
     if ((keys_down & (KEY_DLEFT | KEY_DDOWN)) != 0) {
         input.item_delta = -1;
     } else if ((keys_down & (KEY_DRIGHT | KEY_DUP)) != 0) {
@@ -51,12 +82,54 @@ InputFrame GameApp::readInput(u32 keys_down, u32 keys_held) {
     return input;
 }
 
+void GameApp::latchEdges(const InputFrame& input) {
+    pending_edges_.light_attack = pending_edges_.light_attack || input.light_attack;
+    pending_edges_.heavy_attack = pending_edges_.heavy_attack || input.heavy_attack;
+    pending_edges_.dodge_pressed = pending_edges_.dodge_pressed || input.dodge_pressed;
+    pending_edges_.interact = pending_edges_.interact || input.interact;
+    pending_edges_.heal = pending_edges_.heal || input.heal;
+    pending_edges_.lock_toggle = pending_edges_.lock_toggle || input.lock_toggle;
+    pending_edges_.debug_toggle = pending_edges_.debug_toggle || input.debug_toggle;
+    pending_edges_.pause_toggle = pending_edges_.pause_toggle || input.pause_toggle;
+    if (input.item_delta != 0) {
+        pending_edges_.item_delta = input.item_delta;
+    }
+}
+
+void GameApp::clearLatchedEdges() {
+    pending_edges_.light_attack = false;
+    pending_edges_.heavy_attack = false;
+    pending_edges_.dodge_pressed = false;
+    pending_edges_.interact = false;
+    pending_edges_.heal = false;
+    pending_edges_.lock_toggle = false;
+    pending_edges_.debug_toggle = false;
+    pending_edges_.pause_toggle = false;
+    pending_edges_.item_delta = 0;
+}
+
+void GameApp::aptEventHook(APT_HookType hook, void* parameter) {
+    GameApp* app = static_cast<GameApp*>(parameter);
+    if (!app) {
+        return;
+    }
+    if (hook == APTHOOK_ONSUSPEND || hook == APTHOOK_ONSLEEP) {
+        app->session_.suspend();
+        app->audio_.suspend();
+    } else if (hook == APTHOOK_ONRESTORE || hook == APTHOOK_ONWAKEUP) {
+        app->audio_.resume();
+        app->session_.resume();
+    } else if (hook == APTHOOK_ONEXIT) {
+        app->running_ = false;
+    }
+}
+
 void GameApp::run() {
     u64 previous_ms = osGetTime();
     float accumulator = 0.0f;
     float frame_ms = 0.0f;
-    float previous_boss_health = simulation_.world().boss.health;
-    float previous_player_health = simulation_.world().player.health;
+    float previous_boss_health = session_.simulation().world().boss.health;
+    float previous_player_health = session_.simulation().world().player.health;
 
     while (running_ && aptMainLoop()) {
         const u64 now_ms = osGetTime();
@@ -70,38 +143,40 @@ void GameApp::run() {
         if ((keys_down & KEY_SELECT) != 0) {
             running_ = false;
         }
-        if ((keys_down & KEY_START) != 0 && !title_screen_) {
-            paused_ = !paused_;
-        }
 
         InputFrame input = readInput(keys_down, keys_held);
-        if (title_screen_) {
-            if (input.interact) {
-                simulation_.reset();
-                title_screen_ = false;
-                paused_ = false;
+        latchEdges(input);
+        bool consumed_edges = false;
+        while (accumulator >= kFixedStep) {
+            InputFrame step_input = input;
+            if (!consumed_edges) {
+                step_input.light_attack = pending_edges_.light_attack;
+                step_input.heavy_attack = pending_edges_.heavy_attack;
+                step_input.dodge_pressed = pending_edges_.dodge_pressed;
+                step_input.interact = pending_edges_.interact;
+                step_input.heal = pending_edges_.heal;
+                step_input.lock_toggle = pending_edges_.lock_toggle;
+                step_input.debug_toggle = pending_edges_.debug_toggle;
+                step_input.pause_toggle = pending_edges_.pause_toggle;
+                step_input.item_delta = pending_edges_.item_delta;
+                clearLatchedEdges();
+            } else {
+                step_input.light_attack = false;
+                step_input.heavy_attack = false;
+                step_input.dodge_pressed = false;
+                step_input.interact = false;
+                step_input.heal = false;
+                step_input.lock_toggle = false;
+                step_input.debug_toggle = false;
+                step_input.pause_toggle = false;
+                step_input.item_delta = 0;
             }
-        } else if (!paused_) {
-            bool consumed_edges = false;
-            while (accumulator >= kFixedStep) {
-                InputFrame step_input = input;
-                if (consumed_edges) {
-                    step_input.light_attack = false;
-                    step_input.heavy_attack = false;
-                    step_input.dodge_pressed = false;
-                    step_input.interact = false;
-                    step_input.heal = false;
-                    step_input.lock_toggle = false;
-                    step_input.debug_toggle = false;
-                    step_input.item_delta = 0;
-                }
-                simulation_.step(step_input, kFixedStep);
-                consumed_edges = true;
-                accumulator -= kFixedStep;
-            }
+            session_.step(step_input, kFixedStep);
+            consumed_edges = true;
+            accumulator -= kFixedStep;
         }
 
-        const WorldState& world = simulation_.world();
+        const WorldState& world = session_.simulation().world();
         if (world.boss.health < previous_boss_health) {
             audio_.playHit(1.2f);
         } else if (world.player.health < previous_player_health) {
@@ -116,13 +191,17 @@ void GameApp::run() {
                                              : 0;
         const unsigned zone_index = static_cast<unsigned>(world.zone);
         zone_peak_bytes_[zone_index] = std::max(zone_peak_bytes_[zone_index], current_used);
-        renderer_.render(world, title_screen_, paused_, frame_ms,
+        renderer_.render(world, session_.titleScreen(), session_.paused(), frame_ms,
                          audio_.underruns(), audio_.ambientAvailable(), camera_yaw_,
                          static_cast<unsigned>(zone_peak_bytes_[zone_index] / 1024U));
     }
 }
 
 void GameApp::shutdown() {
+    if (apt_hooked_) {
+        aptUnhook(&apt_hook_cookie_);
+        apt_hooked_ = false;
+    }
     audio_.shutdown();
     renderer_.shutdown();
     romfsExit();

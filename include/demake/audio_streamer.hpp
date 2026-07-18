@@ -11,6 +11,8 @@ public:
     bool initialize();
     void update();
     void playHit(float pitch = 1.0f);
+    void suspend();
+    void resume();
     void shutdown();
 
     unsigned underruns() const { return underruns_; }
@@ -24,6 +26,7 @@ private:
     void fillAmbient(int index);
 
     bool ndsp_ready_ = false;
+    bool suspended_ = false;
     std::FILE* ambient_file_ = nullptr;
     s16* ambient_samples_ = nullptr;
     s16* hit_samples_ = nullptr;

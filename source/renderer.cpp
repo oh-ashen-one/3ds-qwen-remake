@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <cstring>
 
+#include "demake/scene_assets.hpp"
+#include "environment_atlas_t3x.h"
 #include "vshader_shbin.h"
 
 namespace demake {
@@ -15,32 +17,27 @@ constexpr u32 kTransferFlags =
     GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO);
 
 constexpr Renderer::Vertex kCube[] = {
-    {-0.5f,-0.5f, 0.5f},{ 0.5f,-0.5f, 0.5f},{ 0.5f, 0.5f, 0.5f},
-    { 0.5f, 0.5f, 0.5f},{-0.5f, 0.5f, 0.5f},{-0.5f,-0.5f, 0.5f},
-    { 0.5f,-0.5f,-0.5f},{-0.5f,-0.5f,-0.5f},{-0.5f, 0.5f,-0.5f},
-    {-0.5f, 0.5f,-0.5f},{ 0.5f, 0.5f,-0.5f},{ 0.5f,-0.5f,-0.5f},
-    { 0.5f,-0.5f, 0.5f},{ 0.5f,-0.5f,-0.5f},{ 0.5f, 0.5f,-0.5f},
-    { 0.5f, 0.5f,-0.5f},{ 0.5f, 0.5f, 0.5f},{ 0.5f,-0.5f, 0.5f},
-    {-0.5f,-0.5f,-0.5f},{-0.5f,-0.5f, 0.5f},{-0.5f, 0.5f, 0.5f},
-    {-0.5f, 0.5f, 0.5f},{-0.5f, 0.5f,-0.5f},{-0.5f,-0.5f,-0.5f},
-    {-0.5f, 0.5f, 0.5f},{ 0.5f, 0.5f, 0.5f},{ 0.5f, 0.5f,-0.5f},
-    { 0.5f, 0.5f,-0.5f},{-0.5f, 0.5f,-0.5f},{-0.5f, 0.5f, 0.5f},
-    {-0.5f,-0.5f,-0.5f},{ 0.5f,-0.5f,-0.5f},{ 0.5f,-0.5f, 0.5f},
-    { 0.5f,-0.5f, 0.5f},{-0.5f,-0.5f, 0.5f},{-0.5f,-0.5f,-0.5f},
+    {-0.5f,-0.5f, 0.5f,0.0f,0.0f},{ 0.5f,-0.5f, 0.5f,1.0f,0.0f},
+    { 0.5f, 0.5f, 0.5f,1.0f,1.0f},{-0.5f, 0.5f, 0.5f,0.0f,1.0f},
+    { 0.5f,-0.5f,-0.5f,0.0f,0.0f},{-0.5f,-0.5f,-0.5f,1.0f,0.0f},
+    {-0.5f, 0.5f,-0.5f,1.0f,1.0f},{ 0.5f, 0.5f,-0.5f,0.0f,1.0f},
+    { 0.5f,-0.5f, 0.5f,0.0f,0.0f},{ 0.5f,-0.5f,-0.5f,1.0f,0.0f},
+    { 0.5f, 0.5f,-0.5f,1.0f,1.0f},{ 0.5f, 0.5f, 0.5f,0.0f,1.0f},
+    {-0.5f,-0.5f,-0.5f,0.0f,0.0f},{-0.5f,-0.5f, 0.5f,1.0f,0.0f},
+    {-0.5f, 0.5f, 0.5f,1.0f,1.0f},{-0.5f, 0.5f,-0.5f,0.0f,1.0f},
+    {-0.5f, 0.5f, 0.5f,0.0f,0.0f},{ 0.5f, 0.5f, 0.5f,1.0f,0.0f},
+    { 0.5f, 0.5f,-0.5f,1.0f,1.0f},{-0.5f, 0.5f,-0.5f,0.0f,1.0f},
+    {-0.5f,-0.5f,-0.5f,0.0f,0.0f},{ 0.5f,-0.5f,-0.5f,1.0f,0.0f},
+    { 0.5f,-0.5f, 0.5f,1.0f,1.0f},{-0.5f,-0.5f, 0.5f,0.0f,1.0f},
 };
 
-constexpr std::size_t kCubeVertexCount = sizeof(kCube) / sizeof(kCube[0]);
+constexpr std::uint8_t kCubeIndices[] = {
+    0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4,
+    8, 9, 10, 10, 11, 8, 12, 13, 14, 14, 15, 12,
+    16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20,
+};
 
-float stateSwing(const Player& player) {
-    if (player.state == PlayerState::Attack) {
-        return sampleRigidSwing(1.0f - player.state_timer / 0.46f);
-    }
-    if (player.state == PlayerState::HeavyAttack) {
-        return sampleRigidSwing(1.0f - player.state_timer / 0.78f) * 1.2f;
-    }
-    return std::sin(player.position.x * 0.7f + player.position.z * 0.5f) *
-           (player.state == PlayerState::Move ? 0.32f : 0.05f);
-}
+constexpr std::size_t kCubeIndexCount = sizeof(kCubeIndices) / sizeof(kCubeIndices[0]);
 
 } // namespace
 
@@ -81,11 +78,27 @@ bool Renderer::initialize() {
         return false;
     }
     std::memcpy(vbo_data_, kCube, sizeof(kCube));
+    index_data_ = linearAlloc(sizeof(kCubeIndices));
+    if (!index_data_) {
+        shutdown();
+        return false;
+    }
+    std::memcpy(index_data_, kCubeIndices, sizeof(kCubeIndices));
     AttrInfo_Init(&attr_info_);
     AttrInfo_AddLoader(&attr_info_, 0, GPU_FLOAT, 3);
     AttrInfo_AddFixed(&attr_info_, 1);
+    AttrInfo_AddLoader(&attr_info_, 2, GPU_FLOAT, 2);
     BufInfo_Init(&buf_info_);
-    BufInfo_Add(&buf_info_, vbo_data_, sizeof(Vertex), 1, 0x0);
+    BufInfo_Add(&buf_info_, vbo_data_, sizeof(Vertex), 2, 0x20);
+    environment_atlas_ = Tex3DS_TextureImport(
+        environment_atlas_t3x, environment_atlas_t3x_size,
+        &environment_texture_, nullptr, false);
+    if (!environment_atlas_) {
+        shutdown();
+        return false;
+    }
+    C3D_TexSetFilter(&environment_texture_, GPU_LINEAR, GPU_NEAREST);
+    C3D_TexSetWrap(&environment_texture_, GPU_REPEAT, GPU_REPEAT);
     text_buffer_ = C2D_TextBufNew(4096);
     if (!text_buffer_) {
         shutdown();
@@ -94,14 +107,21 @@ bool Renderer::initialize() {
     return true;
 }
 
+void Renderer::setHardwareInfo(const char* model_name, bool new_family) {
+    hardware_model_ = model_name ? model_name : "Unknown 3DS";
+    new_family_hardware_ = new_family;
+}
+
 void Renderer::bind3DState() {
     C3D_BindProgram(&program_);
     C3D_SetAttrInfo(&attr_info_);
     C3D_SetBufInfo(&buf_info_);
+    C3D_TexBind(0, &environment_texture_);
     C3D_TexEnv* environment = C3D_GetTexEnv(0);
     C3D_TexEnvInit(environment);
-    C3D_TexEnvSrc(environment, C3D_Both, GPU_PRIMARY_COLOR);
-    C3D_TexEnvFunc(environment, C3D_Both, GPU_REPLACE);
+    C3D_TexEnvSrc(environment, C3D_Both,
+                  GPU_TEXTURE0, GPU_PRIMARY_COLOR, GPU_PRIMARY_COLOR);
+    C3D_TexEnvFunc(environment, C3D_Both, GPU_MODULATE);
     C3D_DepthTest(true, GPU_GREATER, GPU_WRITE_ALL);
     C3D_CullFace(GPU_CULL_BACK_CCW);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, projection_location_, &projection_);
@@ -148,116 +168,155 @@ void Renderer::render(const WorldState& world, bool title_screen, bool paused,
 }
 
 void Renderer::renderWorld(const WorldState& world) {
+    renderPanorama(world.zone);
+    renderStaticScene(world.zone);
     switch (world.zone) {
         case Zone::Interior: renderInterior(world); break;
         case Zone::Vista: renderVista(world); break;
         case Zone::Arena: renderArena(world); break;
     }
+    RigidPose player_pose{};
+    samplePlayerPose(world.player, world.elapsed, player_pose);
     renderHumanoid(world.player.position, world.player.facing, 1.0f,
-                   stateSwing(world.player), 0.42f, 0.48f, 0.55f, true);
+                   player_pose, 0.42f, 0.48f, 0.55f, true);
+}
+
+void Renderer::renderPanorama(Zone zone) {
+    if (zone == Zone::Interior) {
+        return;
+    }
+    const float red = zone == Zone::Vista ? 0.34f : 0.22f;
+    const float green = zone == Zone::Vista ? 0.28f : 0.18f;
+    const float blue = zone == Zone::Vista ? 0.36f : 0.20f;
+    drawBox(0.0f, 15.0f, 78.0f, 120.0f, 30.0f, 1.0f,
+            0.0f, red, green, blue, true);
+    drawBox(-58.0f, 13.0f, 34.0f, 1.0f, 26.0f, 88.0f,
+            0.0f, red * 0.72f, green * 0.72f, blue * 0.82f, true);
+    drawBox(58.0f, 13.0f, 34.0f, 1.0f, 26.0f, 88.0f,
+            0.0f, red * 0.78f, green * 0.78f, blue * 0.88f, true);
+}
+
+void Renderer::renderStaticScene(Zone zone) {
+    std::size_t count = 0;
+    const SceneBox* boxes = SceneAssets::boxes(zone, count);
+    for (std::size_t index = 0; index < count; ++index) {
+        const SceneBox& box = boxes[index];
+        if (!box.always) {
+            const Vec2 cell_center{
+                static_cast<float>(box.cell_x) * 6.0f + 3.0f,
+                static_cast<float>(box.cell_z) * 6.0f + 3.0f,
+            };
+            if (distance(camera_ground_, cell_center) > 62.0f) {
+                ++culled_objects_;
+                continue;
+            }
+        }
+        drawBox(box.x, box.y, box.z, box.sx, box.sy, box.sz, box.rotation_y,
+                box.red, box.green, box.blue, box.always);
+    }
 }
 
 void Renderer::renderInterior(const WorldState& world) {
-    drawBox(0.0f, -0.35f, -1.0f, 10.0f, 0.6f, 18.0f, 0.0f, 0.20f, 0.18f, 0.24f, true);
-    drawBox(-5.0f, 2.0f, -1.0f, 0.6f, 4.8f, 18.0f, 0.0f, 0.16f, 0.14f, 0.18f, true);
-    drawBox(5.0f, 2.0f, -1.0f, 0.6f, 4.8f, 18.0f, 0.0f, 0.16f, 0.14f, 0.18f, true);
-    drawBox(0.0f, 4.2f, -1.0f, 10.0f, 0.5f, 18.0f, 0.0f, 0.12f, 0.10f, 0.14f, true);
-    for (int side = -1; side <= 1; side += 2) {
-        for (int row = -6; row <= 2; row += 4) {
-            drawBox(static_cast<float>(side) * 3.8f, 1.4f, static_cast<float>(row),
-                    0.75f, 3.0f, 0.75f, 0.0f, 0.30f, 0.25f, 0.28f);
-            drawBox(static_cast<float>(side) * 3.8f, 2.4f, static_cast<float>(row),
-                    0.20f, 0.20f, 0.20f, 0.0f, 0.95f, 0.52f, 0.18f);
-        }
-    }
     const float door_y = 2.0f + world.door_progress * 4.2f;
     drawBox(0.0f, door_y, 4.6f, 4.2f, 4.0f, 0.5f, 0.0f, 0.35f, 0.30f, 0.25f, true);
 }
 
 void Renderer::renderVista(const WorldState& world) {
-    drawBox(0.0f, -0.45f, 17.0f, 24.0f, 0.8f, 28.0f, 0.0f, 0.28f, 0.31f, 0.18f, true);
-    drawBox(0.0f, -0.25f, 8.0f, 7.0f, 0.4f, 7.0f, 0.0f, 0.34f, 0.31f, 0.24f, true);
-    for (int i = 0; i < 10; ++i) {
-        const float side = (i % 2 == 0) ? -1.0f : 1.0f;
-        const float x = side * (5.0f + static_cast<float>((i * 3) % 5));
-        const float z = 8.0f + static_cast<float>(i) * 2.0f;
-        drawBox(x, 1.2f, z, 0.45f, 2.6f, 0.45f, 0.0f, 0.27f, 0.18f, 0.12f);
-        drawBox(x, 3.0f, z, 2.2f, 2.0f, 2.2f, 0.0f, 0.20f, 0.30f, 0.12f);
-    }
-    drawBox(-8.0f, 8.0f, 55.0f, 2.8f, 16.0f, 2.8f, 0.0f, 0.42f, 0.28f, 0.16f, true);
-    drawBox(-8.0f, 18.0f, 55.0f, 16.0f, 8.0f, 16.0f, 0.0f, 0.62f, 0.50f, 0.20f, true);
+    Player keeper{};
+    keeper.state = PlayerState::Idle;
+    RigidPose keeper_pose{};
+    samplePlayerPose(keeper, world.elapsed, keeper_pose);
     renderHumanoid({0.0f, 15.5f}, 3.14159265f, 0.95f,
-                   std::sin(world.elapsed * 1.5f) * 0.08f, 0.25f, 0.22f, 0.40f, false);
+                   keeper_pose, 0.25f, 0.22f, 0.40f, false);
     const float fog_pulse = 0.55f + std::sin(world.elapsed * 2.0f) * 0.08f;
     drawBox(0.0f, 2.0f, 28.4f, 7.0f, 4.0f, 0.25f, 0.0f,
             fog_pulse, fog_pulse, fog_pulse * 0.75f, true);
 }
 
 void Renderer::renderArena(const WorldState& world) {
-    drawBox(0.0f, -0.45f, 0.0f, 19.0f, 0.8f, 19.0f, 0.0f, 0.24f, 0.20f, 0.17f, true);
-    for (int index = 0; index < 12; ++index) {
-        const float angle = static_cast<float>(index) / 12.0f * 6.2831853f;
-        drawBox(std::sin(angle) * 9.2f, 2.0f, std::cos(angle) * 9.2f,
-                0.7f, 4.2f, 0.7f, angle, 0.28f, 0.24f, 0.22f);
-    }
     renderBoss(world.boss, world.elapsed);
 }
 
-void Renderer::renderHumanoid(Vec2 position, float facing, float scale, float swing,
+void Renderer::renderHumanoid(Vec2 position, float facing, float scale, const RigidPose& pose,
                               float red, float green, float blue, bool weapon) {
+    drawBlobShadow(position, scale);
     const float side_x = std::cos(facing);
     const float side_z = -std::sin(facing);
     const float forward_x = std::sin(facing);
     const float forward_z = std::cos(facing);
-    const float gait = std::sin(position.x * 0.7f + position.z * 0.5f) * 0.16f;
-    drawBox(position.x, 0.98f * scale, position.z, 0.72f * scale, 0.34f * scale,
-            0.44f * scale, facing, red * 0.78f, green * 0.78f, blue * 0.82f);
-    drawBox(position.x, 1.48f * scale, position.z, 0.75f * scale, 0.78f * scale,
-            0.45f * scale, facing, red, green, blue);
-    drawBox(position.x, 2.05f * scale, position.z, 0.48f * scale, 0.52f * scale,
+    const float root_y = pose.at(Bone::Root).vertical * scale;
+    drawBox(position.x, 0.98f * scale + root_y, position.z,
+            0.72f * scale, 0.34f * scale, 0.44f * scale,
+            facing + pose.at(Bone::Pelvis).yaw, red * 0.78f, green * 0.78f, blue * 0.82f);
+    drawBox(position.x + forward_x * pose.at(Bone::Torso).forward * scale,
+            1.48f * scale + root_y, position.z + forward_z * pose.at(Bone::Torso).forward * scale,
+            0.75f * scale, 0.78f * scale, 0.45f * scale,
+            facing + pose.at(Bone::Torso).yaw, red, green, blue);
+    drawBox(position.x + forward_x * pose.at(Bone::Head).forward * scale,
+            2.05f * scale + root_y + pose.at(Bone::Head).vertical * scale,
+            position.z + forward_z * pose.at(Bone::Head).forward * scale,
+            0.48f * scale, 0.52f * scale,
             0.48f * scale, facing, red * 0.85f, green * 0.78f, blue * 0.72f);
     for (int side = -1; side <= 1; side += 2) {
-        const float leg_stride = gait * static_cast<float>(side);
+        const Bone upper_leg = side < 0 ? Bone::LeftUpperLeg : Bone::RightUpperLeg;
+        const Bone lower_leg = side < 0 ? Bone::LeftLowerLeg : Bone::RightLowerLeg;
+        const Bone foot = side < 0 ? Bone::LeftFoot : Bone::RightFoot;
+        const Bone upper_arm = side < 0 ? Bone::LeftUpperArm : Bone::RightUpperArm;
+        const Bone lower_arm = side < 0 ? Bone::LeftLowerArm : Bone::RightLowerArm;
+        const float leg_stride = pose.at(upper_leg).forward;
         drawBox(position.x + side_x * side * 0.22f * scale + forward_x * leg_stride,
-                0.65f * scale,
+                0.65f * scale + root_y,
                 position.z + side_z * side * 0.22f * scale + forward_z * leg_stride,
                 0.24f * scale, 0.48f * scale, 0.27f * scale,
-                facing, red * 0.72f, green * 0.72f, blue * 0.77f);
-        drawBox(position.x + side_x * side * 0.22f * scale - forward_x * leg_stride * 0.6f,
-                0.25f * scale,
-                position.z + side_z * side * 0.22f * scale - forward_z * leg_stride * 0.6f,
+                facing + pose.at(upper_leg).yaw, red * 0.72f, green * 0.72f, blue * 0.77f);
+        drawBox(position.x + side_x * side * 0.22f * scale + forward_x * pose.at(lower_leg).forward,
+                0.25f * scale + root_y,
+                position.z + side_z * side * 0.22f * scale + forward_z * pose.at(lower_leg).forward,
                 0.21f * scale, 0.40f * scale, 0.23f * scale,
-                facing, red * 0.66f, green * 0.66f, blue * 0.72f);
-        drawBox(position.x + side_x * side * 0.22f * scale + forward_x * 0.10f * scale,
-                0.05f * scale,
-                position.z + side_z * side * 0.22f * scale + forward_z * 0.10f * scale,
+                facing + pose.at(lower_leg).yaw, red * 0.66f, green * 0.66f, blue * 0.72f);
+        drawBox(position.x + side_x * side * 0.22f * scale +
+                    forward_x * (0.10f + pose.at(foot).forward) * scale,
+                0.05f * scale + root_y,
+                position.z + side_z * side * 0.22f * scale +
+                    forward_z * (0.10f + pose.at(foot).forward) * scale,
                 0.24f * scale, 0.12f * scale, 0.42f * scale,
-                facing, red * 0.58f, green * 0.58f, blue * 0.64f);
+                facing + pose.at(foot).yaw, red * 0.58f, green * 0.58f, blue * 0.64f);
 
-        const float arm_reach = swing * 0.12f * static_cast<float>(side);
+        const float arm_reach = pose.at(upper_arm).forward;
         drawBox(position.x + side_x * side * 0.53f * scale + forward_x * arm_reach,
-                1.52f * scale,
+                1.52f * scale + root_y,
                 position.z + side_z * side * 0.53f * scale + forward_z * arm_reach,
                 0.23f * scale, 0.44f * scale, 0.24f * scale,
-                facing + swing * 0.22f * side, red * 0.76f, green * 0.76f, blue * 0.81f);
-        drawBox(position.x + side_x * side * 0.58f * scale + forward_x * swing * 0.22f,
-                1.16f * scale,
-                position.z + side_z * side * 0.58f * scale + forward_z * swing * 0.22f,
+                facing + pose.at(upper_arm).yaw, red * 0.76f, green * 0.76f, blue * 0.81f);
+        drawBox(position.x + side_x * side * 0.58f * scale +
+                    forward_x * pose.at(lower_arm).forward,
+                1.16f * scale + root_y,
+                position.z + side_z * side * 0.58f * scale +
+                    forward_z * pose.at(lower_arm).forward,
                 0.20f * scale, 0.40f * scale, 0.21f * scale,
-                facing + swing * 0.34f * side, red * 0.68f, green * 0.68f, blue * 0.75f);
-        drawBox(position.x + side_x * side * 0.60f * scale + forward_x * swing * 0.34f,
-                0.91f * scale,
-                position.z + side_z * side * 0.60f * scale + forward_z * swing * 0.34f,
+                facing + pose.at(lower_arm).yaw, red * 0.68f, green * 0.68f, blue * 0.75f);
+        drawBox(position.x + side_x * side * 0.60f * scale + forward_x * arm_reach * 1.2f,
+                0.91f * scale + root_y,
+                position.z + side_z * side * 0.60f * scale + forward_z * arm_reach * 1.2f,
                 0.18f * scale, 0.20f * scale, 0.18f * scale,
                 facing, red * 0.82f, green * 0.72f, blue * 0.68f);
     }
     if (weapon) {
-        drawBox(position.x + side_x * 0.72f * scale + forward_x * 0.8f * scale,
-                1.25f * scale,
-                position.z + side_z * 0.72f * scale + forward_z * 0.8f * scale,
+        const BoneTransform& weapon_pose = pose.at(Bone::Weapon);
+        drawBox(position.x + side_x * 0.72f * scale +
+                    forward_x * (0.8f + weapon_pose.forward) * scale,
+                1.25f * scale + root_y,
+                position.z + side_z * 0.72f * scale +
+                    forward_z * (0.8f + weapon_pose.forward) * scale,
                 0.10f * scale, 0.12f * scale, 1.85f * scale,
-                facing + swing, 0.72f, 0.74f, 0.78f);
+                facing + weapon_pose.yaw, 0.72f, 0.74f, 0.78f);
     }
+}
+
+void Renderer::drawBlobShadow(Vec2 position, float scale) {
+    drawBox(position.x, 0.012f, position.z,
+            1.15f * scale, 0.025f, 0.72f * scale,
+            0.0f, 0.055f, 0.045f, 0.055f, true);
 }
 
 void Renderer::renderBoss(const Boss& boss, float elapsed) {
@@ -266,13 +325,10 @@ void Renderer::renderBoss(const Boss& boss, float elapsed) {
                 boss.facing + 1.57f, 0.35f, 0.12f, 0.10f, true);
         return;
     }
-    float attack_swing = 0.0f;
-    if (boss.state == BossState::WindupSlash) attack_swing = -0.75f;
-    if (boss.state == BossState::Slash) attack_swing = 1.55f;
-    if (boss.state == BossState::WindupSlam) attack_swing = -1.2f;
-    if (boss.state == BossState::Slam) attack_swing = 0.25f;
+    RigidPose boss_pose{};
+    sampleBossPose(boss, elapsed, boss_pose);
     renderHumanoid(boss.position, boss.facing, 1.75f,
-                   attack_swing + std::sin(elapsed * 2.0f) * 0.04f,
+                   boss_pose,
                    0.46f, 0.16f, 0.12f, true);
     const float side_x = std::cos(boss.facing);
     const float side_z = -std::sin(boss.facing);
@@ -306,8 +362,13 @@ void Renderer::drawBox(float x, float y, float z, float sx, float sy, float sz,
     Mtx_Scale(&model, sx, sy, sz);
     Mtx_Multiply(&model_view, &view_, &model);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, model_view_location_, &model_view);
-    C3D_FixedAttribSet(1, red, green, blue, 1.0f);
-    C3D_DrawArrays(GPU_TRIANGLES, 0, kCubeVertexCount);
+    // Original asset colors provide baked lighting; one cheap directional term
+    // adds consistent outdoor shape without a per-pixel lighting pass.
+    const float directional = 0.80f +
+                              0.18f * std::fmax(0.0f, std::cos(rotation_y - 0.65f));
+    C3D_FixedAttribSet(1, red * directional, green * directional,
+                      blue * directional, 1.0f);
+    C3D_DrawElements(GPU_TRIANGLES, kCubeIndexCount, GPU_UNSIGNED_BYTE, index_data_);
     ++draw_calls_;
     ++visible_objects_;
 }
@@ -339,6 +400,10 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
         drawText("A NEW NINTENDO 3DS HOMEBREW TALE", 72.0f, 92.0f, 0.42f,
                  C2D_Color32(205, 205, 210, 255));
         drawText("Press A to descend", 126.0f, 168.0f, 0.52f, C2D_Color32(245, 245, 245, 255));
+        if (!new_family_hardware_) {
+            drawText("NEW 3DS FAMILY RECOMMENDED", 119.0f, 208.0f, 0.36f,
+                     C2D_Color32(231, 154, 82, 255));
+        }
     } else {
         C2D_DrawRectSolid(12.0f, 12.0f, 0.3f, 106.0f, 8.0f, C2D_Color32(30, 20, 24, 220));
         C2D_DrawRectSolid(14.0f, 14.0f, 0.4f, 102.0f * world.player.health / 100.0f, 4.0f,
@@ -392,8 +457,10 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
     if (world.debug_overlay) {
         char diagnostics[192];
         std::snprintf(diagnostics, sizeof(diagnostics),
-                      "%.1f ms  visible %u  culled %u\nzone peak %u KB  linear free %lu KB\naudio %s  underruns %u",
-                      frame_ms, visible_objects_, culled_objects_, zone_memory_kb,
+                      "%s  %.1f ms  visible %u  culled %u\nzone %lu KB  peak linear %u KB\nlinear free %lu KB  audio %s  underruns %u",
+                      hardware_model_,
+                      frame_ms, visible_objects_, culled_objects_,
+                      static_cast<unsigned long>(world.zone_resident_bytes / 1024U), zone_memory_kb,
                       static_cast<unsigned long>(linearSpaceFree() / 1024U),
                       audio_available ? "streaming" : "unavailable", audio_underruns);
         C2D_DrawRectSolid(8.0f, 193.0f, 0.3f, 304.0f, 45.0f, C2D_Color32(4, 4, 6, 235));
@@ -409,6 +476,15 @@ void Renderer::shutdown() {
     if (vbo_data_) {
         linearFree(vbo_data_);
         vbo_data_ = nullptr;
+    }
+    if (index_data_) {
+        linearFree(index_data_);
+        index_data_ = nullptr;
+    }
+    if (environment_atlas_) {
+        Tex3DS_TextureFree(environment_atlas_);
+        environment_atlas_ = nullptr;
+        C3D_TexDelete(&environment_texture_);
     }
     if (vertex_shader_) {
         shaderProgramFree(&program_);

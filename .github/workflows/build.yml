@@ -7,21 +7,30 @@ on:
 jobs:
   native-3ds:
     runs-on: ubuntu-latest
-    container: devkitpro/devkitarm:latest
+    container: devkitpro/devkitarm@sha256:116afba8df8453961de2936ffab20dd441edf4d682856c1ec8b0e53d7ed0bbf5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - name: Audit private-repository payload policy
+        run: make audit-repo
+      - name: Clean generated state
+        run: make clean
       - name: Generate and validate original assets
         run: make validate-assets
       - name: Run deterministic host tests
         run: make test-host HOST_CXX=g++
       - name: Build 3DSX
         run: make
+      - name: Verify 3DSX, RomFS, SMDH, and linked subsystems
+        run: make verify-build
       - name: Record hashes and sizes
         run: |
-          sha256sum elden-ring-3ds-demake.3dsx > build-report.txt
+          "${DEVKITARM}/bin/arm-none-eabi-g++" --version > build-report.txt
+          tex3ds --version >> build-report.txt
+          sha256sum elden-ring-3ds-demake.3dsx >> build-report.txt
           stat --printf='%n %s bytes\n' elden-ring-3ds-demake.3dsx >> build-report.txt
+          cat build-validation.json >> build-report.txt
           cat build-report.txt
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ashen-rift-3ds
           if-no-files-found: error
@@ -29,4 +38,6 @@ jobs:
             elden-ring-3ds-demake.3dsx
             elden-ring-3ds-demake.elf
             elden-ring-3ds-demake.map
+            elden-ring-3ds-demake.smdh
+            build-validation.json
             build-report.txt

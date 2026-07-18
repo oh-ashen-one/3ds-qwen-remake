@@ -6,10 +6,15 @@ The playable sequence connects three memory-bounded zones: a sunken interior, an
 
 ## Status
 
-- Native gameplay simulation and procedural renderer implemented.
-- Host-side deterministic tests and asset validation implemented.
-- Reproducible private GitHub Actions build passing; see [BUILD_EVIDENCE.md](docs/BUILD_EVIDENCE.md).
-- Physical New Nintendo 3DS verification is required before this project can be called complete.
+- Native fixed-step gameplay, three-zone streaming state, combat, lifecycle handling, dual-screen UI, and NDSP audio are implemented.
+- The original-content pipeline includes generated asset IDs, per-zone manifests and budgets, a Blender-editable scene source, 15-bone rigid animation clips, and an RGB565 `tex3ds` atlas.
+- Static props use generated fixed-size data, an indexed VBO, coarse-grid and view/distance culling, baked colors, a directional tint, fog-gate masking, blob shadows, and distant panorama panels.
+- Repository policy audit, asset validation, deterministic host smoke flows, native artifact verification, and private GitHub Actions are implemented; see [BUILD_EVIDENCE.md](docs/BUILD_EVIDENCE.md).
+- Physical New Nintendo 3DS-family verification remains required. A local build or emulator boot is deliberately not called completion.
+
+## Architecture
+
+`GameApp` owns fixed-step input/lifecycle, `GameSession` owns title/pause/suspend state, `ZoneManager` owns preload/enter/unload handoffs, `Renderer` owns citro3d/citro2d output and counters, `AudioStreamer` owns NDSP double buffers, and generated `AssetRegistry` data connects runtime assets to each zone without per-frame allocation.
 
 ## Build
 
@@ -20,7 +25,7 @@ export DEVKITPRO=/opt/devkitpro
 export DEVKITARM=/opt/devkitpro/devkitARM
 make validate-assets
 make test-host
-make
+make verify-build
 ```
 
 The output is `elden-ring-3ds-demake.3dsx`. See [BUILDING.md](docs/BUILDING.md) for installation and netloading.
