@@ -19,7 +19,7 @@ Compilation and emulator behavior do not satisfy this checklist.
 
 ## Playthrough gate
 
-Run three consecutive cold-boot playthroughs. For each run record:
+Run three consecutive cold-boot playthroughs using the intended 6:40 beat sheet in [PLAYTHROUGH_ROUTE.md](PLAYTHROUGH_ROUTE.md). For each run record:
 
 | Run | Duration | Boot | Interior/reveal | NPC/fog gate | Boss | Restart | Minimum FPS | Peak linear memory | Audio underruns | Result |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

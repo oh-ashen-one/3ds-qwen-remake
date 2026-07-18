@@ -8,6 +8,7 @@
 #include <citro3d.h>
 #include <tex3ds.h>
 
+#include <array>
 #include <cstddef>
 
 namespace demake {
@@ -74,6 +75,7 @@ private:
     unsigned culled_objects_ = 0;
     const char* hardware_model_ = "Unknown 3DS";
     bool new_family_hardware_ = false;
+    std::array<char, 256> keeper_dialogue_{};
 };
 
 } // namespace demake

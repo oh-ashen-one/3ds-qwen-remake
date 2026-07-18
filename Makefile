@@ -55,10 +55,11 @@ export VPATH  := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
                  $(foreach dir,$(DATA),$(CURDIR)/$(dir))
 export DEPSDIR := $(CURDIR)/$(BUILD)
 
-CFILES       := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-CPPFILES     := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-SFILES       := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-PICAFILES    := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.v.pica)))
+CFILES       :=
+CPPFILES     := asset_registry.cpp audio_streamer.cpp core.cpp game_app.cpp main.cpp \
+                renderer.cpp rigid_animation.cpp scene_assets.cpp zone_resources.cpp
+SFILES       :=
+PICAFILES    := vshader.v.pica
 BINFILES     := $(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
 
 export LD := $(CXX)
@@ -73,7 +74,7 @@ export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 export _3DSXDEPS := $(OUTPUT).smdh
 export _3DSXFLAGS += --smdh=$(OUTPUT).smdh --romfs=$(CURDIR)/$(ROMFS)
 
-.PHONY: all assets validate-assets audit-repo test-host verify-build package-sd run clean
+.PHONY: all assets validate-assets audit-repo test-host verify-build package-sd check-netload run clean
 
 all: assets $(BUILD)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
@@ -111,7 +112,11 @@ $(HOST_BUILD)/core_tests: $(HOST_SOURCES) include/demake/core.hpp \
 
 run: all
 	@test -n "$(IP)" || (echo "Usage: make run IP=<3DS-IP>" && exit 2)
-	3dslink $(TARGET).3dsx -a $(IP)
+	@$(PYTHON) tools/netload_3ds.py --ip "$(IP)"
+
+check-netload: all
+	@test -n "$(IP)" || (echo "Usage: make check-netload IP=<3DS-IP>" && exit 2)
+	@$(PYTHON) tools/netload_3ds.py --ip "$(IP)" --check-only
 
 verify-build: all
 	@$(PYTHON) tools/verify_build.py

@@ -39,6 +39,25 @@ constexpr std::uint8_t kCubeIndices[] = {
 
 constexpr std::size_t kCubeIndexCount = sizeof(kCubeIndices) / sizeof(kCubeIndices[0]);
 
+bool loadTextAsset(const char* path, char* destination, std::size_t capacity) {
+    if (!path || !destination || capacity < 2) {
+        return false;
+    }
+    std::FILE* file = std::fopen(path, "rb");
+    if (!file) {
+        return false;
+    }
+    const std::size_t bytes = std::fread(destination, 1, capacity - 1, file);
+    const bool valid = bytes > 0 && !std::ferror(file) && std::fgetc(file) == EOF;
+    std::fclose(file);
+    if (!valid) {
+        destination[0] = '\0';
+        return false;
+    }
+    destination[bytes] = '\0';
+    return true;
+}
+
 } // namespace
 
 bool Renderer::initialize() {
@@ -101,6 +120,11 @@ bool Renderer::initialize() {
     C3D_TexSetWrap(&environment_texture_, GPU_REPEAT, GPU_REPEAT);
     text_buffer_ = C2D_TextBufNew(4096);
     if (!text_buffer_) {
+        shutdown();
+        return false;
+    }
+    if (!loadTextAsset("romfs:/dialogue/keeper.txt", keeper_dialogue_.data(),
+                       keeper_dialogue_.size())) {
         shutdown();
         return false;
     }
@@ -421,8 +445,8 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
         if (world.dialogue_active) {
             C2D_DrawRectSolid(24.0f, 158.0f, 0.3f, 352.0f, 67.0f, C2D_Color32(7, 7, 10, 225));
             drawText("VEILED KEEPER", 38.0f, 166.0f, 0.40f, C2D_Color32(196, 167, 224, 255));
-            drawText("Stray ember, the valley remembers every blade. Beyond the pale gate, the Ashen Warden waits.",
-                     38.0f, 185.0f, 0.40f, C2D_Color32(240, 238, 232, 255), 325.0f);
+            drawText(keeper_dialogue_.data(), 38.0f, 185.0f, 0.40f,
+                     C2D_Color32(240, 238, 232, 255), 325.0f);
         }
         if (world.player.state == PlayerState::Dead) {
             drawText("EMBER EXTINGUISHED", 95.0f, 92.0f, 0.75f, C2D_Color32(175, 42, 38, 255));

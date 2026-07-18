@@ -125,6 +125,7 @@ def main() -> None:
         b"ambient.pcm",
         b"keeper.txt",
         b"romfs:/audio/ambient.pcm",
+        b"romfs:/dialogue/keeper.txt",
         b"romfs:/zones/interior.bin",
         b"romfs:/zones/vista.bin",
         b"romfs:/zones/arena.bin",

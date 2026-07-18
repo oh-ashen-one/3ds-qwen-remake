@@ -18,7 +18,7 @@ REGISTRY_INPUTS := assets/manifest.json assets/animation_clips.json \
 SCENE_INPUTS := assets/scene_source.json tools/convert_scene_assets.py
 TEXTURE_INPUTS := gfx/environment.t3s gfx/environment.ppm
 
-.PHONY: all assets validate-assets audit-repo test-host verify-build package-sd run clean
+.PHONY: all assets validate-assets audit-repo test-host verify-build package-sd check-netload run clean
 
 all: assets
 	@$(PYTHON) tools/build_3ds.py
@@ -56,7 +56,11 @@ $(HOST_BUILD)/core_tests: $(HOST_SOURCES) include/demake/core.hpp \
 
 run: all
 	@test -n "$(IP)" || (echo "Usage: make run IP=<3DS-IP>" && exit 2)
-	3dslink $(TARGET).3dsx -a $(IP)
+	@$(PYTHON) tools/netload_3ds.py --ip "$(IP)"
+
+check-netload: all
+	@test -n "$(IP)" || (echo "Usage: make check-netload IP=<3DS-IP>" && exit 2)
+	@$(PYTHON) tools/netload_3ds.py --ip "$(IP)" --check-only
 
 verify-build: all
 	@$(PYTHON) tools/verify_build.py

@@ -15,6 +15,7 @@ This follows the structural strengths of the supplied PS1 transcript without cop
 ## Required footage discipline
 
 - Associate each clip with a build/commit from `MILESTONES.md`.
+- Use `PLAYTHROUGH_ROUTE.md` for the uncut 5–8-minute acceptance take.
 - Capture both screens and enough console body to establish the physical device.
 - Preserve failures, optimization overlays, and before/after comparisons.
 - Do not claim a frame rate, memory result, or hardware pass without the matching checklist evidence.

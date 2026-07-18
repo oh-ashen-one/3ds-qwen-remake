@@ -124,6 +124,15 @@ def main() -> None:
                 fail(f"{asset_id} sample rate is outside the handheld budget")
             if output.stat().st_size % 2 != 0:
                 fail(f"{asset_id} has a truncated PCM16 sample")
+        if kind == "dialogue_text":
+            try:
+                dialogue = output.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError) as error:
+                fail(f"{asset_id} must be readable UTF-8 dialogue: {error}")
+            if not dialogue.strip() or len(dialogue.encode("utf-8")) > 255:
+                fail(f"{asset_id} dialogue must contain 1-255 UTF-8 bytes")
+            if any(ord(character) < 0x20 and character not in "\n\t" for character in dialogue):
+                fail(f"{asset_id} dialogue contains unsupported control characters")
         if kind == "texture_atlas":
             if source.suffix.lower() != ".t3s":
                 fail(f"{asset_id} must be converted from a tex3ds .t3s descriptor")

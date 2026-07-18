@@ -153,6 +153,90 @@ void testControllerDamageBoundaries() {
     assert(world.boss.state == BossState::Dead);
 }
 
+void testPlayerTimedStateTransitions() {
+    PlayerController controller;
+    WorldState world{};
+    world.zone = Zone::Arena;
+    world.player.position = {0.0f, 0.0f};
+    world.boss.position = {0.0f, 8.0f};
+
+    InputFrame light{};
+    light.light_attack = true;
+    controller.update(world, light, kFixedStep);
+    assert(world.player.state == PlayerState::Attack);
+    for (int frame = 0; frame < 16; ++frame) {
+        controller.update(world, InputFrame{}, kFixedStep);
+    }
+    assert(world.player.state == PlayerState::Idle);
+
+    InputFrame heavy{};
+    heavy.heavy_attack = true;
+    controller.update(world, heavy, kFixedStep);
+    assert(world.player.state == PlayerState::HeavyAttack);
+    for (int frame = 0; frame < 25; ++frame) {
+        controller.update(world, InputFrame{}, kFixedStep);
+    }
+    assert(world.player.state == PlayerState::Idle);
+
+    InputFrame dodge{};
+    dodge.move_x = 1.0f;
+    dodge.dodge_pressed = true;
+    controller.update(world, dodge, kFixedStep);
+    assert(world.player.state == PlayerState::Dodge);
+    for (int frame = 0; frame < 16; ++frame) {
+        controller.update(world, InputFrame{}, kFixedStep);
+    }
+    assert(world.player.state == PlayerState::Idle);
+
+    PlayerController::damage(world, 10.0f);
+    assert(world.player.state == PlayerState::Hurt);
+    for (int frame = 0; frame < 13; ++frame) {
+        controller.update(world, InputFrame{}, kFixedStep);
+    }
+    assert(world.player.state == PlayerState::Idle);
+}
+
+void testBossStateTransitions() {
+    BossController controller;
+    WorldState world{};
+    world.zone = Zone::Arena;
+    world.player.position = {0.0f, 0.0f};
+    world.boss.position = {0.0f, 2.0f};
+    world.boss.state = BossState::Approach;
+
+    controller.update(world, kFixedStep);
+    assert(world.boss.state == BossState::WindupSlash);
+    int guard = 0;
+    while (world.boss.state == BossState::WindupSlash && guard++ < 30) {
+        controller.update(world, kFixedStep);
+    }
+    assert(world.boss.state == BossState::Slash);
+    guard = 0;
+    while (world.boss.state == BossState::Slash && guard++ < 15) {
+        controller.update(world, kFixedStep);
+    }
+    assert(world.boss.state == BossState::Recover);
+    guard = 0;
+    while (world.boss.state == BossState::Recover && guard++ < 30) {
+        controller.update(world, kFixedStep);
+    }
+    assert(world.boss.state == BossState::Approach);
+
+    world.boss.attack_cycle = 2;
+    controller.update(world, kFixedStep);
+    assert(world.boss.state == BossState::WindupSlam);
+    guard = 0;
+    while (world.boss.state == BossState::WindupSlam && guard++ < 40) {
+        controller.update(world, kFixedStep);
+    }
+    assert(world.boss.state == BossState::Slam);
+    guard = 0;
+    while (world.boss.state == BossState::Slam && guard++ < 15) {
+        controller.update(world, kFixedStep);
+    }
+    assert(world.boss.state == BossState::Recover);
+}
+
 void testQuickItemSelection() {
     GameSimulation game;
     InputFrame next{};
@@ -414,6 +498,8 @@ int main() {
     testRigidPoseSampling();
     testMovementAndStamina();
     testControllerDamageBoundaries();
+    testPlayerTimedStateTransitions();
+    testBossStateTransitions();
     testQuickItemSelection();
     testZoneHandoffs();
     testDialogueAbortAndRetry();

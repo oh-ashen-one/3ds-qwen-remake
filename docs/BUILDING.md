@@ -49,9 +49,10 @@ Edit the source descriptor and authoring script together; do not hand-edit gener
 1. Start Homebrew Launcher on the 3DS.
 2. Press `Y` to activate netloader and note the console's IP address.
 3. Keep the Mac and 3DS on the same network.
-4. Run `make run IP=<3DS-IP>`.
+4. Run `make check-netload IP=<3DS-IP>` to preflight without networking.
+5. Run `make run IP=<3DS-IP>` to transfer and launch.
 
-This is a transient launch for rapid iteration. A successful transfer is not proof that the complete game works.
+The preflight validates the address, build artifact, and discoverable official `3dslink` executable. `make run` performs the same checks before the transient launch. A successful transfer is not proof that the complete game works.
 
 ## Persistent SD installation
 
