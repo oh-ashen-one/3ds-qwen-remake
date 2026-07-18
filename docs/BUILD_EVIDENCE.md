@@ -1,5 +1,22 @@
 # Build evidence
 
+## Hardware-handoff baseline
+
+- Date: 2026-07-18
+- Source commit: `6d367543641549af2ea0459bd1a8bac0a76918ba`
+- Private repository: `oh-ashen-one/elden-ring-3ds-demake`
+- Merged hardening PRs: [runtime zone resources #5](https://github.com/oh-ashen-one/elden-ring-3ds-demake/pull/5) and [completion audit/handoff #6](https://github.com/oh-ashen-one/elden-ring-3ds-demake/pull/6).
+- Post-merge main CI: [run 29660097300](https://github.com/oh-ashen-one/elden-ring-3ds-demake/actions/runs/29660097300), success in 44 seconds.
+- Private CI artifact: `ashen-rift-3ds`, artifact id `8434059747`, archive size `1,624,101` bytes.
+- CI `.3dsx`: `573,336` bytes; SHA-256 `982a957425d1183de5aeaf34c280fec28736e69a5aacb221abd7d6d57b04d019`.
+- CI SD bundle: `406,887` bytes; SHA-256 `7bbc8ed1d1b4db80fae6b825e41b4d15b0bb743e9965a50c7b1b7668ac30a139`.
+- CI ELF/map/SMDH SHA-256: `2fb3a212...`, `12a53d26...`, and `b00b518f...`; the full values remain in the retained `build-validation.json`.
+- CI validation confirms the runtime Keeper dialogue path, three runtime zone-blob paths, `ZoneResources`, separated player/boss controllers, RGB565 atlas importer, NDSP streamer, model detection, and corrected byte-index renderer.
+- Latest zone RomFS headroom: 144,803 bytes interior, 194,340 bytes vista, and 169,945 bytes arena.
+- Local netload preflight resolved the official user-local `3dslink`, validated a reserved test IPv4 address, and rejected malformed input without networking.
+
+This is the exact build to place at the physical-device boundary. It is not a physical pass: Wi-Fi launch, offline SD launch, sleep/wake, input feel, 5–8-minute pacing, performance, memory headroom, audio continuity, three cold boots, and the uncut proof shot remain open in `HARDWARE_TEST.md`.
+
 ## Runtime-zone-resource candidate
 
 - Date: 2026-07-18
