@@ -2,7 +2,7 @@
 
 This follows the structural strengths of the supplied PS1 transcript without copying its wording.
 
-1. **Cold open:** show a real New Nintendo 3DS launching Ashen Rift, but only after hardware verification exists.
+1. **Cold open:** show the user's real aqua original Nintendo 3DS launching Ashen Rift, but only after hardware verification exists.
 2. **The mismatch:** explain why recreating a modern dark-fantasy action-RPG feeling on this handheld is unreasonable.
 3. **First life:** turn the official triangle/cube foundation into an ugly third-person prototype; preserve real bugs.
 4. **The failed big idea:** show why building the boss arena first overwhelmed the initial renderer and content budget.

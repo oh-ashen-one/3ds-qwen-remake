@@ -13,7 +13,7 @@ This matrix separates deterministic proof from hardware-only claims.
 | Interior to vista | Door preload, masked reveal, enter, prior-zone logical unload, exact generated RomFS blob validation, and native `ZoneResources` link/path verification | Real allocation/free counters, no visible loading, and frame-time behavior |
 | Dialogue | Start, abort with B, retry, complete | Subtitle readability and input feel |
 | Vista to arena | Fog-gate preload/fade/enter/unload assertions | Masking, audio continuity, and frame pacing |
-| Combat | Forward hitbox, rear-target rejection, stamina cost, dodge invulnerability, healing | Readability, latency, C-stick, L/R/ZR ergonomics |
+| Combat | Forward hitbox, rear-target rejection, stamina cost, dodge invulnerability, healing | Readability, latency, D-pad camera, L/R/Y ergonomics on CTR-001 |
 | Boss lifecycle | Lock-on, out-of-range target loss, death lock release, victory | Both attack telegraphs and all death edge cases |
 | Restart stability | Death restart plus five consecutive arena victory/reset cycles | Three cold-boot full playthroughs and repeated transitions |
 | Pause/suspend | Pause freezes simulation; suspend/resume restores prior mode | lid sleep/wake rendering, input, and NDSP continuity |

@@ -131,9 +131,8 @@ bool Renderer::initialize() {
     return true;
 }
 
-void Renderer::setHardwareInfo(const char* model_name, bool new_family) {
+void Renderer::setHardwareInfo(const char* model_name) {
     hardware_model_ = model_name ? model_name : "Unknown 3DS";
-    new_family_hardware_ = new_family;
 }
 
 void Renderer::bind3DState() {
@@ -422,13 +421,11 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
     if (title_screen) {
         C2D_DrawRectSolid(0.0f, 0.0f, 0.2f, 400.0f, 240.0f, C2D_Color32(8, 7, 11, 205));
         drawText("ASHEN RIFT", 200.0f, 52.0f, 1.05f, C2D_Color32(222, 188, 112, 255));
-        drawText("A NEW NINTENDO 3DS HOMEBREW TALE", 72.0f, 92.0f, 0.42f,
+        drawText("AN ORIGINAL NINTENDO 3DS TALE", 83.0f, 92.0f, 0.42f,
                  C2D_Color32(205, 205, 210, 255));
         drawText("Press A to descend", 126.0f, 168.0f, 0.52f, C2D_Color32(245, 245, 245, 255));
-        if (!new_family_hardware_) {
-            drawText("NEW 3DS FAMILY RECOMMENDED", 119.0f, 208.0f, 0.36f,
-                     C2D_Color32(231, 154, 82, 255));
-        }
+        drawText("BUILT FOR CTR-001", 143.0f, 208.0f, 0.36f,
+                 C2D_Color32(231, 154, 82, 255));
     } else {
         C2D_DrawRectSolid(12.0f, 12.0f, 0.3f, 106.0f, 8.0f, C2D_Color32(30, 20, 24, 220));
         C2D_DrawRectSolid(14.0f, 14.0f, 0.4f, 102.0f * world.player.health / 100.0f, 4.0f,
@@ -469,9 +466,9 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
     C2D_TargetClear(bottom_target_, C2D_Color32(17, 15, 21, 255));
     C2D_SceneBegin(bottom_target_);
     drawText(ZoneManager::name(world.zone), 16.0f, 12.0f, 0.50f, C2D_Color32(222, 188, 112, 255));
-    char status[192];
+    char status[256];
     std::snprintf(status, sizeof(status),
-                  "HP %.0f   ST %.0f   FLASKS %d\nQUICK: %s  (D-pad)\nA interact  B dodge/run  X heal\nR light  ZR heavy  L lock  START pause\nSELECT exit  Y diagnostics",
+                  "HP %.0f   ST %.0f   FLASKS %d\nQUICK: %s  (D-up/down)\nA interact  B dodge/run  X heal\nR light  Y heavy  L lock  START pause\nD-left/right camera   SELECT exit\nTap lower-right: diagnostics",
                   world.player.health, world.player.stamina, world.player.flasks,
                   quickItemName(world.player.selected_item));
     drawText(status, 16.0f, 43.0f, 0.42f, C2D_Color32(222, 222, 228, 255), 292.0f);

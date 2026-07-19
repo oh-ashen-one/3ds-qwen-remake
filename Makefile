@@ -104,6 +104,7 @@ audit-repo:
 
 test-host: $(HOST_BUILD)/core_tests
 	@$(HOST_BUILD)/core_tests
+	@$(PYTHON) tests/original_3ds_contract_tests.py
 	@$(PYTHON) tests/hardware_report_tests.py
 
 HARDWARE_REPORT ?= docs/HARDWARE_REPORT.json

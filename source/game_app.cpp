@@ -8,7 +8,7 @@ namespace {
 
 const char* modelName(u8 model) {
     switch (model) {
-        case CFG_MODEL_3DS: return "Nintendo 3DS";
+        case CFG_MODEL_3DS: return "Nintendo 3DS (CTR-001)";
         case CFG_MODEL_3DSXL: return "Nintendo 3DS XL";
         case CFG_MODEL_N3DS: return "New Nintendo 3DS";
         case CFG_MODEL_2DS: return "Nintendo 2DS";
@@ -40,7 +40,8 @@ bool GameApp::initialize() {
         }
         cfguExit();
     }
-    renderer_.setHardwareInfo(modelName(system_model), isNewFamily(system_model));
+    new_family_hardware_ = isNewFamily(system_model);
+    renderer_.setHardwareInfo(modelName(system_model));
     audio_.initialize();
     session_.resetToTitle();
     if (!zone_resources_.sync(session_.simulation().world().loaded_zone_mask)) {
@@ -59,9 +60,20 @@ InputFrame GameApp::readInput(u32 keys_down, u32 keys_held) {
     circlePosition circle{};
     circlePosition cstick{};
     hidCircleRead(&circle);
-    hidCstickRead(&cstick);
+    if (new_family_hardware_) {
+        hidCstickRead(&cstick);
+    }
 
-    camera_yaw_ += static_cast<float>(cstick.dx) / 156.0f * 0.055f;
+    float camera_input = static_cast<float>(cstick.dx) / 156.0f;
+    if (!new_family_hardware_) {
+        if ((keys_held & KEY_DLEFT) != 0) {
+            camera_input -= 1.0f;
+        }
+        if ((keys_held & KEY_DRIGHT) != 0) {
+            camera_input += 1.0f;
+        }
+    }
+    camera_yaw_ += camera_input * 0.055f;
     const float raw_x = static_cast<float>(circle.dx) / 156.0f;
     const float raw_z = static_cast<float>(circle.dy) / 156.0f;
     const float cosine = std::cos(camera_yaw_);
@@ -70,20 +82,24 @@ InputFrame GameApp::readInput(u32 keys_down, u32 keys_held) {
     InputFrame input{};
     input.move_x = raw_x * cosine + raw_z * sine;
     input.move_z = raw_z * cosine - raw_x * sine;
-    input.camera_x = static_cast<float>(cstick.dx) / 156.0f;
+    input.camera_x = camera_input;
     input.light_attack = (keys_down & KEY_R) != 0;
-    input.heavy_attack = (keys_down & KEY_ZR) != 0;
+    input.heavy_attack = (keys_down & (new_family_hardware_ ? KEY_ZR : KEY_Y)) != 0;
     input.dodge_pressed = (keys_down & KEY_B) != 0;
     input.sprint_held = (keys_held & KEY_B) != 0;
     input.interact = (keys_down & KEY_A) != 0;
     input.heal = (keys_down & KEY_X) != 0;
     input.lock_toggle = (keys_down & KEY_L) != 0;
-    input.debug_toggle = (keys_down & KEY_Y) != 0;
     input.pause_toggle = (keys_down & KEY_START) != 0;
-    if ((keys_down & (KEY_DLEFT | KEY_DDOWN)) != 0) {
+    if ((keys_down & KEY_DDOWN) != 0) {
         input.item_delta = -1;
-    } else if ((keys_down & (KEY_DRIGHT | KEY_DUP)) != 0) {
+    } else if ((keys_down & KEY_DUP) != 0) {
         input.item_delta = 1;
+    }
+    if ((keys_down & KEY_TOUCH) != 0) {
+        touchPosition touch{};
+        hidTouchRead(&touch);
+        input.debug_toggle = touch.px >= 200 && touch.py >= 185;
     }
     return input;
 }

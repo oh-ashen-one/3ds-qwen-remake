@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate measured New Nintendo 3DS acceptance evidence.
+"""Validate measured original Nintendo 3DS acceptance evidence.
 
 This validator deliberately refuses placeholder or emulator-only evidence. It is
 not part of the normal CI build gate because a passing report can only be
@@ -20,7 +20,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REPORT = ROOT / "docs" / "HARDWARE_REPORT.json"
-ALLOWED_MODELS = {"New 3DS", "New 3DS XL", "New 2DS XL"}
+ALLOWED_MODELS = {"Nintendo 3DS (CTR-001)"}
 ZONES = ("interior", "vista", "arena")
 TRUE_DEPLOYMENT_CHECKS = (
     "netload_launch_passed",
@@ -74,8 +74,8 @@ def require_nonempty_string(mapping: dict[str, Any], key: str, path: str, errors
 def validate_report(report: object) -> list[str]:
     errors: list[str] = []
     root = require_mapping(report, "report", errors)
-    if root.get("schema_version") != 1:
-        errors.append("schema_version must equal 1")
+    if root.get("schema_version") != 2:
+        errors.append("schema_version must equal 2")
 
     tested_at = root.get("tested_at")
     if not isinstance(tested_at, str) or not tested_at.strip():
@@ -93,11 +93,13 @@ def validate_report(report: object) -> list[str]:
     model = console.get("model")
     if model not in ALLOWED_MODELS:
         errors.append(f"console.model must be one of {sorted(ALLOWED_MODELS)}")
+    if console.get("region") != "Japan":
+        errors.append("console.region must equal Japan for the user's target console")
     for key in ("system_version", "luma3ds_version", "homebrew_launcher_version"):
         require_nonempty_string(console, key, "console", errors)
     require_true(
         console,
-        ("new_3ds_mode_confirmed", "sd_backup_completed", "sd_health_checked", "known_homebrew_launch_passed"),
+        ("original_3ds_profile_confirmed", "sd_backup_completed", "sd_health_checked", "known_homebrew_launch_passed"),
         "console",
         errors,
     )

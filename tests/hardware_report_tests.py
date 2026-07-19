@@ -36,14 +36,15 @@ def valid_report(artifact_sha256: str) -> dict[str, object]:
         "restart_passed": True,
     }
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "tested_at": "2026-07-18T17:00:00-04:00",
         "console": {
-            "model": "New 3DS XL",
+            "model": "Nintendo 3DS (CTR-001)",
+            "region": "Japan",
             "system_version": "test-version",
             "luma3ds_version": "test-version",
             "homebrew_launcher_version": "test-version",
-            "new_3ds_mode_confirmed": True,
+            "original_3ds_profile_confirmed": True,
             "sd_backup_completed": True,
             "sd_health_checked": True,
             "known_homebrew_launch_passed": True,
@@ -88,6 +89,10 @@ def main() -> None:
     digest = hashlib.sha256(payload).hexdigest()
     report = valid_report(digest)
     assert VALIDATOR.validate_report(report) == []
+
+    wrong_model = copy.deepcopy(report)
+    wrong_model["console"]["model"] = "New 3DS XL"
+    assert any("console.model" in error for error in VALIDATOR.validate_report(wrong_model))
 
     bad_duration = copy.deepcopy(report)
     bad_duration["playthroughs"][1]["duration_seconds"] = 299

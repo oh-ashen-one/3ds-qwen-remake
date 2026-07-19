@@ -1,6 +1,6 @@
 # Master-contract completion audit
 
-Authoritative contract: `MASTER_GOAL_PROMPT.md`. This audit separates implemented/local evidence from claims that require the user's physical New Nintendo 3DS-family console.
+Authoritative contract: `MASTER_GOAL_PROMPT.md`. This audit separates implemented/local evidence from claims that require the user's physical Japanese original Nintendo 3DS (CTR-001).
 
 Status meanings:
 
@@ -23,7 +23,7 @@ Status meanings:
 | Requirement | Status | Authoritative evidence |
 | --- | --- | --- |
 | Title, enclosed opening, animated door reveal, outdoor vista, NPC, fog transition, boss, death/victory, restart | Local pass for state flow | `GameSession`, `ZoneManager`, `Renderer`, and deterministic host smoke flows |
-| Circle Pad/C-stick plus L/R/ZR/B/A/X/D-pad/Start controls | Implemented, hardware pending | `GameApp::readInput`, `CONTROLS.md`, host state tests; ergonomics require the console |
+| CTR-001 controls: Circle Pad, D-pad camera/items, L/R/Y/B/A/X/Start/Select and touch diagnostics | Implemented, hardware pending | `GameApp::readInput`, `CONTROLS.md`, source-contract tests; ergonomics require the console |
 | Player combat states, health, stamina, flasks, invulnerability, lock-on, hit reactions | Local pass | `PlayerController`, rigid-pose sampler, combat and edge-case host tests |
 | Boss with multiple telegraphed attacks, hitboxes, health/name UI, victory/reset | Local pass for logic | `BossController`, arena renderer, deterministic slash/slam/death/victory/reset tests |
 | Original text-only NPC presentation | Local pass | UTF-8 `romfs/dialogue/keeper.txt` is validated and loaded into a fixed renderer buffer from RomFS |

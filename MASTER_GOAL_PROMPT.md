@@ -1,19 +1,19 @@
-# Master Goal Prompt: Elden Ring-Inspired New Nintendo 3DS Homebrew Demo
+# Master Goal Prompt: Elden Ring-Inspired Original Nintendo 3DS Homebrew Demo
 
 ## Mission
 
-Own this project from an empty local Git repository through a verified, playable build on the user's physical New Nintendo 3DS. Create a private GitHub repository, build a native 3DS homebrew vertical slice, establish a rapid Mac-to-3DS deployment loop, and preserve real development footage/evidence so the user can make a YouTube video with the same narrative strength as the supplied PS1 Elden Ring transcript.
+Own this project through a verified, playable build on the user's physical Japanese original Nintendo 3DS (CTR-001). Maintain the private GitHub repository, build a native 3DS homebrew vertical slice, establish a rapid Mac-to-3DS deployment loop, and preserve real development footage/evidence so the user can make a YouTube video with the same narrative strength as the supplied PS1 Elden Ring transcript.
 
 The result is not a port of the commercial game. It is an unofficial, from-scratch fan demake: original low-poly art, original animations, original dialogue, original music/SFX, and no extracted FromSoftware assets or code.
 
-## Verified Starting State
+## Verified Pivot State (2026-07-19)
 
-- Local workspace: `PROJECT_ROOT`
-- Git: empty repository on `main`, with no commits and no remote.
-- GitHub: authenticated as `oh-ashen-one`; the intended private name `oh-ashen-one/elden-ring-3ds-demake` was available when planning was performed.
-- Local toolchain: devkitARM exists under `/opt/devkitpro`; the 3DS-specific `3ds-dev` packages (`libctru`, `citro3d`, `citro2d`, `tex3ds`, `3dslink`, and related tools) were not installed.
-- Hardware: no 3DS is connected now. Build everything possible locally, then stop at the real-device boundary and request the console/model/homebrew/network details needed for testing.
-- Intended hardware baseline: New Nintendo 3DS, New Nintendo 3DS XL, or New Nintendo 2DS XL.
+- Local workspace: `PROJECT_ROOT`.
+- Git/private GitHub: `oh-ashen-one/elden-ring-3ds-demake` exists, `origin/main` was healthy at `80f30b1`, and the pre-pivot build/CI gates passed.
+- Local toolchain: the official devkitPro 3DS stack is installed and has produced a verified `.3dsx` and SD-root package.
+- Hardware: the user's photograph confirms an aqua Japanese original Nintendo 3DS, model family CTR-001. It is stock/not yet homebrewed; the exact System Settings version still must be recorded before following the current official 3DS Hacks Guide.
+- SD card: the user's 32 GB FAT32 card was health-checked and the app bundle was installed without disturbing its existing `Nintendo 3DS` data. It must be updated with the rebuilt artifact after local verification.
+- User-approved pivot: replace the former New-3DS-only baseline with the exact original Nintendo 3DS. Preserve the full vertical slice and physical acceptance gate; do not solve compatibility by shrinking the promised game.
 
 Re-verify all of these facts before relying on them because local, GitHub, package, and hardware state may change.
 
@@ -34,7 +34,8 @@ Re-verify all of these facts before relying on them because local, GitHub, packa
 
 - Top screen: native third-person 3D game at 400x240.
 - Bottom screen: quick items, controls/context, and a toggleable debug/performance display.
-- Circle Pad movement; C-stick camera; L lock-on; R light attack; ZR heavy attack; B dodge/sprint; A interact/confirm; X heal; D-pad item selection; Start pause.
+- Original-3DS controls: Circle Pad movement; D-pad left/right camera; D-pad up/down item selection; L lock-on; R light attack; Y heavy attack; B dodge/sprint; A interact/confirm; X heal; Start pause; Select exit; lower-right touchscreen tap toggles diagnostics.
+- New-family C-stick/ZR input may remain as optional compatibility, but no required gameplay, performance, UI, or acceptance path may depend on New-family controls or CPU speedup.
 - Player states: idle, locomotion, attack, dodge, hurt, heal, interact, death, and victory lockout.
 - Health, stamina, healing charges, damage, dodge invulnerability, target lock, simple hit reactions, and restart flow.
 - One readable boss with a compact state machine, multiple telegraphed attacks, collision/hitboxes, health bar, name card, victory state, and arena reset.
@@ -54,6 +55,7 @@ Re-verify all of these facts before relying on them because local, GitHub, packa
 - `citro2d`: HUD, text, bottom-screen UI, dialogue, and debug overlay.
 - `tex3ds`: offline texture conversion and atlases.
 - Build with a devkitPro-style Makefile and generate `.elf`, `.map`, `.smdh`, and `.3dsx` outputs.
+- Compile for the original 3DS ARM11 MPCore baseline and retain the 30 FPS fixed step. Use model detection for truthful diagnostics and optional newer-family enhancements only; never reject CTR-001 at startup.
 
 Use clear subsystem boundaries:
 
@@ -88,7 +90,7 @@ Use clear subsystem boundaries:
 
 Use the reference transcript's story architecture without copying its wording:
 
-1. Hook: a real New Nintendo 3DS visibly running the demo.
+1. Hook: the user's real aqua original Nintendo 3DS visibly running the demo.
 2. Hardware contrast and why this is unreasonable.
 3. First official graphics example becoming an ugly third-person prototype.
 4. Broken model/animation/camera and an overly ambitious early arena attempt.
@@ -111,7 +113,7 @@ Maintain a milestone log with build/commit identifier, what changed, bugs visibl
 
 ### Physical hardware
 
-- Confirm the exact New 3DS-family model, Luma/Homebrew Launcher state, SD-card readiness, and network access with the user.
+- Confirm the exact CTR-001 model/region, System Settings version, Luma/Homebrew Launcher state, SD-card readiness, and network access with the user.
 - Prove Wi-Fi launch through `3dslink` and persistent launch from the SD card without the Mac.
 - Run three consecutive cold-boot full playthroughs.
 - Target 30 FPS with no sustained drops below 24 FPS, no crashes, no audio underruns, no visible loading outside masked transitions, and at least 20% measured memory headroom at each zone's peak.
@@ -130,4 +132,4 @@ Maintain a milestone log with build/commit identifier, what changed, bugs visibl
 
 ## Definition of Done
 
-The goal is complete only when the private repository and CI are healthy; the original-asset vertical slice is fully playable; the `.3dsx` works through both Wi-Fi netloading and persistent SD installation; the physical New Nintendo 3DS passes the three-playthrough performance/stability gate; and the repository contains the build artifact references, test evidence, hardware report, controls, milestone footage index, and narration/shot outline needed for the user's video.
+The goal is complete only when the private repository and CI are healthy; the original-asset vertical slice is fully playable; the `.3dsx` works through both Wi-Fi netloading and persistent SD installation; the user's physical Japanese original Nintendo 3DS (CTR-001) passes the three-playthrough performance/stability gate; and the repository contains the build artifact references, test evidence, hardware report, controls, milestone footage index, and narration/shot outline needed for the user's video.

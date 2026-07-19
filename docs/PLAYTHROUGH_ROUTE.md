@@ -5,7 +5,7 @@ This is the intended first-completion and proof-recording route. It targets **6:
 | Time | Beat | Required visible evidence |
 | --- | --- | --- |
 | 0:00–0:10 | Title and launch settle | Ashen Rift title, both screens, A prompt |
-| 0:10–0:55 | Sunken Vestibule | Third-person movement, C-stick camera, quick-item selection, room silhouette |
+| 0:10–0:55 | Sunken Vestibule | Third-person movement, D-pad left/right camera, D-pad up/down quick-item selection, room silhouette |
 | 0:55–1:20 | Door/lift reveal | A interaction, rising door, vista data preloaded behind the mask |
 | 1:20–2:35 | Sable Expanse reveal | Panorama, low-poly path, camera sweep, culling counter once |
 | 2:35–3:05 | Veiled Keeper | Full original subtitle, abort/retry only on an edge-case run |

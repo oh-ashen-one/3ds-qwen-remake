@@ -15,15 +15,20 @@ FORBIDDEN_BASENAMES = {
     "aes_keys.txt",
     "boot9.bin",
     "boot11.bin",
+    "essential.exefs",
+    "localfriendcodeseed_b",
     "movable.sed",
+    "nand.bin",
     "otp.bin",
+    "private",
+    "secureinfo_a",
     "seeddb.bin",
 }
 FORBIDDEN_SUFFIXES = {".3ds", ".cia", ".key", ".pem", ".sav"}
 FORBIDDEN_PARTS = {"nintendo 3ds", "sd backup", "sd-card-backup", "credentials"}
 SECRET_PATTERNS = (
     re.compile(rb"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
-    re.compile(rb"\bghp_[A-Za-z0-9]{30,}\b"),
+    re.compile(rb"\bgh[opusr]_[A-Za-z0-9]{30,}\b"),
     re.compile(rb"\bgithub_pat_[A-Za-z0-9_]{30,}\b"),
     re.compile(rb"\bAKIA[A-Z0-9]{16}\b"),
 )
@@ -71,8 +76,11 @@ def main() -> None:
                     violations.append(path.as_posix())
     if violations:
         fail(f"forbidden tracked files: {sorted(violations)}")
-    if any(path.name.lower().startswith("license") for path in tracked):
-        fail("v1 must remain private without an open-source license")
+    license_path = ROOT / "LICENSE"
+    if not license_path.is_file() or not license_path.read_text(encoding="utf-8").startswith(
+        "MIT License\n"
+    ):
+        fail("public releases require the repository MIT LICENSE")
     print(f"repository audit passed: {len(tracked)} repository files, no forbidden payloads")
 
 

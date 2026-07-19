@@ -20,7 +20,7 @@ public:
     struct Vertex { float x; float y; float z; float u; float v; };
 
     bool initialize();
-    void setHardwareInfo(const char* model_name, bool new_family);
+    void setHardwareInfo(const char* model_name);
     void render(const WorldState& world, bool title_screen, bool paused,
                 float frame_ms, unsigned audio_underruns, bool audio_available,
                 float camera_yaw, const SceneBox* scene_boxes,
@@ -74,7 +74,6 @@ private:
     unsigned visible_objects_ = 0;
     unsigned culled_objects_ = 0;
     const char* hardware_model_ = "Unknown 3DS";
-    bool new_family_hardware_ = false;
     std::array<char, 256> keeper_dialogue_{};
 };
 

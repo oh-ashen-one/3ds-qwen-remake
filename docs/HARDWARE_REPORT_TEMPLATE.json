@@ -1,12 +1,13 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "tested_at": null,
   "console": {
     "model": null,
+    "region": "Japan",
     "system_version": null,
     "luma3ds_version": null,
     "homebrew_launcher_version": null,
-    "new_3ds_mode_confirmed": false,
+    "original_3ds_profile_confirmed": false,
     "sd_backup_completed": false,
     "sd_health_checked": false,
     "known_homebrew_launch_passed": false

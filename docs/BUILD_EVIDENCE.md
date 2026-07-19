@@ -1,5 +1,18 @@
 # Build evidence
 
+## Original-3DS rebuild candidate
+
+- Date: 2026-07-19
+- Source commit: `bb59c1f1aedbb1aa27a7096248ac37ffd3bc6792`
+- Target: the user's Japanese original Nintendo 3DS (CTR-001), replacing the former New-family-only baseline without reducing the three-zone vertical slice.
+- Clean local gate: repository audit, original-asset validation, deterministic gameplay tests, original-3DS contract tests, hardware-report validator tests, native cross-build, artifact verification, and deterministic SD package validation all passed.
+- Local `.3dsx`: `571,292` bytes; SHA-256 `0c3e11f31ee15947e5eacec3902f7bb9f8e86eaabc9f3ab3b01806616e4352b6`.
+- Deterministic SD bundle: `406,114` bytes; SHA-256 `66850d44b07c09b93d46a3cb3ada2ff73772b723162f3f266b2b398ee774dbe0`.
+- Package metadata records the exact source commit, artifact size/hash, and install path `sdmc:/3ds/elden-ring-3ds-demake/elden-ring-3ds-demake.3dsx`.
+- Runtime no longer exits on Old hardware. CTR-001 mapping uses D-pad left/right camera, D-pad up/down items, Y heavy attack, and a lower-right touchscreen diagnostics toggle; New-family C-stick/ZR remain optional only.
+
+This is a locally verified physical-test candidate, not a physical pass. The stock console still needs its exact System Settings version recorded, current-guide homebrew setup, rebuilt SD refresh, netload/offline launches, and the complete hardware checklist.
+
 ## Hardware-handoff baseline
 
 - Date: 2026-07-18
@@ -107,4 +120,4 @@ The local and CI hashes differ because they were linked against different offici
 
 ## Evidence boundary
 
-This proves that the source, tests, asset policy, shader, RomFS, native link pipeline, and title-screen emulator smoke work. It does **not** prove that input, audio, performance, netloading, sleep/wake, or the full gameplay loop work on a physical New Nintendo 3DS. Those claims remain pending in `HARDWARE_TEST.md`.
+This proves that the source, tests, asset policy, shader, RomFS, native link pipeline, and title-screen emulator smoke work. It does **not** prove that input, audio, performance, netloading, sleep/wake, or the full gameplay loop work on the user's physical original Nintendo 3DS. Those claims remain pending in `HARDWARE_TEST.md`.
