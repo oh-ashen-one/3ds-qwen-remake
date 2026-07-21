@@ -46,6 +46,36 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
+def git_output(arguments: list[str]) -> bytes:
+    result = subprocess.run(
+        ["git", "-c", f"safe.directory={ROOT}", *arguments],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.decode("utf-8", errors="replace").strip()
+        fail(f"git {' '.join(arguments)} failed: {detail or 'unknown git error'}")
+    return result.stdout
+
+
+def validate_release_history() -> None:
+    identities = git_output(["log", "--format=%ae%x00%ce", "HEAD"])
+    allowed_suffixes = (b"@users.noreply.github.com", b"@github.com")
+    emails = {value.strip() for value in identities.split(b"\x00") if value.strip()}
+    disallowed = sorted(
+        value.decode("utf-8", errors="replace")
+        for value in emails
+        if not value.endswith(allowed_suffixes)
+    )
+    if disallowed:
+        fail(f"release history contains non-noreply identities: {disallowed}")
+
+    patch_history = git_output(["log", "-p", "--no-ext-diff", "HEAD", "--", "."])
+    if any(pattern.search(patch_history) for pattern in SECRET_PATTERNS + PERSONAL_PATTERNS):
+        fail("release history contains a secret or personal path pattern")
+
+
 def main() -> None:
     result = subprocess.run(
         [
@@ -88,6 +118,7 @@ def main() -> None:
         "MIT License\n"
     ):
         fail("public releases require the repository MIT LICENSE")
+    validate_release_history()
     print(f"repository audit passed: {len(tracked)} repository files, no forbidden payloads")
 
 
