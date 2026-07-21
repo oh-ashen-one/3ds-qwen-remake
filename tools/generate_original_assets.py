@@ -1,43 +1,41 @@
 #!/usr/bin/env python3
-"""Generate deterministic, project-original runtime assets."""
+"""Convert the project-owned music masters to raw CTR-001 PCM streams."""
 
 from __future__ import annotations
 
-import math
-import struct
+import wave
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "romfs" / "audio" / "ambient.pcm"
 SAMPLE_RATE = 22_050
-DURATION_SECONDS = 8
+TRACKS = (
+    (ROOT / "assets" / "audio" / "ashen_deep_hall.wav",
+     ROOT / "romfs" / "audio" / "ashen_deep_hall.pcm"),
+    (ROOT / "assets" / "audio" / "ashen_gate.wav",
+     ROOT / "romfs" / "audio" / "ashen_gate.pcm"),
+)
 
 
-def synthesize_ambient() -> bytes:
-    frequencies = (110.0, 146.83, 164.81)
-    frames = bytearray()
-    total_samples = SAMPLE_RATE * DURATION_SECONDS
-    for index in range(total_samples):
-        time = index / SAMPLE_RATE
-        loop_phase = index / total_samples
-        fade = math.sin(loop_phase * math.tau) ** 2
-        drone = sum(
-            math.sin(math.tau * frequency * time + voice * 0.7) / (voice + 2.0)
-            for voice, frequency in enumerate(frequencies)
-        )
-        shimmer = math.sin(math.tau * 0.125 * time) * math.sin(math.tau * 293.66 * time) * 0.05
-        sample = max(-1.0, min(1.0, drone * (0.25 + fade * 0.08) + shimmer))
-        frames.extend(struct.pack("<h", int(sample * 11_000)))
-    return bytes(frames)
+def convert(master: Path, output: Path) -> int:
+    with wave.open(str(master), "rb") as source:
+        if source.getnchannels() != 1:
+            raise SystemExit(f"{master.name} must be mono")
+        if source.getsampwidth() != 2:
+            raise SystemExit(f"{master.name} must be PCM16")
+        if source.getframerate() != SAMPLE_RATE:
+            raise SystemExit(f"{master.name} must be {SAMPLE_RATE} Hz")
+        payload = source.readframes(source.getnframes())
+    output.parent.mkdir(parents=True, exist_ok=True)
+    if not output.exists() or output.read_bytes() != payload:
+        output.write_bytes(payload)
+    return len(payload)
 
 
 def main() -> None:
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    payload = synthesize_ambient()
-    if not OUTPUT.exists() or OUTPUT.read_bytes() != payload:
-        OUTPUT.write_bytes(payload)
-    print(f"generated {OUTPUT.relative_to(ROOT)} ({len(payload)} bytes)")
+    for master, output in TRACKS:
+        size = convert(master, output)
+        print(f"generated {output.relative_to(ROOT)} ({size} bytes)")
 
 
 if __name__ == "__main__":

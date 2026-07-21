@@ -12,28 +12,16 @@ bool AudioStreamer::initialize() {
     ndsp_ready_ = true;
     ndspSetOutputMode(NDSP_OUTPUT_STEREO);
 
-    ambient_samples_ = static_cast<s16*>(linearAlloc(kSamplesPerBuffer * 2U * sizeof(s16)));
+    music_samples_ = static_cast<s16*>(linearAlloc(kSamplesPerBuffer * 2U * sizeof(s16)));
     hit_samples_ = static_cast<s16*>(linearAlloc(kHitSamples * sizeof(s16)));
-    if (!ambient_samples_ || !hit_samples_) {
+    if (!music_samples_ || !hit_samples_) {
         shutdown();
         return false;
     }
 
-    ambient_file_ = std::fopen("romfs:/audio/ambient.pcm", "rb");
-    ndspChnSetInterp(0, NDSP_INTERP_LINEAR);
-    ndspChnSetRate(0, static_cast<float>(kSampleRate));
-    ndspChnSetFormat(0, NDSP_FORMAT_MONO_PCM16);
-    float ambient_mix[12]{};
-    ambient_mix[0] = 0.38f;
-    ambient_mix[1] = 0.38f;
-    ndspChnSetMix(0, ambient_mix);
-
-    if (ambient_file_) {
-        for (int index = 0; index < 2; ++index) {
-            ambient_wave_[index].data_vaddr = ambient_samples_ + index * kSamplesPerBuffer;
-            fillAmbient(index);
-            ndspChnWaveBufAdd(0, &ambient_wave_[index]);
-        }
+    if (!switchMusic("romfs:/audio/ashen_deep_hall.pcm", false)) {
+        shutdown();
+        return false;
     }
 
     for (std::size_t i = 0; i < kHitSamples; ++i) {
@@ -53,22 +41,64 @@ bool AudioStreamer::initialize() {
     return true;
 }
 
-void AudioStreamer::fillAmbient(int index) {
-    if (!ambient_file_ || !ambient_samples_) {
+void AudioStreamer::configureMusicChannel() {
+    ndspChnSetInterp(0, NDSP_INTERP_LINEAR);
+    ndspChnSetRate(0, static_cast<float>(kSampleRate));
+    ndspChnSetFormat(0, NDSP_FORMAT_MONO_PCM16);
+    float music_mix[12]{};
+    const float volume = boss_track_ ? 0.32f : 0.24f;
+    music_mix[0] = volume;
+    music_mix[1] = volume;
+    ndspChnSetMix(0, music_mix);
+}
+
+bool AudioStreamer::switchMusic(const char* path, bool boss_track) {
+    std::FILE* next_file = std::fopen(path, "rb");
+    if (!next_file) {
+        return false;
+    }
+    ndspChnReset(0);
+    if (music_file_) {
+        std::fclose(music_file_);
+    }
+    music_file_ = next_file;
+    boss_track_ = boss_track;
+    std::memset(music_wave_, 0, sizeof(music_wave_));
+    configureMusicChannel();
+    for (int index = 0; index < 2; ++index) {
+        music_wave_[index].data_vaddr = music_samples_ + index * kSamplesPerBuffer;
+        fillMusic(index);
+        ndspChnWaveBufAdd(0, &music_wave_[index]);
+    }
+    return true;
+}
+
+void AudioStreamer::setZone(Zone zone) {
+    const bool wants_boss_track = zone == Zone::Arena;
+    if (wants_boss_track == boss_track_) {
         return;
     }
-    s16* destination = ambient_samples_ + index * kSamplesPerBuffer;
+    switchMusic(wants_boss_track ? "romfs:/audio/ashen_gate.pcm"
+                                 : "romfs:/audio/ashen_deep_hall.pcm",
+                wants_boss_track);
+}
+
+void AudioStreamer::fillMusic(int index) {
+    if (!music_file_ || !music_samples_) {
+        return;
+    }
+    s16* destination = music_samples_ + index * kSamplesPerBuffer;
     std::size_t written = 0;
     unsigned empty_reads = 0;
     while (written < kSamplesPerBuffer) {
         const std::size_t count = std::fread(destination + written, sizeof(s16),
-                                             kSamplesPerBuffer - written, ambient_file_);
+                                             kSamplesPerBuffer - written, music_file_);
         written += count;
         if (count == 0) {
             ++empty_reads;
-            std::rewind(ambient_file_);
-            if (std::ferror(ambient_file_) || empty_reads >= 2) {
-                std::clearerr(ambient_file_);
+            std::rewind(music_file_);
+            if (std::ferror(music_file_) || empty_reads >= 2) {
+                std::clearerr(music_file_);
                 break;
             }
         } else {
@@ -79,18 +109,18 @@ void AudioStreamer::fillAmbient(int index) {
         std::memset(destination + written, 0, (kSamplesPerBuffer - written) * sizeof(s16));
     }
     DSP_FlushDataCache(destination, kSamplesPerBuffer * sizeof(s16));
-    ambient_wave_[index].nsamples = kSamplesPerBuffer;
+    music_wave_[index].nsamples = kSamplesPerBuffer;
 }
 
 void AudioStreamer::update() {
-    if (!ndsp_ready_ || !ambient_file_) {
+    if (!ndsp_ready_ || !music_file_) {
         return;
     }
     bool any_queued = false;
     for (int index = 0; index < 2; ++index) {
-        if (ambient_wave_[index].status == NDSP_WBUF_DONE) {
-            fillAmbient(index);
-            ndspChnWaveBufAdd(0, &ambient_wave_[index]);
+        if (music_wave_[index].status == NDSP_WBUF_DONE) {
+            fillMusic(index);
+            ndspChnWaveBufAdd(0, &music_wave_[index]);
         } else {
             any_queued = true;
         }
@@ -133,9 +163,9 @@ void AudioStreamer::resume() {
 }
 
 void AudioStreamer::shutdown() {
-    if (ambient_file_) {
-        std::fclose(ambient_file_);
-        ambient_file_ = nullptr;
+    if (music_file_) {
+        std::fclose(music_file_);
+        music_file_ = nullptr;
     }
     if (ndsp_ready_) {
         ndspChnReset(0);
@@ -144,9 +174,9 @@ void AudioStreamer::shutdown() {
         ndsp_ready_ = false;
         suspended_ = false;
     }
-    if (ambient_samples_) {
-        linearFree(ambient_samples_);
-        ambient_samples_ = nullptr;
+    if (music_samples_) {
+        linearFree(music_samples_);
+        music_samples_ = nullptr;
     }
     if (hit_samples_) {
         linearFree(hit_samples_);

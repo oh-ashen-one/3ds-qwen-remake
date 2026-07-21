@@ -2,24 +2,24 @@
 
 ## Mission
 
-Own this project through a verified, playable build on the user's physical Japanese original Nintendo 3DS (CTR-001). Maintain the private GitHub repository, build a native 3DS homebrew vertical slice, establish a rapid Mac-to-3DS deployment loop, and preserve real development footage/evidence so the user can make a YouTube video with the same narrative strength as the supplied PS1 Elden Ring transcript.
+Own this project through a verified, playable build on the user's physical Japanese original Nintendo 3DS (CTR-001). Maintain the public GitHub repository, build a native 3DS homebrew vertical slice, establish a rapid development-to-3DS deployment loop, and preserve real development footage/evidence so the user can make a YouTube video with the same narrative strength as the supplied PS1 Elden Ring transcript.
 
 The result is not a port of the commercial game. It is an unofficial, from-scratch fan demake: original low-poly art, original animations, original dialogue, original music/SFX, and no extracted FromSoftware assets or code.
 
 ## Verified Pivot State (2026-07-19)
 
-- Local workspace: `PROJECT_ROOT`.
-- Git/private GitHub: `oh-ashen-one/elden-ring-3ds-demake` exists, `origin/main` was healthy at `80f30b1`, and the pre-pivot build/CI gates passed.
+- Local workspace: the repository root; no machine-specific absolute path belongs in tracked files.
+- Git/public GitHub: `oh-ashen-one/elden-ring-3ds-demake` exists and uses `main` as its release branch.
 - Local toolchain: the official devkitPro 3DS stack is installed and has produced a verified `.3dsx` and SD-root package.
-- Hardware: the user's photograph confirms an aqua Japanese original Nintendo 3DS, model family CTR-001. It is stock/not yet homebrewed; the exact System Settings version still must be recorded before following the current official 3DS Hacks Guide.
-- SD card: the user's 32 GB FAT32 card was health-checked and the app bundle was installed without disturbing its existing `Nintendo 3DS` data. It must be updated with the rebuilt artifact after local verification.
+- Hardware: the user's photograph confirms an aqua Japanese original Nintendo 3DS, model family CTR-001, on System Settings `11.17.0-50J`; boot9strap and Luma3DS are installed, while the game-specific physical acceptance report remains pending.
+- SD card: the user's 32 GB FAT32 card was health-checked and the app bundle was installed without disturbing its existing `Nintendo 3DS` data.
 - User-approved pivot: replace the former New-3DS-only baseline with the exact original Nintendo 3DS. Preserve the full vertical slice and physical acceptance gate; do not solve compatibility by shrinking the promised game.
 
 Re-verify all of these facts before relying on them because local, GitHub, package, and hardware state may change.
 
 ## Non-Negotiable Outcomes
 
-1. Create `oh-ashen-one/elden-ring-3ds-demake` as a **private** GitHub repository and connect it as `origin` without disturbing unrelated user files.
+1. Maintain `oh-ashen-one/elden-ring-3ds-demake` as a **public** GitHub repository with an MIT license, privacy-safe history, and no secrets, personal paths, console-unique data, or backups.
 2. Produce a self-contained Homebrew Launcher `.3dsx` built with the official devkitPro stack.
 3. Implement a coherent 5–8 minute sequence: title screen, enclosed opening room, animated doorway/lift reveal, outdoor vista, short NPC interaction, fog-gate/transition, third-person boss fight, victory/death, and restart.
 4. Support physical-device iteration through both:
@@ -81,9 +81,9 @@ Use clear subsystem boundaries:
 ## Repository and Automation
 
 - Add a concise README, build/setup guide, controls, fan-project disclaimer, asset-provenance manifest, `.gitignore`, milestone log, test instructions, and hardware-test checklist.
-- Keep the repository private and omit an open-source license for v1.
+- Keep the repository public under its MIT license and audit the current tree plus reachable history before every release.
 - Add `make`, `make clean`, host-test, asset-validation, and `make run IP=<3DS-IP>` workflows.
-- Add GitHub Actions that use the official devkitPro devkitARM container, build reproducibly, run host tests/asset validation, and retain private `.3dsx`, `.elf`/map, and budget reports.
+- Add GitHub Actions that use the official devkitPro devkitARM container, build reproducibly, run host tests/asset validation, and retain `.3dsx`, `.elf`/map, and budget reports without personal build paths.
 - Commit in coherent milestones and push them. Do not include copyrighted source media, credentials, SD-card backups, console-unique files, or generated build directories.
 
 ## Video-Production Evidence
@@ -132,4 +132,4 @@ Maintain a milestone log with build/commit identifier, what changed, bugs visibl
 
 ## Definition of Done
 
-The goal is complete only when the private repository and CI are healthy; the original-asset vertical slice is fully playable; the `.3dsx` works through both Wi-Fi netloading and persistent SD installation; the user's physical Japanese original Nintendo 3DS (CTR-001) passes the three-playthrough performance/stability gate; and the repository contains the build artifact references, test evidence, hardware report, controls, milestone footage index, and narration/shot outline needed for the user's video.
+The goal is complete only when the public, privacy-audited repository and CI are healthy; the original-asset vertical slice is fully playable; the `.3dsx` works through both Wi-Fi netloading and persistent SD installation; the user's physical Japanese original Nintendo 3DS (CTR-001) passes the three-playthrough performance/stability gate; and the repository contains the build artifact references, test evidence, hardware report, controls, milestone footage index, and narration/shot outline needed for the user's video.

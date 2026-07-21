@@ -9,9 +9,10 @@ Ashen Rift uses no extracted commercial assets.
 | Environment texture atlas | `gfx/environment.ppm` + `gfx/environment.t3s` | Original hand-authored pixels; converted to compressed RGB565 T3X by official `tex3ds` |
 | Player, NPC, and boss geometry | Indexed runtime box mesh plus rigid hierarchy in `source/renderer.cpp` | Original code, silhouettes, and composition |
 | Rigid animation clips | `source/rigid_animation.cpp` + `assets/animation_clips.json` | Original idle, locomotion, attack, dodge, hurt, and heal transforms |
-| Ambient loop | `tools/generate_original_assets.py` | Original deterministic synthesis |
+| Exploration music: Ashen Deep Hall | `assets/audio/ashen_deep_hall.wav` | User-supplied original Suno composition authorized for this project; 22.05 kHz mono PCM16 master |
+| Boss music: Ashen Gate | `assets/audio/ashen_gate.wav` | User-supplied original Suno composition authorized for this project; 22.05 kHz mono PCM16 master |
 | Combat hit sound | Runtime synthesis in `source/audio_streamer.cpp` | Original deterministic synthesis |
 | Veiled Keeper dialogue | `romfs/dialogue/keeper.txt` | Original writing |
 | UI | citro2d primitives and 3DS system font | Runtime primitives; no bundled font asset |
 
-`assets/manifest.json` is the authoritative inventory. The generator produces typed asset IDs and zone records; validation rejects missing sources/outputs, stale generated files, invalid formats, disallowed licenses, bad clip metadata, sparse scenes, and zone-budget overflow. Every future asset must declare its source, provenance, allowed license, expected output, size limit, and zone membership before entering the build.
+`assets/manifest.json` is the authoritative inventory. The generator produces typed asset IDs and zone records; validation rejects missing sources/outputs, stale generated files, invalid formats, disallowed licenses, bad clip metadata, sparse scenes, and zone-budget overflow. The tracked WAV masters are converted to headerless PCM streams without requiring an external audio converter during reproducible builds. Every future asset must declare its source, provenance, allowed license, expected output, size limit, and zone membership before entering the build.

@@ -20,7 +20,8 @@ GENERATED_BUILD_INPUTS = (
     Path("include/demake/generated/asset_registry_data.hpp"),
     Path("include/demake/generated/scene_asset_data.hpp"),
     Path("include/demake/generated/scene_assets.stamp"),
-    Path("romfs/audio/ambient.pcm"),
+    Path("romfs/audio/ashen_deep_hall.pcm"),
+    Path("romfs/audio/ashen_gate.pcm"),
     Path("romfs/zones/interior.bin"),
     Path("romfs/zones/vista.bin"),
     Path("romfs/zones/arena.bin"),
@@ -39,9 +40,10 @@ def clean() -> None:
         report = ROOT / report_name
         if report.is_file():
             report.unlink()
-    generated_audio = ROOT / "romfs" / "audio" / "ambient.pcm"
-    if generated_audio.is_file():
-        generated_audio.unlink()
+    for track_name in ("ashen_deep_hall.pcm", "ashen_gate.pcm"):
+        generated_audio = ROOT / "romfs" / "audio" / track_name
+        if generated_audio.is_file():
+            generated_audio.unlink()
     generated_texture = ROOT / "data" / "environment_atlas.t3x"
     if generated_texture.is_file():
         generated_texture.unlink()

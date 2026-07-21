@@ -17,10 +17,10 @@ This is a locally verified physical-test candidate, not a physical pass. The sto
 
 - Date: 2026-07-18
 - Source commit: `6d367543641549af2ea0459bd1a8bac0a76918ba`
-- Private repository: `oh-ashen-one/elden-ring-3ds-demake`
+- Repository (private at this historical capture; now public): `oh-ashen-one/elden-ring-3ds-demake`
 - Merged hardening PRs: [runtime zone resources #5](https://github.com/oh-ashen-one/elden-ring-3ds-demake/pull/5) and [completion audit/handoff #6](https://github.com/oh-ashen-one/elden-ring-3ds-demake/pull/6).
 - Post-merge main CI: [run 29660097300](https://github.com/oh-ashen-one/elden-ring-3ds-demake/actions/runs/29660097300), success in 44 seconds.
-- Private CI artifact: `ashen-rift-3ds`, artifact id `8434059747`, archive size `1,624,101` bytes.
+- CI artifact: `ashen-rift-3ds`, artifact id `8434059747`, archive size `1,624,101` bytes.
 - CI `.3dsx`: `573,336` bytes; SHA-256 `982a957425d1183de5aeaf34c280fec28736e69a5aacb221abd7d6d57b04d019`.
 - CI SD bundle: `406,887` bytes; SHA-256 `7bbc8ed1d1b4db80fae6b825e41b4d15b0bb743e9965a50c7b1b7668ac30a139`.
 - CI ELF/map/SMDH SHA-256: `2fb3a212...`, `12a53d26...`, and `b00b518f...`; the full values remain in the retained `build-validation.json`.
@@ -68,11 +68,11 @@ After rebuilding, official Azahar 2125.1.3 was restarted against the corrected a
 
 - Date: 2026-07-18
 - Source commit: `4f8865195bdeeee6c093612c7500fee02ca3d38f`
-- Private repository: `oh-ashen-one/elden-ring-3ds-demake`
+- Repository (private at this historical capture; now public): `oh-ashen-one/elden-ring-3ds-demake`
 - Draft PR: `https://github.com/oh-ashen-one/elden-ring-3ds-demake/pull/1`
 - GitHub Actions PR run: `https://github.com/oh-ashen-one/elden-ring-3ds-demake/actions/runs/29657762838`
 - GitHub Actions push run: `https://github.com/oh-ashen-one/elden-ring-3ds-demake/actions/runs/29657761443`
-- CI result: both runs succeeded. The PR run passed repository audit, clean original-asset generation, validation, deterministic host tests, native build, 3DSX/SMDH/RomFS/link verification, report generation, and private artifact upload.
+- CI result: both runs succeeded. The PR run passed repository audit, clean original-asset generation, validation, deterministic host tests, native build, 3DSX/SMDH/RomFS/link verification, report generation, and artifact upload.
 - Pinned CI toolchain: official `devkitpro/devkitarm` OCI digest `sha256:116afba8df8453961de2936ffab20dd441edf4d682856c1ec8b0e53d7ed0bbf5`; devkitARM GCC 16.1.0; `tex3ds` 2.3.0.
 - CI artifact: `ashen-rift-3ds`, artifact id `8433385115`, archive size `1,199,658` bytes.
 - CI `.3dsx`: `571,132` bytes; SHA-256 `e308ba55a388ed5a70b4beaefb4435323df6e6918556815f392645bea3abbf6e`.
@@ -86,7 +86,7 @@ This candidate closes the non-hardware asset/architecture automation gap. It doe
 
 - Date: 2026-07-18
 - Source commit: `89a520244d4b86071ee62b222d995b38a074ab14`
-- Private repository: `oh-ashen-one/elden-ring-3ds-demake`
+- Repository (private at this historical capture; now public): `oh-ashen-one/elden-ring-3ds-demake`
 - GitHub Actions run: `https://github.com/oh-ashen-one/elden-ring-3ds-demake/actions/runs/29656291832`
 - CI result: success; original-asset validation, deterministic host tests, native 3DSX build, report generation, and artifact upload all passed.
 - CI artifact: `ashen-rift-3ds`, artifact id `8432968668`, archive size `1,079,490` bytes.
@@ -107,14 +107,14 @@ Computer-driven key taps were not reliable enough to claim an end-to-end emulato
 
 - Date: 2026-07-18
 - Source commit: `0ad06b66144e85ac2fc0be31e227e66ca7705fa4`
-- Private repository: `oh-ashen-one/elden-ring-3ds-demake`
+- Repository (private at this historical capture; now public): `oh-ashen-one/elden-ring-3ds-demake`
 - GitHub Actions run: `https://github.com/oh-ashen-one/elden-ring-3ds-demake/actions/runs/29655685968`
 - CI result: success; original-asset generation/validation, deterministic host tests, native 3DSX build, report generation, and artifact upload all passed.
 - CI artifact: `ashen-rift-3ds`, artifact id `8432791976`, archive size `1,074,719` bytes.
 - CI `.3dsx`: `556,316` bytes; SHA-256 `a90871d5498efd83c6000a02bcc6fcea63b0668f3dbc4978d316a8c3da3052d5`.
 - Local source-built-toolchain `.3dsx`: `565,008` bytes; SHA-256 `6493caaec16cb38755e6c40b5c58ba6cab1dbb92ffb949408afe8ea7e3ab38e0`.
 - `3dsxdump` accepted the local artifact and reported 44 code pages, 3 read-only-data pages, 2 data pages, and 7 BSS pages.
-- Embedded RomFS inspection found `audio/ambient.pcm` and the original Veiled Keeper dialogue.
+- The earlier candidate embedded `audio/ambient.pcm`; the current music integration replaces it with zone-selected `audio/ashen_deep_hall.pcm` and `audio/ashen_gate.pcm` streams while retaining the original Veiled Keeper dialogue.
 
 The local and CI hashes differ because they were linked against different official devkitPro package snapshots. Reproducibility is defined within the pinned CI container environment; the CI artifact is the handoff candidate until the next source change.
 

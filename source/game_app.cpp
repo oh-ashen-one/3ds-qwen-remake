@@ -99,7 +99,15 @@ InputFrame GameApp::readInput(u32 keys_down, u32 keys_held) {
     if ((keys_down & KEY_TOUCH) != 0) {
         touchPosition touch{};
         hidTouchRead(&touch);
-        input.debug_toggle = touch.px >= 200 && touch.py >= 185;
+        if (touch.px >= 220 && touch.py >= 58 && touch.py < 100) {
+            input.interact = true;
+        } else if (touch.px >= 220 && touch.py >= 108 && touch.py < 150) {
+            input.heal = true;
+        } else if (touch.px >= 220 && touch.py >= 158 && touch.py < 200) {
+            input.lock_toggle = true;
+        } else if (touch.px >= 244 && touch.py >= 207) {
+            input.debug_toggle = true;
+        }
     }
     return input;
 }
@@ -210,6 +218,7 @@ void GameApp::run() {
         }
         previous_boss_health = world.boss.health;
         previous_player_health = world.player.health;
+        audio_.setZone(world.zone);
         audio_.update();
         const std::size_t current_free = linearSpaceFree();
         const std::size_t current_used = linear_baseline_ > current_free

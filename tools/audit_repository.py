@@ -32,6 +32,13 @@ SECRET_PATTERNS = (
     re.compile(rb"\bgithub_pat_[A-Za-z0-9_]{30,}\b"),
     re.compile(rb"\bAKIA[A-Z0-9]{16}\b"),
 )
+PERSONAL_PATTERNS = (
+    re.compile(rb"/" + b"Users" + rb"/[^/\s]+/"),
+    re.compile(rb"/" + b"Volumes" + rb"/[^/\r\n]+"),
+    re.compile(rb"[A-Za-z]:\\\\" + b"Users" + rb"\\\\[^\\\s]+", re.IGNORECASE),
+    re.compile(rb"\bmi" + b"dir" + rb"\b", re.IGNORECASE),
+    re.compile(rb"\bhaar" + b"itth" + rb"@gmail\.com\b", re.IGNORECASE),
+)
 
 
 def fail(message: str) -> None:
@@ -72,7 +79,7 @@ def main() -> None:
             absolute = ROOT / path
             if absolute.is_file() and absolute.stat().st_size <= 2 * 1024 * 1024:
                 payload = absolute.read_bytes()
-                if any(pattern.search(payload) for pattern in SECRET_PATTERNS):
+                if any(pattern.search(payload) for pattern in SECRET_PATTERNS + PERSONAL_PATTERNS):
                     violations.append(path.as_posix())
     if violations:
         fail(f"forbidden tracked files: {sorted(violations)}")

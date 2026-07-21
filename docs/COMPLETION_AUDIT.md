@@ -12,10 +12,10 @@ Status meanings:
 
 | Requirement | Status | Authoritative evidence |
 | --- | --- | --- |
-| Private `oh-ashen-one/elden-ring-3ds-demake` repository and `origin` | Local pass | Live GitHub repository metadata plus `git remote -v`; private CI/PRs are recorded in `BUILD_EVIDENCE.md` |
-| No extracted commercial assets, credentials, console-unique files, SD backups, release package, or public license | Local pass | `make audit-repo`; `assets/manifest.json`; `ASSET_PROVENANCE.md`; no license file |
+| Public `oh-ashen-one/elden-ring-3ds-demake` repository and `origin` | Local pass | Live GitHub repository metadata plus `git remote -v`; CI/PRs are recorded in `BUILD_EVIDENCE.md` |
+| No extracted commercial assets, credentials, personal paths, console-unique files, SD backups, or committed release package | Local pass | `make audit-repo`; `assets/manifest.json`; `ASSET_PROVENANCE.md`; MIT `LICENSE` |
 | Official devkitPro native C++17 build | Local pass | `Makefile`, devkitARM flags, libctru/citro3d/citro2d/tex3ds use, clean `make verify-build` |
-| Private CI builds/tests/verifies and retains artifacts | Local pass | `.github/workflows/build.yml`; green GitHub Actions runs and downloaded private artifacts in `BUILD_EVIDENCE.md` |
+| CI builds/tests/verifies and retains artifacts | Local pass | `.github/workflows/build.yml`; green GitHub Actions runs and downloaded artifacts in `BUILD_EVIDENCE.md` |
 | Netload and persistent SD workflows exist | Implemented, hardware pending | `make check-netload IP=...` validates address/artifact/tool discovery; `make run IP=...`; deterministic `make package-sd`; SD-root path and embedded source/hash validation |
 
 ## Playable vertical slice
@@ -23,7 +23,8 @@ Status meanings:
 | Requirement | Status | Authoritative evidence |
 | --- | --- | --- |
 | Title, enclosed opening, animated door reveal, outdoor vista, NPC, fog transition, boss, death/victory, restart | Local pass for state flow | `GameSession`, `ZoneManager`, `Renderer`, and deterministic host smoke flows |
-| CTR-001 controls: Circle Pad, D-pad camera/items, L/R/Y/B/A/X/Start/Select and touch diagnostics | Implemented, hardware pending | `GameApp::readInput`, `CONTROLS.md`, source-contract tests; ergonomics require the console |
+| CTR-001 controls: Circle Pad, D-pad camera/items, L/R/Y/B/A/X/Start/Select and touch ACT/HEAL/LOCK/DEBUG | Implemented, hardware pending | `GameApp::readInput`, `CONTROLS.md`, source-contract tests; ergonomics require the console |
+| Useful lower screen: live objective, zone map, facing/objective markers, status, and touch actions | Implemented, hardware pending | `Renderer::renderUi`, `CONTROLS.md`, source-contract tests; legibility and touch ergonomics require the console |
 | Player combat states, health, stamina, flasks, invulnerability, lock-on, hit reactions | Local pass | `PlayerController`, rigid-pose sampler, combat and edge-case host tests |
 | Boss with multiple telegraphed attacks, hitboxes, health/name UI, victory/reset | Local pass for logic | `BossController`, arena renderer, deterministic slash/slam/death/victory/reset tests |
 | Original text-only NPC presentation | Local pass | UTF-8 `romfs/dialogue/keeper.txt` is validated and loaded into a fixed renderer buffer from RomFS |
@@ -36,7 +37,7 @@ Status meanings:
 | Clear GameApp/ZoneManager/Renderer/Player/Boss/Audio/Asset boundaries | Local pass | Native headers/sources and required linked-symbol verification |
 | Three independently loadable zones with masked overlap and prior-zone free | Local pass for allocation logic | `ZoneResources`, ASZN blobs, host parser/residency tests, native map without host-only all-zone arrays |
 | Original low-poly/Blender/rigid-animation/texture pipeline | Local pass | 53 authored props, editable `.blend` plus fingerprints, 15-bone clips, RGB565 T3X, generated registry/blobs |
-| RomFS content and NDSP double-buffered original audio | Local pass for build/runtime path | Embedded marker/link verification and `AudioStreamer`; audible continuity/underruns remain hardware-only |
+| RomFS content and NDSP double-buffered original audio with zone-based exploration/boss music | Local pass for build/runtime path | Embedded marker/link verification and `AudioStreamer`; audible switching, balance, continuity, and underruns remain hardware-only |
 | No per-frame heap allocation in game loop | Local pass by inspection | Fixed members/buffers; transition-only linear allocations; preallocated renderer/audio resources |
 | Frame/draw/culling/zone/linear-memory/audio counters | Implemented, hardware pending | Bottom-screen diagnostics and verifier; performance values require physical sampling |
 

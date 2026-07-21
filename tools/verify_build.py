@@ -122,9 +122,11 @@ def main() -> None:
     if header_size < 32 or reloc_header_size == 0:
         fail("3DSX header sizes are invalid")
     required_romfs_markers = (
-        b"ambient.pcm",
+        b"ashen_deep_hall.pcm",
+        b"ashen_gate.pcm",
         b"keeper.txt",
-        b"romfs:/audio/ambient.pcm",
+        b"romfs:/audio/ashen_deep_hall.pcm",
+        b"romfs:/audio/ashen_gate.pcm",
         b"romfs:/dialogue/keeper.txt",
         b"romfs:/zones/interior.bin",
         b"romfs:/zones/vista.bin",

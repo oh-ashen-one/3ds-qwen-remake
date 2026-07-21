@@ -4,17 +4,30 @@
   "policy": "Only original, generated, or explicitly licensed assets may enter RomFS.",
   "assets": [
     {
-      "id": "ambient_sable_expanse",
+      "id": "music_ashen_deep_hall",
       "kind": "audio_pcm16_mono",
-      "source": "tools/generate_original_assets.py",
-      "output": "romfs/audio/ambient.pcm",
-      "provenance": "Original deterministic synthesis created for this project",
+      "source": "assets/audio/ashen_deep_hall.wav",
+      "output": "romfs/audio/ashen_deep_hall.pcm",
+      "provenance": "User-supplied original Suno composition authorized by the project owner and converted to a tracked PCM16 mono master",
       "license": "project-original",
-      "max_bytes": 400000,
+      "max_bytes": 12000000,
       "sample_rate": 22050,
       "channels": 1,
       "sample_width_bytes": 2,
-      "zones": ["interior", "vista", "arena"]
+      "zones": ["interior", "vista"]
+    },
+    {
+      "id": "music_ashen_gate",
+      "kind": "audio_pcm16_mono",
+      "source": "assets/audio/ashen_gate.wav",
+      "output": "romfs/audio/ashen_gate.pcm",
+      "provenance": "User-supplied original Suno composition authorized by the project owner and converted to a tracked PCM16 mono master",
+      "license": "project-original",
+      "max_bytes": 14000000,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "zones": ["arena"]
     },
     {
       "id": "veiled_keeper_dialogue",

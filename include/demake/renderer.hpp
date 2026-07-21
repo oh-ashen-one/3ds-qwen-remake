@@ -37,7 +37,7 @@ private:
     void renderWorld(const WorldState& world, const SceneBox* scene_boxes,
                      std::size_t scene_box_count);
     void renderPanorama(Zone zone);
-    void renderStaticScene(const SceneBox* boxes, std::size_t count);
+    void renderStaticScene(const WorldState& world, const SceneBox* boxes, std::size_t count);
     void renderInterior(const WorldState& world);
     void renderVista(const WorldState& world);
     void renderArena(const WorldState& world);

@@ -139,7 +139,7 @@ $(BUILD):
 
 clean:
 	@echo clean ...
-	@rm -rf $(BUILD) $(HOST_BUILD) $(TARGET).3dsx $(TARGET).smdh $(TARGET).elf $(TARGET).lst $(TARGET).map romfs/audio/ambient.pcm $(SCENE_BLOBS) $(TEXTURE_ATLAS) $(GENERATED_REGISTRY) $(GENERATED_SCENE) $(GENERATED_SCENE_STAMP) asset-budget-report.json build-validation.json build-report.txt dist
+	@rm -rf $(BUILD) $(HOST_BUILD) $(TARGET).3dsx $(TARGET).smdh $(TARGET).elf $(TARGET).lst $(TARGET).map romfs/audio/ashen_deep_hall.pcm romfs/audio/ashen_gate.pcm $(SCENE_BLOBS) $(TEXTURE_ATLAS) $(GENERATED_REGISTRY) $(GENERATED_SCENE) $(GENERATED_SCENE_STAMP) asset-budget-report.json build-validation.json build-report.txt dist
 
 else
 

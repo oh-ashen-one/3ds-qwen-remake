@@ -1,5 +1,6 @@
 #include "demake/renderer.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -38,6 +39,58 @@ constexpr std::uint8_t kCubeIndices[] = {
 };
 
 constexpr std::size_t kCubeIndexCount = sizeof(kCubeIndices) / sizeof(kCubeIndices[0]);
+
+constexpr float kCameraDistance = 7.2f;
+constexpr float kExteriorCameraHeight = 4.5f;
+constexpr float kInteriorCameraHeight = 3.45f;
+constexpr float kInteriorCameraWallLimit = 4.55f;
+constexpr float kInteriorCameraFrontLimit = 4.25f;
+constexpr float kCameraOccluderPadding = 0.18f;
+
+float distanceToSegment(Vec2 point, Vec2 start, Vec2 end) {
+    const Vec2 segment{end.x - start.x, end.z - start.z};
+    const float length_squared = segment.x * segment.x + segment.z * segment.z;
+    if (length_squared <= 0.0001f) {
+        return distance(point, start);
+    }
+    const Vec2 offset{point.x - start.x, point.z - start.z};
+    const float projection = std::clamp(
+        (offset.x * segment.x + offset.z * segment.z) / length_squared, 0.0f, 1.0f);
+    return distance(point, {start.x + segment.x * projection,
+                            start.z + segment.z * projection});
+}
+
+const char* objectiveFor(const WorldState& world) {
+    if (world.player.state == PlayerState::Dead) {
+        return "Return to the ember";
+    }
+    if (world.player.state == PlayerState::Victory || world.boss.state == BossState::Dead) {
+        return "The Ashen Warden is felled";
+    }
+    if (world.zone == Zone::Interior) {
+        if (!world.door_activated) {
+            return "Reach the sealed lift and press ACT";
+        }
+        if (world.door_progress < 0.95f) {
+            return "The lift gate is opening";
+        }
+        return "Enter the Sable Expanse";
+    }
+    if (world.zone == Zone::Vista) {
+        if (world.dialogue_active) {
+            return "ACT: continue   B: leave";
+        }
+        if (!world.dialogue_complete) {
+            return "Find the Veiled Keeper";
+        }
+        if (world.arena_transition) {
+            return "Crossing the pale gate";
+        }
+        return "Cross the pale gate and press ACT";
+    }
+    return world.player.lock_on ? "Defeat the Warden - target locked"
+                                : "Defeat the Warden - tap LOCK";
+}
 
 bool loadTextAsset(const char* path, char* destination, std::size_t capacity) {
     if (!path || !destination || capacity < 2) {
@@ -160,9 +213,21 @@ void Renderer::updateCamera(const WorldState& world) {
     }
     const float forward_x = std::sin(camera_yaw_);
     const float forward_z = std::cos(camera_yaw_);
-    camera_ground_ = {player.position.x - forward_x * 7.2f,
-                      player.position.z - forward_z * 7.2f};
-    const C3D_FVec camera = FVec3_New(camera_ground_.x, 4.5f, camera_ground_.z);
+    camera_ground_ = {player.position.x - forward_x * kCameraDistance,
+                      player.position.z - forward_z * kCameraDistance};
+    float camera_height = kExteriorCameraHeight;
+    if (world.zone == Zone::Interior) {
+        // The vestibule roof starts at Y=3.95. Keeping the camera below it
+        // prevents the roof slab from sitting between the camera and player.
+        // Constraining the orbit to the room's inner side-wall and door faces
+        // also prevents rotated views from looking back through those solids.
+        camera_ground_.x = std::clamp(camera_ground_.x,
+                                      -kInteriorCameraWallLimit,
+                                      kInteriorCameraWallLimit);
+        camera_ground_.z = std::min(camera_ground_.z, kInteriorCameraFrontLimit);
+        camera_height = kInteriorCameraHeight;
+    }
+    const C3D_FVec camera = FVec3_New(camera_ground_.x, camera_height, camera_ground_.z);
     const C3D_FVec target = FVec3_New(player.position.x, 1.1f, player.position.z + 1.2f);
     const C3D_FVec up = FVec3_New(0.0f, 1.0f, 0.0f);
     Mtx_LookAt(&view_, camera, target, up, false);
@@ -195,7 +260,7 @@ void Renderer::render(const WorldState& world, bool title_screen, bool paused,
 void Renderer::renderWorld(const WorldState& world, const SceneBox* scene_boxes,
                            std::size_t scene_box_count) {
     renderPanorama(world.zone);
-    renderStaticScene(scene_boxes, scene_box_count);
+    renderStaticScene(world, scene_boxes, scene_box_count);
     switch (world.zone) {
         case Zone::Interior: renderInterior(world); break;
         case Zone::Vista: renderVista(world); break;
@@ -222,7 +287,8 @@ void Renderer::renderPanorama(Zone zone) {
             0.0f, red * 0.78f, green * 0.78f, blue * 0.88f, true);
 }
 
-void Renderer::renderStaticScene(const SceneBox* boxes, std::size_t count) {
+void Renderer::renderStaticScene(const WorldState& world, const SceneBox* boxes,
+                                 std::size_t count) {
     for (std::size_t index = 0; index < count; ++index) {
         const SceneBox& box = boxes[index];
         if (!box.always) {
@@ -231,6 +297,17 @@ void Renderer::renderStaticScene(const SceneBox* boxes, std::size_t count) {
                 static_cast<float>(box.cell_z) * 6.0f + 3.0f,
             };
             if (distance(camera_ground_, cell_center) > 62.0f) {
+                ++culled_objects_;
+                continue;
+            }
+            // Generated columns and trees are scenery, not gameplay barriers.
+            // Hide one only while its footprint crosses the camera-to-player
+            // segment, preventing the same full-screen obstruction in any zone.
+            const float occluder_radius =
+                0.5f * std::sqrt(box.sx * box.sx + box.sz * box.sz) +
+                kCameraOccluderPadding;
+            if (distanceToSegment({box.x, box.z}, camera_ground_, world.player.position) <
+                occluder_radius) {
                 ++culled_objects_;
                 continue;
             }
@@ -423,7 +500,7 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
         drawText("ASHEN RIFT", 200.0f, 52.0f, 1.05f, C2D_Color32(222, 188, 112, 255));
         drawText("AN ORIGINAL NINTENDO 3DS TALE", 83.0f, 92.0f, 0.42f,
                  C2D_Color32(205, 205, 210, 255));
-        drawText("Press A to descend", 126.0f, 168.0f, 0.52f, C2D_Color32(245, 245, 245, 255));
+        drawText("Press A or tap ACT", 126.0f, 168.0f, 0.52f, C2D_Color32(245, 245, 245, 255));
         drawText("BUILT FOR CTR-001", 143.0f, 208.0f, 0.36f,
                  C2D_Color32(231, 154, 82, 255));
     } else {
@@ -466,16 +543,76 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
     C2D_TargetClear(bottom_target_, C2D_Color32(17, 15, 21, 255));
     C2D_SceneBegin(bottom_target_);
     drawText(ZoneManager::name(world.zone), 16.0f, 12.0f, 0.50f, C2D_Color32(222, 188, 112, 255));
-    char status[256];
-    std::snprintf(status, sizeof(status),
-                  "HP %.0f   ST %.0f   FLASKS %d\nQUICK: %s  (D-up/down)\nA interact  B dodge/run  X heal\nR light  Y heavy  L lock  START pause\nD-left/right camera   SELECT exit\nTap lower-right: diagnostics",
+    char status[96];
+    std::snprintf(status, sizeof(status), "HP %.0f  ST %.0f  FLASKS %d  %s",
                   world.player.health, world.player.stamina, world.player.flasks,
                   quickItemName(world.player.selected_item));
-    drawText(status, 16.0f, 43.0f, 0.42f, C2D_Color32(222, 222, 228, 255), 292.0f);
-    for (int index = 0; index < world.player.flasks; ++index) {
-        C2D_DrawRectSolid(20.0f + static_cast<float>(index) * 28.0f, 178.0f, 0.2f,
-                          20.0f, 34.0f, C2D_Color32(190, 108, 28, 255));
+    drawText(status, 16.0f, 31.0f, 0.34f, C2D_Color32(215, 215, 220, 255));
+    drawText(objectiveFor(world), 16.0f, 45.0f, 0.35f, C2D_Color32(196, 167, 224, 255), 196.0f);
+
+    constexpr float map_x = 14.0f;
+    constexpr float map_y = 68.0f;
+    constexpr float map_width = 194.0f;
+    constexpr float map_height = 126.0f;
+    C2D_DrawRectSolid(map_x, map_y, 0.1f, map_width, map_height,
+                      C2D_Color32(6, 7, 10, 255));
+    C2D_DrawRectSolid(map_x + 3.0f, map_y + 3.0f, 0.2f, map_width - 6.0f, map_height - 6.0f,
+                      C2D_Color32(35, 31, 43, 255));
+
+    float min_x = -5.0f;
+    float max_x = 5.0f;
+    float min_z = -8.0f;
+    float max_z = 6.0f;
+    if (world.zone == Zone::Vista) {
+        min_x = -11.0f;
+        max_x = 11.0f;
+        min_z = 5.8f;
+        max_z = 28.2f;
+    } else if (world.zone == Zone::Arena) {
+        min_x = -9.5f;
+        max_x = 9.5f;
+        min_z = -9.5f;
+        max_z = 9.5f;
     }
+    const auto mapPoint = [&](Vec2 point) {
+        const float normalized_x = std::clamp((point.x - min_x) / (max_x - min_x), 0.0f, 1.0f);
+        const float normalized_z = std::clamp((point.z - min_z) / (max_z - min_z), 0.0f, 1.0f);
+        return Vec2{map_x + 7.0f + normalized_x * (map_width - 14.0f),
+                    map_y + map_height - 7.0f - normalized_z * (map_height - 14.0f)};
+    };
+
+    Vec2 objective{0.0f, 4.6f};
+    if (world.zone == Zone::Vista) {
+        objective = world.dialogue_complete ? Vec2{0.0f, 28.0f} : Vec2{0.0f, 15.5f};
+    } else if (world.zone == Zone::Arena) {
+        objective = world.boss.position;
+    }
+    const Vec2 objective_map = mapPoint(objective);
+    C2D_DrawRectSolid(objective_map.x - 4.0f, objective_map.z - 4.0f, 0.4f, 8.0f, 8.0f,
+                      world.zone == Zone::Arena ? C2D_Color32(174, 48, 42, 255)
+                                                : C2D_Color32(200, 153, 62, 255));
+    const Vec2 player_map = mapPoint(world.player.position);
+    C2D_DrawRectSolid(player_map.x - 3.0f, player_map.z - 3.0f, 0.5f, 7.0f, 7.0f,
+                      C2D_Color32(230, 225, 210, 255));
+    const Vec2 facing_map = mapPoint({world.player.position.x + std::sin(world.player.facing) * 0.7f,
+                                     world.player.position.z + std::cos(world.player.facing) * 0.7f});
+    C2D_DrawRectSolid(facing_map.x - 1.5f, facing_map.z - 1.5f, 0.5f, 3.0f, 3.0f,
+                      C2D_Color32(116, 230, 152, 255));
+
+    const auto drawTouchButton = [&](const char* label, float y, u32 color) {
+        C2D_DrawRectSolid(220.0f, y, 0.2f, 88.0f, 42.0f, C2D_Color32(8, 7, 11, 255));
+        C2D_DrawRectSolid(223.0f, y + 3.0f, 0.3f, 82.0f, 36.0f, color);
+        drawText(label, 239.0f, y + 12.0f, 0.48f, C2D_Color32(245, 245, 245, 255));
+    };
+    drawTouchButton("ACT", 58.0f, C2D_Color32(82, 64, 100, 255));
+    drawTouchButton("HEAL", 108.0f, C2D_Color32(126, 70, 28, 255));
+    drawTouchButton("LOCK", 158.0f,
+                    world.player.lock_on ? C2D_Color32(130, 42, 38, 255)
+                                         : C2D_Color32(48, 58, 68, 255));
+    C2D_DrawRectSolid(244.0f, 207.0f, 0.2f, 64.0f, 23.0f, C2D_Color32(38, 36, 44, 255));
+    drawText("DEBUG", 253.0f, 212.0f, 0.30f, C2D_Color32(170, 170, 178, 255));
+    drawText("white: you   gold: objective", 16.0f, 207.0f, 0.29f,
+             C2D_Color32(165, 165, 172, 255));
     if (world.debug_overlay) {
         char diagnostics[256];
         std::snprintf(diagnostics, sizeof(diagnostics),
@@ -486,8 +623,8 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
                       static_cast<unsigned long>(world.zone_resident_bytes / 1024U), zone_memory_kb,
                       static_cast<unsigned long>(linearSpaceFree() / 1024U),
                       audio_available ? "streaming" : "unavailable", audio_underruns);
-        C2D_DrawRectSolid(8.0f, 193.0f, 0.3f, 304.0f, 45.0f, C2D_Color32(4, 4, 6, 235));
-        drawText(diagnostics, 12.0f, 196.0f, 0.32f, C2D_Color32(116, 230, 152, 255));
+        C2D_DrawRectSolid(8.0f, 172.0f, 0.7f, 204.0f, 66.0f, C2D_Color32(4, 4, 6, 245));
+        drawText(diagnostics, 12.0f, 176.0f, 0.29f, C2D_Color32(116, 230, 152, 255), 196.0f);
     }
 }
 
