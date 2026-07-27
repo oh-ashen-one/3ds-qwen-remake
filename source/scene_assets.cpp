@@ -22,6 +22,9 @@ const SceneBox* SceneAssets::boxes(Zone zone, std::size_t& count) {
         case Zone::Arena:
             count = generated::kArenaBoxCount;
             return generated::kArenaBoxes;
+        case Zone::Field:
+            count = generated::kFieldBoxCount;
+            return generated::kFieldBoxes;
     }
     count = 0;
     return nullptr;

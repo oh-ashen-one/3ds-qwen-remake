@@ -26,15 +26,18 @@ const char* zonePath(Zone zone) {
     constexpr const char* kInteriorPath = "romfs:/zones/interior.bin";
     constexpr const char* kVistaPath = "romfs:/zones/vista.bin";
     constexpr const char* kArenaPath = "romfs:/zones/arena.bin";
+    constexpr const char* kFieldPath = "romfs:/zones/field.bin";
 #else
     constexpr const char* kInteriorPath = "romfs/zones/interior.bin";
     constexpr const char* kVistaPath = "romfs/zones/vista.bin";
     constexpr const char* kArenaPath = "romfs/zones/arena.bin";
+    constexpr const char* kFieldPath = "romfs/zones/field.bin";
 #endif
     switch (zone) {
         case Zone::Interior: return kInteriorPath;
         case Zone::Vista: return kVistaPath;
         case Zone::Arena: return kArenaPath;
+        case Zone::Field: return kFieldPath;
     }
     return nullptr;
 }
@@ -80,7 +83,7 @@ bool readExact(std::FILE* file, void* destination, std::size_t bytes) {
 } // namespace
 
 bool ZoneResources::sync(std::uint8_t requested_mask) {
-    constexpr std::uint8_t kZoneMask = 0x07U;
+    constexpr std::uint8_t kZoneMask = 0x0FU;
     if ((requested_mask & ~kZoneMask) != 0U) {
         return false;
     }

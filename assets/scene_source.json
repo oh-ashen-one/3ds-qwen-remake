@@ -4,10 +4,10 @@
   "zones": {
     "interior": {
       "boxes": [
-        {"name": "floor", "position": [0.0, -0.35, -1.0], "scale": [10.0, 0.6, 18.0], "color": [0.20, 0.18, 0.24], "always": true},
-        {"name": "left_wall", "position": [-5.0, 2.0, -1.0], "scale": [0.6, 4.8, 18.0], "color": [0.16, 0.14, 0.18], "always": true},
-        {"name": "right_wall", "position": [5.0, 2.0, -1.0], "scale": [0.6, 4.8, 18.0], "color": [0.16, 0.14, 0.18], "always": true},
-        {"name": "ceiling", "position": [0.0, 4.2, -1.0], "scale": [10.0, 0.5, 18.0], "color": [0.12, 0.10, 0.14], "always": true}
+        {"name": "floor", "position": [0.0, -0.35, -1.0], "scale": [10.0, 0.6, 18.0], "color": [0.32, 0.29, 0.37], "always": true},
+        {"name": "left_wall", "position": [-5.0, 2.0, -1.0], "scale": [0.6, 4.8, 18.0], "color": [0.27, 0.24, 0.31], "always": true},
+        {"name": "right_wall", "position": [5.0, 2.0, -1.0], "scale": [0.6, 4.8, 18.0], "color": [0.27, 0.24, 0.31], "always": true},
+        {"name": "ceiling", "position": [0.0, 4.2, -1.0], "scale": [10.0, 0.5, 18.0], "color": [0.22, 0.19, 0.26], "always": true}
       ],
       "generators": [
         {
@@ -16,18 +16,18 @@
           "x": 3.8,
           "z_values": [-6.0, -2.0, 2.0],
           "templates": [
-            {"position": [0.0, 1.4, 0.0], "scale": [0.75, 3.0, 0.75], "color": [0.30, 0.25, 0.28]},
-            {"position": [0.0, 2.4, 0.0], "scale": [0.20, 0.20, 0.20], "color": [0.95, 0.52, 0.18]}
+            {"position": [0.0, 1.4, 0.0], "scale": [0.75, 3.0, 0.75], "color": [0.43, 0.37, 0.42]},
+            {"position": [0.0, 2.4, 0.0], "scale": [0.20, 0.20, 0.20], "color": [1.00, 0.66, 0.28]}
           ]
         }
       ]
     },
     "vista": {
       "boxes": [
-        {"name": "valley_floor", "position": [0.0, -0.45, 17.0], "scale": [24.0, 0.8, 28.0], "color": [0.28, 0.31, 0.18], "always": true},
-        {"name": "reveal_ledge", "position": [0.0, -0.25, 8.0], "scale": [7.0, 0.4, 7.0], "color": [0.34, 0.31, 0.24], "always": true},
-        {"name": "distant_tower", "position": [-8.0, 8.0, 55.0], "scale": [2.8, 16.0, 2.8], "color": [0.42, 0.28, 0.16], "always": true},
-        {"name": "distant_crown", "position": [-8.0, 18.0, 55.0], "scale": [16.0, 8.0, 16.0], "color": [0.62, 0.50, 0.20], "always": true}
+        {"name": "valley_floor", "position": [0.0, -0.45, 17.0], "scale": [24.0, 0.8, 28.0], "color": [0.42, 0.50, 0.25], "always": true},
+        {"name": "reveal_ledge", "position": [0.0, -0.25, 8.0], "scale": [7.0, 0.4, 7.0], "color": [0.49, 0.45, 0.34], "always": true},
+        {"name": "distant_tower", "position": [-8.0, 8.0, 55.0], "scale": [2.8, 16.0, 2.8], "color": [0.55, 0.40, 0.25], "always": true},
+        {"name": "distant_crown", "position": [-8.0, 18.0, 55.0], "scale": [16.0, 8.0, 16.0], "color": [0.76, 0.63, 0.31], "always": true}
       ],
       "generators": [
         {
@@ -39,15 +39,15 @@
           "x_base": 5.0,
           "x_modulus": 5,
           "templates": [
-            {"position": [0.0, 1.2, 0.0], "scale": [0.45, 2.6, 0.45], "color": [0.27, 0.18, 0.12]},
-            {"position": [0.0, 3.0, 0.0], "scale": [2.2, 2.0, 2.2], "color": [0.20, 0.30, 0.12]}
+            {"position": [0.0, 1.2, 0.0], "scale": [0.45, 2.6, 0.45], "color": [0.39, 0.27, 0.18]},
+            {"position": [0.0, 3.0, 0.0], "scale": [2.2, 2.0, 2.2], "color": [0.31, 0.48, 0.20]}
           ]
         }
       ]
     },
     "arena": {
       "boxes": [
-        {"name": "arena_floor", "position": [0.0, -0.45, 0.0], "scale": [19.0, 0.8, 19.0], "color": [0.24, 0.20, 0.17], "always": true}
+        {"name": "arena_floor", "position": [0.0, -0.45, 0.0], "scale": [19.0, 0.8, 19.0], "color": [0.36, 0.32, 0.28], "always": true}
       ],
       "generators": [
         {
@@ -55,7 +55,41 @@
           "name": "warden_columns",
           "count": 12,
           "radius": 9.2,
-          "template": {"position": [0.0, 2.0, 0.0], "scale": [0.7, 4.2, 0.7], "color": [0.28, 0.24, 0.22]}
+          "template": {"position": [0.0, 2.0, 0.0], "scale": [0.7, 4.2, 0.7], "color": [0.43, 0.39, 0.37]}
+        }
+      ]
+    },
+    "field": {
+      "boxes": [
+        {"name": "sunlit_grassland", "position": [0.0, -0.48, 25.0], "scale": [90.0, 0.8, 110.0], "color": [0.38, 0.63, 0.22], "always": true},
+        {"name": "wind_path", "position": [0.0, -0.02, 25.0], "scale": [5.5, 0.12, 105.0], "color": [0.70, 0.68, 0.38], "always": true},
+        {"name": "left_meadow_rise", "position": [-27.0, 1.1, 18.0], "scale": [30.0, 2.8, 42.0], "rotation_y": -0.12, "color": [0.32, 0.56, 0.19]},
+        {"name": "right_meadow_rise", "position": [29.0, 1.4, 31.0], "scale": [34.0, 3.4, 48.0], "rotation_y": 0.10, "color": [0.35, 0.59, 0.20]},
+        {"name": "mountain_left_back", "position": [-39.0, 5.0, 91.0], "scale": [32.0, 10.0, 24.0], "rotation_y": -0.22, "color": [0.35, 0.47, 0.39], "always": true},
+        {"name": "mountain_left_peak", "position": [-22.0, 8.0, 99.0], "scale": [24.0, 16.0, 21.0], "rotation_y": 0.28, "color": [0.42, 0.54, 0.45], "always": true},
+        {"name": "mountain_center_peak", "position": [4.0, 9.0, 108.0], "scale": [30.0, 18.0, 24.0], "rotation_y": -0.14, "color": [0.47, 0.58, 0.49], "always": true},
+        {"name": "mountain_right_peak", "position": [29.0, 7.0, 98.0], "scale": [27.0, 14.0, 23.0], "rotation_y": 0.19, "color": [0.40, 0.52, 0.43], "always": true},
+        {"name": "mountain_right_back", "position": [48.0, 4.5, 90.0], "scale": [34.0, 9.0, 27.0], "rotation_y": -0.30, "color": [0.33, 0.45, 0.37], "always": true},
+        {"name": "distant_snow_cap_left", "position": [-22.0, 19.5, 98.0], "scale": [13.0, 7.0, 12.0], "rotation_y": 0.28, "color": [0.82, 0.88, 0.86], "always": true},
+        {"name": "distant_snow_cap_center", "position": [4.0, 22.0, 107.0], "scale": [16.0, 8.0, 14.0], "rotation_y": -0.14, "color": [0.88, 0.91, 0.89], "always": true},
+        {"name": "distant_snow_cap_right", "position": [29.0, 17.0, 97.0], "scale": [14.0, 6.0, 12.0], "rotation_y": 0.19, "color": [0.80, 0.86, 0.83], "always": true},
+        {"name": "waystone_left", "position": [-5.0, 2.3, 61.0], "scale": [0.8, 4.8, 0.8], "color": [0.51, 0.50, 0.42]},
+        {"name": "waystone_right", "position": [5.0, 2.3, 61.0], "scale": [0.8, 4.8, 0.8], "color": [0.51, 0.50, 0.42]},
+        {"name": "waystone_lintel", "position": [0.0, 4.6, 61.0], "scale": [11.0, 0.7, 0.8], "color": [0.58, 0.55, 0.43]}
+      ],
+      "generators": [
+        {
+          "type": "field_scatter",
+          "name": "wind_grass",
+          "count": 28,
+          "x_min": -40.0,
+          "x_max": 40.0,
+          "z_min": -20.0,
+          "z_max": 70.0,
+          "templates": [
+            {"position": [0.0, 0.38, 0.0], "scale": [0.16, 0.82, 1.25], "color": [0.50, 0.78, 0.24]},
+            {"position": [0.0, 0.31, 0.0], "scale": [0.14, 0.66, 1.05], "color": [0.68, 0.83, 0.29]}
+          ]
         }
       ]
     }

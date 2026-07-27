@@ -2,13 +2,15 @@
 
 Ashen Rift is an original, low-poly action-RPG homebrew demo rebuilt for the original Nintendo 3DS (CTR-001). It is a from-scratch fan demake experiment inspired by the feeling of modern dark-fantasy games, not a port or redistribution of any commercial title.
 
-The playable sequence connects three memory-bounded zones: a sunken interior, an outdoor reveal with an NPC encounter, and a boss arena. It includes third-person movement, D-pad camera control, lock-on, stamina combat, healing, RomFS-backed text dialogue, a scripted boss, dual-screen UI, generated original audio, and performance diagnostics.
+The playable sequence connects four memory-bounded zones: a sunken interior, an outdoor reveal with an NPC encounter, a boss arena, and the post-boss Sunlit Reach. It includes third-person movement, D-pad camera control, lock-on, stamina combat, healing, RomFS-backed text dialogue, a readable scripted boss, a mountable and galloping horse, dual-screen UI, generated original audio, and performance diagnostics.
 
 The complete project contract is preserved in [MASTER_GOAL_PROMPT.md](MASTER_GOAL_PROMPT.md); [GOAL_PROMPT.md](GOAL_PROMPT.md) is its reusable sub-4,000-character `/goal` launcher.
 
 ## Status
 
-- Native fixed-step gameplay, three-zone streaming state, combat, lifecycle handling, dual-screen UI, and NDSP audio are implemented.
+- Native fixed-step gameplay, four-zone streaming state, combat, lifecycle handling, dual-screen UI, and NDSP audio are implemented.
+- Defeating the Ashen Warden now opens into the Sunlit Reach: a bright, wide grassland with a road, grass banks, layered mountains, snowcaps, clouds, a visible sun, and a summonable horse.
+- The lighting and material palette were lifted for original-3DS visibility, and the boss now has lower health, slower telegraphs, gentler pursuit, smaller hit zones, and clearer recovery windows.
 - The original-content pipeline includes generated asset IDs, per-zone manifests and budgets, independently loadable RomFS scene blobs, a Blender-editable scene source, 15-bone rigid animation clips, and an RGB565 `tex3ds` atlas.
 - Static props use generated fixed-size data, an indexed VBO, coarse-grid and view/distance culling, baked colors, a directional tint, fog-gate masking, blob shadows, and distant panorama panels.
 - Repository policy audit, asset validation, deterministic host smoke flows, native artifact verification, and GitHub Actions are implemented; see [BUILD_EVIDENCE.md](docs/BUILD_EVIDENCE.md).

@@ -12,6 +12,8 @@ constexpr float kPi = 3.14159265f;
 constexpr Vec2 kDoor{0.0f, 4.3f};
 constexpr Vec2 kNpc{0.0f, 15.5f};
 constexpr Vec2 kFogGate{0.0f, 27.5f};
+constexpr Vec2 kFieldSpawn{0.0f, -20.0f};
+constexpr Vec2 kHorseSpawn{2.0f, -12.0f};
 
 float clamp(float value, float low, float high) {
     return std::max(low, std::min(value, high));
@@ -77,6 +79,9 @@ void ZoneManager::reset(WorldState& world) const {
     world.dialogue_active = false;
     world.dialogue_complete = false;
     world.arena_transition = false;
+    world.field_transition = false;
+    world.horse_position = kHorseSpawn;
+    world.horse_facing = 0.0f;
     world.loaded_zone_mask = 0;
     world.zone_resident_bytes = 0;
     world.zone_loads = 0;
@@ -119,6 +124,18 @@ void ZoneManager::enter(WorldState& world, Zone zone) {
     world.zone = zone;
     ++world.zone_transitions;
     unload(world, previous);
+}
+
+void ZoneManager::beginPostBossField(WorldState& world) const {
+    if (world.zone != Zone::Arena || world.boss.state != BossState::Dead ||
+        world.field_transition) {
+        return;
+    }
+    preload(world, Zone::Field);
+    world.field_transition = true;
+    world.transition_timer = 1.05f;
+    world.player.state = PlayerState::Interact;
+    world.player.state_timer = 1.05f;
 }
 
 void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) const {
@@ -175,6 +192,49 @@ void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) c
                 world.boss.state = BossState::Approach;
             }
         }
+        return;
+    }
+
+    if (world.zone == Zone::Arena) {
+        if (world.field_transition) {
+            world.transition_timer -= dt;
+            if (world.transition_timer <= 0.0f) {
+                enter(world, Zone::Field);
+                world.player.position = kFieldSpawn;
+                world.player.facing = 0.0f;
+                world.player.state = PlayerState::Idle;
+                world.player.state_timer = 0.0f;
+                world.player.mounted = false;
+                world.horse_position = kHorseSpawn;
+                world.horse_facing = 0.0f;
+                world.field_transition = false;
+            }
+        }
+        return;
+    }
+
+    if (world.zone == Zone::Field && playerCanAct(world.player.state)) {
+        if (input.lock_toggle && !world.player.mounted) {
+            const Vec2 forward = forwardOf(world.player.facing);
+            world.horse_position = offset(world.player.position, forward, 1.8f);
+            world.horse_facing = world.player.facing;
+        }
+        if (input.interact) {
+            if (world.player.mounted) {
+                const Vec2 side{std::cos(world.player.facing), -std::sin(world.player.facing)};
+                world.player.mounted = false;
+                world.horse_position = world.player.position;
+                world.horse_facing = world.player.facing;
+                world.player.position.x += side.x * 1.35f;
+                world.player.position.z += side.z * 1.35f;
+            } else if (distance(world.player.position, world.horse_position) < 2.4f) {
+                world.player.mounted = true;
+                world.player.position = world.horse_position;
+                world.player.facing = world.horse_facing;
+            }
+            world.player.state = PlayerState::Interact;
+            world.player.state_timer = 0.28f;
+        }
     }
 }
 
@@ -183,6 +243,7 @@ const char* ZoneManager::name(Zone zone) {
         case Zone::Interior: return "Sunken Vestibule";
         case Zone::Vista: return "The Sable Expanse";
         case Zone::Arena: return "Warden's Hollow";
+        case Zone::Field: return "The Sunlit Reach";
     }
     return "Unknown";
 }
@@ -208,16 +269,22 @@ void GameSimulation::step(const InputFrame& input, float dt) {
             (world_.player.selected_item + input.item_delta + kQuickItemCount) % kQuickItemCount;
     }
 
-    if (world_.player.state == PlayerState::Dead || world_.player.state == PlayerState::Victory) {
+    if (world_.player.state == PlayerState::Dead) {
         if (input.interact) {
             reset();
+        }
+        return;
+    }
+    if (world_.player.state == PlayerState::Victory) {
+        if (input.interact) {
+            zones_.beginPostBossField(world_);
         }
         return;
     }
 
     zones_.update(world_, input, dt);
     player_controller_.update(world_, input, dt);
-    if (world_.zone == Zone::Arena) {
+    if (world_.zone == Zone::Arena && !world_.field_transition) {
         boss_controller_.update(world_, dt);
     }
 }
@@ -233,14 +300,14 @@ void PlayerController::update(WorldState& world_, const InputFrame& input, float
         const Vec2 hit_center = offset(player.position, forwardOf(player.facing), 1.25f);
         if (world_.zone == Zone::Arena &&
             circlesOverlap(hit_center, 1.25f, world_.boss.position, 0.9f)) {
-            BossController::damage(world_, 16.0f);
+            BossController::damage(world_, 20.0f);
         }
     } else if (player.state == PlayerState::HeavyAttack && !player.action_applied && player.state_timer <= 0.30f) {
         player.action_applied = true;
         const Vec2 hit_center = offset(player.position, forwardOf(player.facing), 1.45f);
         if (world_.zone == Zone::Arena &&
             circlesOverlap(hit_center, 1.55f, world_.boss.position, 0.9f)) {
-            BossController::damage(world_, 30.0f);
+            BossController::damage(world_, 38.0f);
         }
     } else if (player.state == PlayerState::Heal && !player.action_applied && player.state_timer <= 0.25f) {
         player.action_applied = true;
@@ -263,14 +330,16 @@ void PlayerController::update(WorldState& world_, const InputFrame& input, float
         player.lock_on = !player.lock_on;
     }
 
-    if (input.light_attack && player.stamina >= 12.0f && world_.zone == Zone::Arena) {
+    if (!player.mounted && input.light_attack && player.stamina >= 12.0f &&
+        world_.zone == Zone::Arena) {
         player.state = PlayerState::Attack;
         player.state_timer = 0.46f;
         player.action_applied = false;
         player.stamina -= 12.0f;
         return;
     }
-    if (input.heavy_attack && player.stamina >= 24.0f && world_.zone == Zone::Arena) {
+    if (!player.mounted && input.heavy_attack && player.stamina >= 24.0f &&
+        world_.zone == Zone::Arena) {
         player.state = PlayerState::HeavyAttack;
         player.state_timer = 0.78f;
         player.action_applied = false;
@@ -291,17 +360,19 @@ void PlayerController::update(WorldState& world_, const InputFrame& input, float
         movement = normalized(movement);
     }
 
-    if (input.dodge_pressed && magnitude > 0.15f && player.stamina >= 20.0f) {
+    if (!player.mounted && input.dodge_pressed && magnitude > 0.15f &&
+        player.stamina >= 20.0f) {
         player.state = PlayerState::Dodge;
         player.state_timer = 0.48f;
         player.action_applied = false;
         player.stamina -= 20.0f;
         const Vec2 direction = normalized(movement);
-        player.position.x += direction.x * 1.5f;
-        player.position.z += direction.z * 1.5f;
+        player.position.x += direction.x * 1.7f;
+        player.position.z += direction.z * 1.7f;
     } else if (magnitude > 0.08f) {
         const bool sprinting = input.sprint_held && player.stamina > 1.0f;
-        const float speed = sprinting ? 5.2f : 3.4f;
+        const float speed = player.mounted ? (sprinting ? 10.2f : 7.0f)
+                                           : (sprinting ? 5.2f : 3.4f);
         player.position.x += movement.x * speed * dt;
         player.position.z += movement.z * speed * dt;
         player.state = PlayerState::Move;
@@ -309,7 +380,8 @@ void PlayerController::update(WorldState& world_, const InputFrame& input, float
             player.facing = std::atan2(movement.x, movement.z);
         }
         if (sprinting) {
-            player.stamina = std::max(0.0f, player.stamina - 18.0f * dt);
+            const float stamina_cost = player.mounted ? 10.0f : 18.0f;
+            player.stamina = std::max(0.0f, player.stamina - stamina_cost * dt);
         }
     } else {
         player.state = PlayerState::Idle;
@@ -331,9 +403,16 @@ void PlayerController::update(WorldState& world_, const InputFrame& input, float
     } else if (world_.zone == Zone::Vista) {
         player.position.x = clamp(player.position.x, -11.0f, 11.0f);
         player.position.z = clamp(player.position.z, 5.8f, 28.2f);
-    } else {
+    } else if (world_.zone == Zone::Arena) {
         player.position.x = clamp(player.position.x, -8.5f, 8.5f);
         player.position.z = clamp(player.position.z, -8.5f, 8.5f);
+    } else {
+        player.position.x = clamp(player.position.x, -42.0f, 42.0f);
+        player.position.z = clamp(player.position.z, -24.0f, 74.0f);
+        if (player.mounted) {
+            world_.horse_position = player.position;
+            world_.horse_facing = player.facing;
+        }
     }
 }
 
@@ -378,15 +457,15 @@ void BossController::update(WorldState& world_, float dt) const {
             boss.state = BossState::Approach;
             break;
         case BossState::Approach: {
-            if (gap > 2.8f) {
+            if (gap > 3.0f) {
                 const Vec2 direction = normalized({player.position.x - boss.position.x,
                                                    player.position.z - boss.position.z});
-                boss.position.x += direction.x * 1.65f * dt;
-                boss.position.z += direction.z * 1.65f * dt;
+                boss.position.x += direction.x * 1.25f * dt;
+                boss.position.z += direction.z * 1.25f * dt;
             } else {
                 const bool slam = (boss.attack_cycle++ % 3U) == 2U;
                 boss.state = slam ? BossState::WindupSlam : BossState::WindupSlash;
-                boss.state_timer = slam ? 0.92f : 0.58f;
+                boss.state_timer = slam ? 1.20f : 0.80f;
             }
             break;
         }
@@ -395,9 +474,9 @@ void BossController::update(WorldState& world_, float dt) const {
                 boss.state = BossState::Slash;
                 boss.state_timer = 0.18f;
                 const Vec2 hit_center = offset(boss.position, forwardOf(boss.facing), 1.45f);
-                if (circlesOverlap(hit_center, 1.35f, player.position, 0.55f) &&
+                if (circlesOverlap(hit_center, 1.20f, player.position, 0.55f) &&
                     player.state != PlayerState::Dodge) {
-                    PlayerController::damage(world_, 24.0f);
+                    PlayerController::damage(world_, 16.0f);
                 }
             }
             break;
@@ -405,9 +484,9 @@ void BossController::update(WorldState& world_, float dt) const {
             if (boss.state_timer <= 0.0f) {
                 boss.state = BossState::Slam;
                 boss.state_timer = 0.25f;
-                if (circlesOverlap(boss.position, 3.25f, player.position, 0.55f) &&
+                if (circlesOverlap(boss.position, 2.75f, player.position, 0.55f) &&
                     player.state != PlayerState::Dodge) {
-                    PlayerController::damage(world_, 34.0f);
+                    PlayerController::damage(world_, 24.0f);
                 }
             }
             break;
@@ -415,7 +494,7 @@ void BossController::update(WorldState& world_, float dt) const {
         case BossState::Slam:
             if (boss.state_timer <= 0.0f) {
                 boss.state = BossState::Recover;
-                boss.state_timer = 0.62f;
+                boss.state_timer = 0.90f;
             }
             break;
         case BossState::Recover:

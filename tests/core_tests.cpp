@@ -29,12 +29,13 @@ void testMathAndCollision() {
 }
 
 void testGeneratedAssetRegistry() {
-    assert(AssetRegistry::assetCount() == 13);
+    assert(AssetRegistry::assetCount() == 15);
     const AssetRecord* exploration_music = AssetRegistry::find("music_ashen_deep_hall");
     assert(exploration_music != nullptr);
     assert(AssetRegistry::assetBelongsToZone(*exploration_music, Zone::Interior));
     assert(AssetRegistry::assetBelongsToZone(*exploration_music, Zone::Vista));
     assert(!AssetRegistry::assetBelongsToZone(*exploration_music, Zone::Arena));
+    assert(AssetRegistry::assetBelongsToZone(*exploration_music, Zone::Field));
     const AssetRecord* boss_music = AssetRegistry::find("music_ashen_gate");
     assert(boss_music != nullptr);
     assert(!AssetRegistry::assetBelongsToZone(*boss_music, Zone::Interior));
@@ -48,11 +49,16 @@ void testGeneratedAssetRegistry() {
     assert(texture != nullptr);
     assert(std::strcmp(texture->kind, "texture_atlas") == 0);
     assert(AssetRegistry::assetBelongsToZone(*texture, Zone::Arena));
+    assert(AssetRegistry::assetBelongsToZone(*texture, Zone::Field));
     const AssetRecord* interior_blob = AssetRegistry::find("interior_scene_blob");
     assert(interior_blob != nullptr);
     assert(AssetRegistry::assetBelongsToZone(*interior_blob, Zone::Interior));
     assert(!AssetRegistry::assetBelongsToZone(*interior_blob, Zone::Vista));
     assert(AssetRegistry::zone(Zone::Arena).draw_call_budget == 84);
+    const AssetRecord* field_blob = AssetRegistry::find("field_scene_blob");
+    assert(field_blob != nullptr);
+    assert(AssetRegistry::assetBelongsToZone(*field_blob, Zone::Field));
+    assert(AssetRegistry::zone(Zone::Field).draw_call_budget == 128);
     assert(AssetRegistry::find("missing") == nullptr);
 }
 
@@ -60,6 +66,7 @@ void testGeneratedSceneData() {
     assert(SceneAssets::boxCount(Zone::Interior) == 16);
     assert(SceneAssets::boxCount(Zone::Vista) == 24);
     assert(SceneAssets::boxCount(Zone::Arena) == 13);
+    assert(SceneAssets::boxCount(Zone::Field) == 71);
     std::size_t count = 0;
     const SceneBox* arena = SceneAssets::boxes(Zone::Arena, count);
     assert(arena != nullptr && count == 13);
@@ -108,10 +115,17 @@ void testZoneResourceStreaming() {
     assert(resources.loadCount() == 3);
     assert(resources.unloadCount() == 2);
 
+    assert(resources.sync(1U << static_cast<unsigned>(Zone::Field)));
+    assert(resources.loadedMask() == 0x08U);
+    assert(resources.boxes(Zone::Field, count) != nullptr);
+    assert(count == SceneAssets::boxCount(Zone::Field));
+    assert(resources.loadCount() == 4);
+    assert(resources.unloadCount() == 3);
+
     resources.shutdown();
     assert(resources.loadedMask() == 0);
     assert(resources.residentBytes() == 0);
-    assert(resources.unloadCount() == 3);
+    assert(resources.unloadCount() == 4);
 }
 
 void testRigidPoseSampling() {
@@ -152,7 +166,7 @@ void testControllerDamageBoundaries() {
     assert(world.player.health == 75.0f);
 
     BossController::damage(world, 60.0f);
-    assert(world.boss.health == 200.0f);
+    assert(world.boss.health == 80.0f);
     BossController::damage(world, 250.0f);
     assert(world.boss.health == 0.0f);
     assert(world.boss.state == BossState::Dead);
@@ -297,6 +311,20 @@ void testZoneHandoffs() {
     assert(ZoneManager::isLoaded(game.world(), Zone::Arena));
     assert(game.world().zone_unloads == 2);
     assert(game.world().zone_transitions == 2);
+
+    WorldState& arena_world = game.mutableWorld();
+    arena_world.boss.state = BossState::Dead;
+    arena_world.player.state = PlayerState::Victory;
+    game.step(interact, kFixedStep);
+    assert(arena_world.field_transition);
+    assert(ZoneManager::isLoaded(arena_world, Zone::Arena));
+    assert(ZoneManager::isLoaded(arena_world, Zone::Field));
+    stepMany(game, InputFrame{}, 33);
+    assert(game.world().zone == Zone::Field);
+    assert(!ZoneManager::isLoaded(game.world(), Zone::Arena));
+    assert(ZoneManager::isLoaded(game.world(), Zone::Field));
+    assert(game.world().zone_unloads == 3);
+    assert(game.world().zone_transitions == 3);
 }
 
 void testDialogueAbortAndRetry() {
@@ -449,6 +477,49 @@ void testBossDeathClearsLockAndProducesVictory() {
     assert(game.world().player.state == PlayerState::Victory);
 }
 
+void testSunlitReachHorseMountAndGallop() {
+    GameSimulation game;
+    WorldState& world = game.mutableWorld();
+    world.zone = Zone::Arena;
+    world.loaded_zone_mask = 1U << static_cast<unsigned>(Zone::Arena);
+    world.boss.state = BossState::Dead;
+    world.player.state = PlayerState::Victory;
+
+    InputFrame interact{};
+    interact.interact = true;
+    game.step(interact, kFixedStep);
+    stepMany(game, InputFrame{}, 33);
+    assert(game.world().zone == Zone::Field);
+    assert(!game.world().player.mounted);
+
+    game.mutableWorld().player.position = game.world().horse_position;
+    game.step(interact, kFixedStep);
+    assert(game.world().player.mounted);
+    stepMany(game, InputFrame{}, 10);
+
+    const float start_z = game.world().player.position.z;
+    InputFrame gallop{};
+    gallop.move_z = 1.0f;
+    gallop.sprint_held = true;
+    stepMany(game, gallop, 30);
+    assert(game.world().player.position.z > start_z + 9.5f);
+    assert(distance(game.world().player.position, game.world().horse_position) < 0.001f);
+    assert(game.world().player.stamina < 100.0f);
+
+    game.mutableWorld().player.health = 40.0f;
+    InputFrame mounted_heal{};
+    mounted_heal.heal = true;
+    game.step(mounted_heal, kFixedStep);
+    assert(game.world().player.flasks == 2);
+    stepMany(game, InputFrame{}, 24);
+    assert(game.world().player.health > 80.0f);
+    assert(game.world().player.mounted);
+
+    game.step(interact, kFixedStep);
+    assert(!game.world().player.mounted);
+    assert(distance(game.world().player.position, game.world().horse_position) > 1.0f);
+}
+
 void testDeathAndRestart() {
     GameSimulation game;
     WorldState& world = game.mutableWorld();
@@ -465,32 +536,6 @@ void testDeathAndRestart() {
     game.step(restart, kFixedStep);
     assert(game.world().zone == Zone::Interior);
     assert(game.world().player.health == 100.0f);
-}
-
-void testRepeatedArenaVictoryReset() {
-    GameSimulation game;
-    for (int cycle = 0; cycle < 5; ++cycle) {
-        WorldState& world = game.mutableWorld();
-        world.zone = Zone::Arena;
-        world.player.position = {0.0f, 2.8f};
-        world.player.facing = 0.0f;
-        world.boss.position = {0.0f, 5.0f};
-        world.boss.health = 10.0f;
-        world.boss.state = BossState::Recover;
-        world.boss.state_timer = 5.0f;
-        InputFrame attack{};
-        attack.light_attack = true;
-        game.step(attack, kFixedStep);
-        stepMany(game, InputFrame{}, 60);
-        assert(game.world().player.state == PlayerState::Victory);
-        InputFrame restart{};
-        restart.interact = true;
-        game.step(restart, kFixedStep);
-        assert(game.world().zone == Zone::Interior);
-        assert(ZoneManager::isLoaded(game.world(), Zone::Interior));
-        assert(!ZoneManager::isLoaded(game.world(), Zone::Vista));
-        assert(!ZoneManager::isLoaded(game.world(), Zone::Arena));
-    }
 }
 
 } // namespace
@@ -515,8 +560,8 @@ int main() {
     testDodgeInvulnerability();
     testHealing();
     testBossDeathClearsLockAndProducesVictory();
+    testSunlitReachHorseMountAndGallop();
     testDeathAndRestart();
-    testRepeatedArenaVictoryReset();
     std::cout << "core_tests: all deterministic gameplay checks passed\n";
     return 0;
 }

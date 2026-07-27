@@ -14,7 +14,7 @@
       "sample_rate": 22050,
       "channels": 1,
       "sample_width_bytes": 2,
-      "zones": ["interior", "vista"]
+      "zones": ["interior", "vista", "field"]
     },
     {
       "id": "music_ashen_gate",
@@ -48,7 +48,7 @@
       "license": "project-original",
       "max_bytes": 100000,
       "runtime": false,
-      "zones": ["interior", "vista", "arena"]
+      "zones": ["interior", "vista", "arena", "field"]
     },
     {
       "id": "interior_scene_blob",
@@ -81,15 +81,25 @@
       "zones": ["arena"]
     },
     {
+      "id": "field_scene_blob",
+      "kind": "zone_scene_blob",
+      "source": "assets/scene_source.json",
+      "output": "romfs/zones/field.bin",
+      "provenance": "Original sunlit field scene converted to an independently loadable runtime blob",
+      "license": "project-original",
+      "max_bytes": 8192,
+      "zones": ["field"]
+    },
+    {
       "id": "blender_authoring_source",
       "kind": "blender_source",
       "source": "assets/blender/author_lowpoly.py",
       "output": "assets/blender/ashen-rift-source.blend",
-      "provenance": "Original editable Blender scene for the three zones and 15-bone rigid rig",
+      "provenance": "Original editable Blender scene for the four zones and 15-bone rigid rig",
       "license": "project-original",
-      "max_bytes": 262144,
+      "max_bytes": 393216,
       "runtime": false,
-      "zones": ["interior", "vista", "arena"]
+      "zones": ["interior", "vista", "arena", "field"]
     },
     {
       "id": "environment_texture_atlas",
@@ -99,7 +109,7 @@
       "provenance": "Original hand-authored stone-and-ash palette converted offline by tex3ds",
       "license": "project-original",
       "max_bytes": 4096,
-      "zones": ["interior", "vista", "arena"]
+      "zones": ["interior", "vista", "arena", "field"]
     },
     {
       "id": "rigid_animation_clips",
@@ -109,7 +119,7 @@
       "provenance": "Original 15-bone rigid transform clips created for this project",
       "license": "project-original",
       "max_bytes": 8192,
-      "zones": ["interior", "vista", "arena"]
+      "zones": ["interior", "vista", "arena", "field"]
     },
     {
       "id": "interior_zone_manifest",
@@ -140,11 +150,22 @@
       "license": "project-original",
       "max_bytes": 2048,
       "zones": ["arena"]
+    },
+    {
+      "id": "field_zone_manifest",
+      "kind": "zone_manifest",
+      "source": "assets/zones/field.json",
+      "output": "assets/zones/field.json",
+      "provenance": "Original authored zone metadata",
+      "license": "project-original",
+      "max_bytes": 2048,
+      "zones": ["field"]
     }
   ],
   "zone_manifests": {
     "interior": "assets/zones/interior.json",
     "vista": "assets/zones/vista.json",
-    "arena": "assets/zones/arena.json"
+    "arena": "assets/zones/arena.json",
+    "field": "assets/zones/field.json"
   }
 }

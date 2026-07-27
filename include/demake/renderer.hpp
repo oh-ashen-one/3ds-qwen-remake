@@ -41,9 +41,12 @@ private:
     void renderInterior(const WorldState& world);
     void renderVista(const WorldState& world);
     void renderArena(const WorldState& world);
-    void renderPlayer(const Player& player, const RigidPose& pose);
+    void renderField(const WorldState& world);
+    void renderPlayer(const Player& player, const RigidPose& pose, float vertical_offset = 0.0f);
     void renderHumanoid(Vec2 position, float facing, float scale, const RigidPose& pose,
-                        float red, float green, float blue, bool weapon);
+                        float red, float green, float blue, bool weapon,
+                        float vertical_offset = 0.0f);
+    void renderHorse(Vec2 position, float facing, float elapsed, bool moving);
     void renderBoss(const Boss& boss, float elapsed);
     void drawBlobShadow(Vec2 position, float scale);
     void drawBox(float x, float y, float z, float sx, float sy, float sz,

@@ -25,6 +25,7 @@ GENERATED_BUILD_INPUTS = (
     Path("romfs/zones/interior.bin"),
     Path("romfs/zones/vista.bin"),
     Path("romfs/zones/arena.bin"),
+    Path("romfs/zones/field.bin"),
 )
 
 
@@ -56,7 +57,7 @@ def clean() -> None:
     generated_scene_stamp = ROOT / "include" / "demake" / "generated" / "scene_assets.stamp"
     if generated_scene_stamp.is_file():
         generated_scene_stamp.unlink()
-    for zone_id in ("interior", "vista", "arena"):
+    for zone_id in ("interior", "vista", "arena", "field"):
         zone_blob = ROOT / "romfs" / "zones" / f"{zone_id}.bin"
         if zone_blob.is_file():
             zone_blob.unlink()

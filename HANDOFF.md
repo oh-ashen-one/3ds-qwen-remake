@@ -1,4 +1,4 @@
-# Laptop Handoff: Box-Model Character Redesign
+# Laptop Handoff: Sunlit Reach Quality Upgrade
 
 ## Checkout
 
@@ -16,18 +16,26 @@ intentionally not committed. Rebuild them from source on the laptop.
 
 ## Implemented
 
-- The player now has a distinct original-3DS box model assembled around the
-  existing 15-bone rigid pose: dark iron body, large pauldrons, short mantle,
-  crimson chest/skirt tabard, barred slit helmet, and a three-part short sword.
-- The Ashen Warden now uses dark iron instead of the old red body, with oversized
-  shoulders, a bright cross-shaped ember visor, chest plate, asymmetric hanging
-  armor/cape panels, and a three-part gate-blade.
-- The dead Warden is now a five-piece collapsed armor-and-sword composition
-  instead of one flat red slab.
-- Gameplay, hitboxes, animation sampling, controls, combat timing, music, zones,
-  and the Veiled Keeper model were not changed.
-- The renderer contract now requires the dedicated player assembly and Warden
-  identity markers.
+- The redesigned player and Ashen Warden remain cube-based, original-3DS-safe
+  models with distinct silhouettes, armor layers, weapons, and rigid animation.
+- The whole game uses brighter clear colors, stone, sky, ground, character, and
+  UI palettes so shapes remain readable on the dimmer CTR-001 display.
+- The Warden has 140 health, slower and clearer attack telegraphs, lower damage,
+  smaller hit radii, gentler pursuit, and longer recovery. Light/heavy player
+  attacks now deal 20/38 damage, and the dodge travels farther.
+- Victory no longer immediately ends the slice. Pressing A begins a golden,
+  preload-before-unload transition into a fourth streamed zone: **The Sunlit
+  Reach**.
+- The Reach contains a broad grassland, pale road, meadow rises, deterministic
+  grass scatter, layered mountains and snowcaps, clouds, a visible sun, and a
+  distant waystone. Its camera and draw distance were widened for the vista.
+- The horse is a fully rendered low-poly figure with saddle, tail, ears, animated
+  legs, rider placement, mounting, dismounting, stamina-limited galloping, and
+  recall. The lower screen exposes contextual RIDE/DISMOUNT and CALL actions,
+  a field-scale map, horse/waystone markers, objective text, and RIDING status.
+- The fourth zone has its own RomFS scene blob, manifest, generated asset
+  registry membership, Blender source objects, streaming/budget validation, and
+  host flow tests. Exploration music continues through the field.
 
 Primary files:
 
@@ -37,40 +45,27 @@ Primary files:
 
 ## Budget
 
-The redesign remains cube-only and reuses the existing indexed cube VBO:
-
-- Player: approximately 28 box draws, including the blob shadow.
-- Living Warden: approximately 29 box draws, including the blob shadow.
-- Estimated worst arena frame: approximately 73 draws.
-- Declared arena budget: 84 draws.
-
-No new texture, model, audio, RomFS, or runtime allocation was added.
+The game continues to reuse one indexed cube VBO. The Sunlit Reach declares a
+128-draw budget and 512 KiB runtime budget. Its 71 generated static boxes are
+coarse-grid, view, and distance culled; the horse and rider are small fixed box
+assemblies. Re-run the validators whenever the scene source changes.
 
 ## Verified Locally
 
-The following passed before handoff:
+Run the following before handing the branch onward:
 
 ```text
 make test-host
 make validate-assets
 make verify-build
+make package-sd
 make audit-repo
 ```
 
-Verified native artifact:
-
-```text
-size:   25,636,268 bytes
-sha256: 86151392cf0d17a8f8124808c17e1942bbe02248fdf9980161fef70b94a5dd59
-```
-
-Official Azahar 2125.1.3 booted that artifact and rendered the redesigned player
-in the Sable Expanse at 60 application FPS. The player, mantle, red tabard, helmet,
-and sword were visible, although the current night palette is very dark. The
-Warden redesign has compiled but has not yet received an emulator screenshot.
-
-The latest artifact has not been copied to the physical SD card. Build or
-emulator evidence is not a physical-console acceptance result.
+Official Azahar 2125.1.3 rendered both the unmounted and mounted Reach at 60
+application FPS during development (roughly 0.9–1.0 ms reported emulator frame
+time). This is only emulator evidence. The latest artifact has not been copied
+to and replayed on the physical 3DS, so hardware acceptance remains pending.
 
 ## Rebuild
 
@@ -96,13 +91,14 @@ Azahar.app/Contents/MacOS/azahar --windowed ./elden-ring-3ds-demake.3dsx
 
 ## Next Checks
 
-1. Capture clear front/back player views and a living Warden view in Azahar.
-2. If required, brighten only the character palette constants in
-   `Renderer::renderPlayer` and `Renderer::renderBoss`; do not add textures or a
-   new mesh pipeline for this pass.
-3. Re-run the four validation commands above.
-4. With the 3DS fully powered off, copy the rebuilt application to the SD card
-   and verify its hash before ejecting.
-5. On the physical original 3DS, confirm player/visor readability, attack and
-   dodge poses, Warden telegraphs, death composition, draw count, frame time,
-   and audio continuity. Target 30 FPS with a 24 FPS floor.
+1. On the physical original 3DS, play from the vestibule through the Warden and
+   into the Reach; confirm that brighter colors do not wash out and text remains
+   readable.
+2. Confirm all Warden telegraphs, damage, recovery openings, death transition,
+   and music changes. Tune only after observing the real console.
+3. Ride, gallop, heal while mounted, dismount, recall the horse, reach every
+   field edge, and inspect mountain/grass pop-in while rotating the camera.
+4. Record diagnostics at the field's busiest view. Target 30 FPS with a 24 FPS
+   floor, then update the hardware report with measured—not emulator—results.
+5. Copy the freshly verified SD bundle only with the 3DS fully powered off and
+   verify its hash before ejecting the card.

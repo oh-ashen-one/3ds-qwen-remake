@@ -47,9 +47,9 @@ and arena columns before any playthrough is counted toward acceptance.
 
 ## Playthrough gate
 
-Run three consecutive cold-boot playthroughs using the intended 6:40 beat sheet in [PLAYTHROUGH_ROUTE.md](PLAYTHROUGH_ROUTE.md). For each run record:
+Run three consecutive cold-boot playthroughs using the intended 7:25 beat sheet in [PLAYTHROUGH_ROUTE.md](PLAYTHROUGH_ROUTE.md). For each run record:
 
-| Run | Duration | Boot | Interior/reveal | NPC/fog gate | Boss | Restart | Minimum FPS | Peak linear memory | Audio underruns | Result |
+| Run | Duration | Boot | Interior/reveal | NPC/fog gate | Boss | Reach/horse | Minimum FPS | Peak linear memory | Audio underruns | Result |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 |  |  |  |  |  |  |  |  |  |  |
 | 2 |  |  |  |  |  |  |  |  |  |  |
@@ -63,11 +63,12 @@ Required: a coherent 5–8 minute sequence, no crash, no audio underrun, no sust
 - [ ] Abort and repeat the NPC interaction.
 - [ ] Lose lock-on when the boss dies.
 - [ ] Die during each boss attack class and restart.
-- [ ] Win and restart.
-- [ ] Repeat both zone transitions at least five times across sessions.
-- [ ] Orbit the camera beside columns/trees in all three zones with no full-screen obstruction.
-- [ ] Verify the bottom-screen map, objective changes, facing pip, and ACT/HEAL/LOCK/DEBUG touch targets.
-- [ ] Confirm Ashen Deep Hall plays in the interior/vista and switches once to Ashen Gate at the arena without a crash, long gap, or underrun.
+- [ ] Win, cross into the Reach, and restart after a later death or relaunch.
+- [ ] Repeat all three zone transitions at least five times across sessions.
+- [ ] Orbit the camera beside columns/trees/mountains in all four zones with no full-screen obstruction.
+- [ ] Mount, gallop, heal while mounted, dismount, recall the horse, and reach every field boundary.
+- [ ] Verify the bottom-screen map, objective changes, facing/horse/waystone markers, and ACT/RIDE/DISMOUNT, HEAL, LOCK/CALL, DEBUG touch targets.
+- [ ] Confirm Ashen Deep Hall plays in the interior/vista/field and switches once to Ashen Gate at the arena without a crash, long gap, or underrun.
 
 ## Proof recording
 

@@ -48,7 +48,10 @@ def main() -> None:
     require(renderer, "BUILT FOR CTR-001", "title hardware label")
     require(renderer, "objectiveFor", "bottom-screen objective tracker")
     require(renderer, "mapPoint", "bottom-screen live map")
-    require(renderer, 'drawTouchButton("ACT"', "bottom-screen action button")
+    require(renderer, 'const char* act_label', "contextual bottom-screen action button")
+    require(renderer, 'drawTouchButton(act_label', "bottom-screen action button")
+    require(renderer, 'world.zone == Zone::Field ? "CALL" : "LOCK"',
+            "field horse-call touch control")
     require(renderer, "distanceToSegment", "cross-zone camera occluder filter")
     require(renderer, "occluder_radius", "generated-prop camera clearance")
     require(renderer, "std::clamp(camera_ground_.x", "interior camera wall constraint")

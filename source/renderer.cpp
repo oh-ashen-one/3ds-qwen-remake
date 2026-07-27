@@ -64,7 +64,8 @@ const char* objectiveFor(const WorldState& world) {
     if (world.player.state == PlayerState::Dead) {
         return "Return to the ember";
     }
-    if (world.player.state == PlayerState::Victory || world.boss.state == BossState::Dead) {
+    if (world.zone == Zone::Arena &&
+        (world.player.state == PlayerState::Victory || world.boss.state == BossState::Dead)) {
         return "The Ashen Warden is felled";
     }
     if (world.zone == Zone::Interior) {
@@ -87,6 +88,15 @@ const char* objectiveFor(const WorldState& world) {
             return "Crossing the pale gate";
         }
         return "Cross the pale gate and press ACT";
+    }
+    if (world.zone == Zone::Field) {
+        if (world.player.mounted) {
+            return "Ride through the grass - hold B to gallop";
+        }
+        if (distance(world.player.position, world.horse_position) < 2.4f) {
+            return "Press ACT to mount the windhorse";
+        }
+        return "Find the horse - tap CALL if it strays";
     }
     return world.player.lock_on ? "Defeat the Warden - target locked"
                                 : "Defeat the Warden - tap LOCK";
@@ -142,7 +152,7 @@ bool Renderer::initialize() {
     projection_location_ = shaderInstanceGetUniformLocation(program_.vertexShader, "projection");
     model_view_location_ = shaderInstanceGetUniformLocation(program_.vertexShader, "modelView");
     Mtx_PerspTilt(&projection_, C3D_AngleFromDegrees(55.0f), C3D_AspectRatioTop,
-                  0.1f, 130.0f, false);
+                  0.1f, 190.0f, false);
 
     vbo_data_ = linearAlloc(sizeof(kCube));
     if (!vbo_data_) {
@@ -213,8 +223,9 @@ void Renderer::updateCamera(const WorldState& world) {
     }
     const float forward_x = std::sin(camera_yaw_);
     const float forward_z = std::cos(camera_yaw_);
-    camera_ground_ = {player.position.x - forward_x * kCameraDistance,
-                      player.position.z - forward_z * kCameraDistance};
+    const float camera_distance = world.zone == Zone::Field ? 8.6f : kCameraDistance;
+    camera_ground_ = {player.position.x - forward_x * camera_distance,
+                      player.position.z - forward_z * camera_distance};
     float camera_height = kExteriorCameraHeight;
     if (world.zone == Zone::Interior) {
         // The vestibule roof starts at Y=3.95. Keeping the camera below it
@@ -226,9 +237,16 @@ void Renderer::updateCamera(const WorldState& world) {
                                       kInteriorCameraWallLimit);
         camera_ground_.z = std::min(camera_ground_.z, kInteriorCameraFrontLimit);
         camera_height = kInteriorCameraHeight;
+    } else if (world.zone == Zone::Field) {
+        camera_height = player.mounted ? 5.5f : 5.0f;
     }
     const C3D_FVec camera = FVec3_New(camera_ground_.x, camera_height, camera_ground_.z);
-    const C3D_FVec target = FVec3_New(player.position.x, 1.1f, player.position.z + 1.2f);
+    const float target_y = player.mounted ? 2.0f : (world.zone == Zone::Field ? 1.4f : 1.1f);
+    const float target_forward = world.zone == Zone::Field ? 7.5f : 1.2f;
+    const C3D_FVec target =
+        FVec3_New(player.position.x + forward_x * target_forward,
+                  target_y,
+                  player.position.z + forward_z * target_forward);
     const C3D_FVec up = FVec3_New(0.0f, 1.0f, 0.0f);
     Mtx_LookAt(&view_, camera, target, up, false);
 }
@@ -246,7 +264,9 @@ void Renderer::render(const WorldState& world, bool title_screen, bool paused,
     }
     updateCamera(world);
 
-    const u32 clear_color = world.zone == Zone::Interior ? 0x17101DFF : 0x6B5B51FF;
+    const u32 clear_color = world.zone == Zone::Interior
+                                ? 0x30283BFF
+                                : (world.zone == Zone::Field ? 0x9FC9E7FF : 0x8A786FFF);
     C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
     C3D_RenderTargetClear(top_target_, C3D_CLEAR_ALL, clear_color, 0);
     C3D_FrameDrawOn(top_target_);
@@ -265,24 +285,38 @@ void Renderer::renderWorld(const WorldState& world, const SceneBox* scene_boxes,
         case Zone::Interior: renderInterior(world); break;
         case Zone::Vista: renderVista(world); break;
         case Zone::Arena: renderArena(world); break;
+        case Zone::Field: renderField(world); break;
+    }
+    if (world.zone == Zone::Field) {
+        renderHorse(world.horse_position, world.horse_facing, world.elapsed,
+                    world.player.mounted && world.player.state == PlayerState::Move);
+    }
+    Player displayed_player = world.player;
+    if (displayed_player.mounted) {
+        displayed_player.state = PlayerState::Idle;
     }
     RigidPose player_pose{};
-    samplePlayerPose(world.player, world.elapsed, player_pose);
-    renderPlayer(world.player, player_pose);
+    samplePlayerPose(displayed_player, world.elapsed, player_pose);
+    renderPlayer(displayed_player, player_pose, displayed_player.mounted ? 1.55f : 0.0f);
 }
 
 void Renderer::renderPanorama(Zone zone) {
     if (zone == Zone::Interior) {
         return;
     }
-    const float red = zone == Zone::Vista ? 0.34f : 0.22f;
-    const float green = zone == Zone::Vista ? 0.28f : 0.18f;
-    const float blue = zone == Zone::Vista ? 0.36f : 0.20f;
-    drawBox(0.0f, 15.0f, 78.0f, 120.0f, 30.0f, 1.0f,
+    const float red = zone == Zone::Vista ? 0.52f : (zone == Zone::Field ? 0.49f : 0.34f);
+    const float green = zone == Zone::Vista ? 0.46f : (zone == Zone::Field ? 0.70f : 0.29f);
+    const float blue = zone == Zone::Vista ? 0.58f : (zone == Zone::Field ? 0.88f : 0.34f);
+    const float back_z = zone == Zone::Field ? 140.0f : 78.0f;
+    const float side_x = zone == Zone::Field ? 72.0f : 58.0f;
+    const float side_z = zone == Zone::Field ? 55.0f : 34.0f;
+    const float sky_height = zone == Zone::Field ? 46.0f : 30.0f;
+    const float side_depth = zone == Zone::Field ? 170.0f : 88.0f;
+    drawBox(0.0f, sky_height * 0.5f, back_z, side_x * 2.0f, sky_height, 1.0f,
             0.0f, red, green, blue, true);
-    drawBox(-58.0f, 13.0f, 34.0f, 1.0f, 26.0f, 88.0f,
+    drawBox(-side_x, sky_height * 0.5f, side_z, 1.0f, sky_height, side_depth,
             0.0f, red * 0.72f, green * 0.72f, blue * 0.82f, true);
-    drawBox(58.0f, 13.0f, 34.0f, 1.0f, 26.0f, 88.0f,
+    drawBox(side_x, sky_height * 0.5f, side_z, 1.0f, sky_height, side_depth,
             0.0f, red * 0.78f, green * 0.78f, blue * 0.88f, true);
 }
 
@@ -337,7 +371,21 @@ void Renderer::renderArena(const WorldState& world) {
     renderBoss(world.boss, world.elapsed);
 }
 
-void Renderer::renderPlayer(const Player& player, const RigidPose& pose) {
+void Renderer::renderField(const WorldState& world) {
+    const float cloud_drift = std::sin(world.elapsed * 0.12f) * 2.5f;
+    drawBox(-18.0f, 18.0f, 52.0f, 4.8f, 4.8f, 0.7f,
+            0.0f, 1.00f, 0.84f, 0.30f, true);
+    drawBox(-9.0f + cloud_drift, 14.0f, 43.0f, 8.0f, 1.15f, 2.1f,
+            0.08f, 0.94f, 0.96f, 0.93f, true);
+    drawBox(-4.0f + cloud_drift, 14.7f, 44.5f, 5.0f, 1.65f, 2.4f,
+            -0.06f, 0.98f, 0.98f, 0.96f, true);
+    drawBox(18.0f - cloud_drift * 0.7f, 13.0f, 47.0f, 9.0f, 1.25f, 2.2f,
+            -0.04f, 0.91f, 0.95f, 0.95f, true);
+    drawBox(24.0f - cloud_drift * 0.7f, 13.8f, 48.0f, 5.5f, 1.75f, 2.6f,
+            0.07f, 0.97f, 0.98f, 0.97f, true);
+}
+
+void Renderer::renderPlayer(const Player& player, const RigidPose& pose, float vertical_offset) {
     constexpr float scale = 1.0f;
     const Vec2 position = player.position;
     const float facing = player.facing;
@@ -349,41 +397,43 @@ void Renderer::renderPlayer(const Player& player, const RigidPose& pose) {
 
     // Keep the animated 15-bone body, then spend the remaining box budget on
     // the player's readable identity: slit helm, mantle, tabard, and short sword.
-    renderHumanoid(position, facing, scale, pose, 0.30f, 0.31f, 0.35f, false);
+    renderHumanoid(position, facing, scale, pose, 0.47f, 0.49f, 0.56f, false,
+                   vertical_offset);
 
     for (int side = -1; side <= 1; side += 2) {
         drawBox(position.x + side_x * side * 0.48f,
-                1.73f + root_y,
+                1.73f + root_y + vertical_offset,
                 position.z + side_z * side * 0.48f,
                 0.34f, 0.22f, 0.42f, facing,
-                0.19f, 0.20f, 0.23f);
+                0.31f, 0.33f, 0.38f);
     }
 
     const float torso_forward = pose.at(Bone::Torso).forward;
     drawBox(position.x + forward_x * (torso_forward - 0.24f),
-            1.72f + root_y,
+            1.72f + root_y + vertical_offset,
             position.z + forward_z * (torso_forward - 0.24f),
             0.88f, 0.16f, 0.54f, facing,
-            0.13f, 0.13f, 0.16f);
+            0.24f, 0.24f, 0.29f);
     drawBox(position.x - forward_x * 0.28f,
-            1.30f + root_y,
+            1.30f + root_y + vertical_offset,
             position.z - forward_z * 0.28f,
             0.66f, 0.70f, 0.08f, facing,
-            0.12f, 0.12f, 0.14f);
+            0.22f, 0.22f, 0.26f);
 
     drawBox(position.x + forward_x * (torso_forward + 0.24f),
-            1.43f + root_y,
+            1.43f + root_y + vertical_offset,
             position.z + forward_z * (torso_forward + 0.24f),
             0.19f, 0.55f, 0.045f, facing,
-            0.42f, 0.12f, 0.11f);
+            0.58f, 0.18f, 0.15f);
     drawBox(position.x + forward_x * 0.24f,
-            0.82f + root_y,
+            0.82f + root_y + vertical_offset,
             position.z + forward_z * 0.24f,
-            0.21f, 0.42f, 0.045f, facing,
-            0.38f, 0.10f, 0.09f);
+            0.58f, 0.42f, 0.045f, facing,
+            0.52f, 0.15f, 0.13f);
 
     const float head_forward = pose.at(Bone::Head).forward;
-    const float head_y = 2.06f + root_y + pose.at(Bone::Head).vertical;
+    const float head_y =
+        2.06f + root_y + pose.at(Bone::Head).vertical + vertical_offset;
     const float visor_x = position.x + forward_x * (head_forward + 0.255f);
     const float visor_z = position.z + forward_z * (head_forward + 0.255f);
     drawBox(visor_x, head_y + 0.03f, visor_z,
@@ -394,7 +444,7 @@ void Renderer::renderPlayer(const Player& player, const RigidPose& pose) {
                 head_y + 0.03f,
                 visor_z + side_z * side * 0.10f,
                 0.025f, 0.17f, 0.035f, facing,
-                0.30f, 0.30f, 0.33f);
+                0.48f, 0.48f, 0.53f);
     }
 
     const BoneTransform& weapon_pose = pose.at(Bone::Weapon);
@@ -405,7 +455,7 @@ void Renderer::renderPlayer(const Player& player, const RigidPose& pose) {
                          forward_x * (0.38f + weapon_pose.forward);
     const float hand_z = position.z + side_z * 0.70f +
                          forward_z * (0.38f + weapon_pose.forward);
-    const float weapon_y = 1.13f + root_y;
+    const float weapon_y = 1.13f + root_y + vertical_offset;
     drawBox(hand_x, weapon_y, hand_z,
             0.09f, 0.11f, 0.30f, weapon_yaw,
             0.22f, 0.15f, 0.10f);
@@ -418,26 +468,30 @@ void Renderer::renderPlayer(const Player& player, const RigidPose& pose) {
             weapon_y,
             hand_z + weapon_forward_z * 0.90f,
             0.13f, 0.09f, 1.36f, weapon_yaw,
-            0.58f, 0.59f, 0.62f);
+            0.76f, 0.77f, 0.81f);
 }
 
 void Renderer::renderHumanoid(Vec2 position, float facing, float scale, const RigidPose& pose,
-                              float red, float green, float blue, bool weapon) {
-    drawBlobShadow(position, scale);
+                              float red, float green, float blue, bool weapon,
+                              float vertical_offset) {
+    if (vertical_offset <= 0.01f) {
+        drawBlobShadow(position, scale);
+    }
     const float side_x = std::cos(facing);
     const float side_z = -std::sin(facing);
     const float forward_x = std::sin(facing);
     const float forward_z = std::cos(facing);
     const float root_y = pose.at(Bone::Root).vertical * scale;
-    drawBox(position.x, 0.98f * scale + root_y, position.z,
+    drawBox(position.x, 0.98f * scale + root_y + vertical_offset, position.z,
             0.72f * scale, 0.34f * scale, 0.44f * scale,
             facing + pose.at(Bone::Pelvis).yaw, red * 0.78f, green * 0.78f, blue * 0.82f);
     drawBox(position.x + forward_x * pose.at(Bone::Torso).forward * scale,
-            1.48f * scale + root_y, position.z + forward_z * pose.at(Bone::Torso).forward * scale,
+            1.48f * scale + root_y + vertical_offset,
+            position.z + forward_z * pose.at(Bone::Torso).forward * scale,
             0.75f * scale, 0.78f * scale, 0.45f * scale,
             facing + pose.at(Bone::Torso).yaw, red, green, blue);
     drawBox(position.x + forward_x * pose.at(Bone::Head).forward * scale,
-            2.05f * scale + root_y + pose.at(Bone::Head).vertical * scale,
+            2.05f * scale + root_y + pose.at(Bone::Head).vertical * scale + vertical_offset,
             position.z + forward_z * pose.at(Bone::Head).forward * scale,
             0.48f * scale, 0.52f * scale,
             0.48f * scale, facing, red * 0.85f, green * 0.78f, blue * 0.72f);
@@ -449,18 +503,18 @@ void Renderer::renderHumanoid(Vec2 position, float facing, float scale, const Ri
         const Bone lower_arm = side < 0 ? Bone::LeftLowerArm : Bone::RightLowerArm;
         const float leg_stride = pose.at(upper_leg).forward;
         drawBox(position.x + side_x * side * 0.22f * scale + forward_x * leg_stride,
-                0.65f * scale + root_y,
+                0.65f * scale + root_y + vertical_offset,
                 position.z + side_z * side * 0.22f * scale + forward_z * leg_stride,
                 0.24f * scale, 0.48f * scale, 0.27f * scale,
                 facing + pose.at(upper_leg).yaw, red * 0.72f, green * 0.72f, blue * 0.77f);
         drawBox(position.x + side_x * side * 0.22f * scale + forward_x * pose.at(lower_leg).forward,
-                0.25f * scale + root_y,
+                0.25f * scale + root_y + vertical_offset,
                 position.z + side_z * side * 0.22f * scale + forward_z * pose.at(lower_leg).forward,
                 0.21f * scale, 0.40f * scale, 0.23f * scale,
                 facing + pose.at(lower_leg).yaw, red * 0.66f, green * 0.66f, blue * 0.72f);
         drawBox(position.x + side_x * side * 0.22f * scale +
                     forward_x * (0.10f + pose.at(foot).forward) * scale,
-                0.05f * scale + root_y,
+                0.05f * scale + root_y + vertical_offset,
                 position.z + side_z * side * 0.22f * scale +
                     forward_z * (0.10f + pose.at(foot).forward) * scale,
                 0.24f * scale, 0.12f * scale, 0.42f * scale,
@@ -468,19 +522,19 @@ void Renderer::renderHumanoid(Vec2 position, float facing, float scale, const Ri
 
         const float arm_reach = pose.at(upper_arm).forward;
         drawBox(position.x + side_x * side * 0.53f * scale + forward_x * arm_reach,
-                1.52f * scale + root_y,
+                1.52f * scale + root_y + vertical_offset,
                 position.z + side_z * side * 0.53f * scale + forward_z * arm_reach,
                 0.23f * scale, 0.44f * scale, 0.24f * scale,
                 facing + pose.at(upper_arm).yaw, red * 0.76f, green * 0.76f, blue * 0.81f);
         drawBox(position.x + side_x * side * 0.58f * scale +
                     forward_x * pose.at(lower_arm).forward,
-                1.16f * scale + root_y,
+                1.16f * scale + root_y + vertical_offset,
                 position.z + side_z * side * 0.58f * scale +
                     forward_z * pose.at(lower_arm).forward,
                 0.20f * scale, 0.40f * scale, 0.21f * scale,
                 facing + pose.at(lower_arm).yaw, red * 0.68f, green * 0.68f, blue * 0.75f);
         drawBox(position.x + side_x * side * 0.60f * scale + forward_x * arm_reach * 1.2f,
-                0.91f * scale + root_y,
+                0.91f * scale + root_y + vertical_offset,
                 position.z + side_z * side * 0.60f * scale + forward_z * arm_reach * 1.2f,
                 0.18f * scale, 0.20f * scale, 0.18f * scale,
                 facing, red * 0.82f, green * 0.72f, blue * 0.68f);
@@ -489,11 +543,70 @@ void Renderer::renderHumanoid(Vec2 position, float facing, float scale, const Ri
         const BoneTransform& weapon_pose = pose.at(Bone::Weapon);
         drawBox(position.x + side_x * 0.72f * scale +
                     forward_x * (0.8f + weapon_pose.forward) * scale,
-                1.25f * scale + root_y,
+                1.25f * scale + root_y + vertical_offset,
                 position.z + side_z * 0.72f * scale +
                     forward_z * (0.8f + weapon_pose.forward) * scale,
                 0.10f * scale, 0.12f * scale, 1.85f * scale,
                 facing + weapon_pose.yaw, 0.72f, 0.74f, 0.78f);
+    }
+}
+
+void Renderer::renderHorse(Vec2 position, float facing, float elapsed, bool moving) {
+    drawBlobShadow(position, 1.55f);
+    const float side_x = std::cos(facing);
+    const float side_z = -std::sin(facing);
+    const float forward_x = std::sin(facing);
+    const float forward_z = std::cos(facing);
+    const float gait = moving ? elapsed * 11.0f : elapsed * 1.5f;
+    const float body_bob = moving ? std::sin(gait * 2.0f) * 0.045f : 0.0f;
+
+    drawBox(position.x, 1.02f + body_bob, position.z,
+            0.92f, 0.86f, 1.82f, facing,
+            0.52f, 0.27f, 0.13f);
+    drawBox(position.x, 1.48f + body_bob, position.z - forward_z * 0.10f,
+            0.78f, 0.18f, 1.20f, facing,
+            0.22f, 0.13f, 0.08f);
+    drawBox(position.x + forward_x * 0.88f, 1.47f + body_bob,
+            position.z + forward_z * 0.88f,
+            0.56f, 1.02f, 0.64f, facing,
+            0.56f, 0.29f, 0.14f);
+    drawBox(position.x + forward_x * 1.30f, 1.86f + body_bob,
+            position.z + forward_z * 1.30f,
+            0.64f, 0.56f, 0.86f, facing,
+            0.58f, 0.31f, 0.16f);
+    drawBox(position.x + forward_x * 1.73f, 1.72f + body_bob,
+            position.z + forward_z * 1.73f,
+            0.50f, 0.34f, 0.52f, facing,
+            0.65f, 0.36f, 0.19f);
+    for (int side = -1; side <= 1; side += 2) {
+        drawBox(position.x + forward_x * 1.22f + side_x * side * 0.22f,
+                2.22f + body_bob,
+                position.z + forward_z * 1.22f + side_z * side * 0.22f,
+                0.16f, 0.42f, 0.16f, facing + side * 0.08f,
+                0.33f, 0.19f, 0.11f);
+    }
+    drawBox(position.x - forward_x * 1.18f, 1.12f + body_bob,
+            position.z - forward_z * 1.18f,
+            0.22f, 0.22f, 1.18f, facing,
+            0.24f, 0.15f, 0.09f);
+
+    for (int front = -1; front <= 1; front += 2) {
+        for (int side = -1; side <= 1; side += 2) {
+            const float phase = gait + static_cast<float>((front + side) * 2);
+            const float lift = moving ? std::fmax(0.0f, std::sin(phase)) * 0.18f : 0.0f;
+            const float along = static_cast<float>(front) * 0.62f;
+            const float leg_x =
+                position.x + forward_x * along + side_x * static_cast<float>(side) * 0.33f;
+            const float leg_z =
+                position.z + forward_z * along + side_z * static_cast<float>(side) * 0.33f;
+            drawBox(leg_x, 0.48f + lift, leg_z,
+                    0.19f, 0.76f, 0.21f, facing,
+                    0.42f, 0.22f, 0.12f);
+            drawBox(leg_x + forward_x * 0.08f, 0.10f + lift,
+                    leg_z + forward_z * 0.08f,
+                    0.24f, 0.16f, 0.38f, facing,
+                    0.18f, 0.14f, 0.11f);
+        }
     }
 }
 
@@ -538,7 +651,7 @@ void Renderer::renderBoss(const Boss& boss, float elapsed) {
     sampleBossPose(boss, elapsed, boss_pose);
     renderHumanoid(boss.position, boss.facing, 1.75f,
                    boss_pose,
-                   0.24f, 0.24f, 0.27f, false);
+                   0.36f, 0.36f, 0.41f, false);
     const float side_x = std::cos(boss.facing);
     const float side_z = -std::sin(boss.facing);
     const float forward_x = std::sin(boss.facing);
@@ -552,7 +665,7 @@ void Renderer::renderBoss(const Boss& boss, float elapsed) {
                 3.08f + root_y,
                 boss.position.z + side_z * side * 0.92f,
                 0.92f, 0.58f, 0.94f, boss.facing,
-                0.18f, 0.18f, 0.21f);
+                0.29f, 0.29f, 0.34f);
     }
 
     const float head_forward = boss_pose.at(Bone::Head).forward * 1.75f;
@@ -571,23 +684,23 @@ void Renderer::renderBoss(const Boss& boss, float elapsed) {
             2.56f + root_y,
             boss.position.z + forward_z * (torso_forward + 0.42f),
             1.06f, 0.88f, 0.10f, boss.facing,
-            0.17f, 0.17f, 0.20f);
+            0.28f, 0.28f, 0.33f);
     drawBox(boss.position.x + forward_x * 0.44f,
             1.46f + root_y,
             boss.position.z + forward_z * 0.44f,
             0.48f, 1.15f, 0.10f, boss.facing,
-            0.28f, 0.25f, 0.22f);
+            0.41f, 0.37f, 0.32f);
     for (int side = -1; side <= 1; side += 2) {
         drawBox(boss.position.x + side_x * side * 0.48f + forward_x * 0.28f,
                 1.42f + root_y - (side > 0 ? 0.10f : 0.0f),
                 boss.position.z + side_z * side * 0.48f + forward_z * 0.28f,
                 0.34f, 0.94f, 0.14f, boss.facing + side * 0.05f,
-                0.17f, 0.16f, 0.17f);
+                0.28f, 0.27f, 0.29f);
         drawBox(boss.position.x + side_x * side * 0.36f - forward_x * 0.50f,
                 2.12f + root_y - (side > 0 ? 0.18f : 0.0f),
                 boss.position.z + side_z * side * 0.36f - forward_z * 0.50f,
                 0.54f, 1.56f, 0.12f, boss.facing,
-                0.12f, 0.12f, 0.14f);
+                0.22f, 0.22f, 0.26f);
     }
 
     const BoneTransform& weapon_pose = boss_pose.at(Bone::Weapon);
@@ -611,7 +724,7 @@ void Renderer::renderBoss(const Boss& boss, float elapsed) {
             weapon_y,
             hand_z + weapon_forward_z * 1.76f,
             0.58f, 0.20f, 2.85f, weapon_yaw,
-            0.31f, 0.30f, 0.33f);
+            0.48f, 0.47f, 0.51f);
 }
 
 void Renderer::drawBox(float x, float y, float z, float sx, float sy, float sz,
@@ -638,8 +751,8 @@ void Renderer::drawBox(float x, float y, float z, float sx, float sy, float sz,
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, model_view_location_, &model_view);
     // Original asset colors provide baked lighting; one cheap directional term
     // adds consistent outdoor shape without a per-pixel lighting pass.
-    const float directional = 0.80f +
-                              0.18f * std::fmax(0.0f, std::cos(rotation_y - 0.65f));
+    const float directional = std::fmin(
+        1.0f, 0.90f + 0.16f * std::fmax(0.0f, std::cos(rotation_y - 0.65f)));
     C3D_FixedAttribSet(1, red * directional, green * directional,
                       blue * directional, 1.0f);
     C3D_DrawElements(GPU_TRIANGLES, kCubeIndexCount, C3D_UNSIGNED_BYTE, index_data_);
@@ -685,7 +798,7 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
                           C2D_Color32(66, 145, 76, 255));
         if (world.zone == Zone::Arena && world.boss.state != BossState::Dead) {
             C2D_DrawRectSolid(72.0f, 211.0f, 0.3f, 256.0f, 10.0f, C2D_Color32(18, 14, 14, 230));
-            C2D_DrawRectSolid(75.0f, 214.0f, 0.4f, 250.0f * world.boss.health / 260.0f, 4.0f,
+            C2D_DrawRectSolid(75.0f, 214.0f, 0.4f, 250.0f * world.boss.health / 140.0f, 4.0f,
                               C2D_Color32(126, 28, 24, 255));
             drawText("THE ASHEN WARDEN", 139.0f, 190.0f, 0.40f, C2D_Color32(230, 220, 205, 255));
         }
@@ -700,16 +813,21 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
             drawText("Press A to restart", 135.0f, 130.0f, 0.45f, C2D_Color32(225, 220, 215, 255));
         } else if (world.player.state == PlayerState::Victory) {
             drawText("WARDEN FELLED", 124.0f, 92.0f, 0.78f, C2D_Color32(222, 188, 112, 255));
-            drawText("Press A to begin anew", 118.0f, 130.0f, 0.45f, C2D_Color32(225, 220, 215, 255));
+            drawText("Press A to enter the Sunlit Reach", 77.0f, 130.0f, 0.45f,
+                     C2D_Color32(225, 220, 215, 255));
         }
         if (paused) {
             C2D_DrawRectSolid(0.0f, 0.0f, 0.6f, 400.0f, 240.0f, C2D_Color32(0, 0, 0, 155));
             drawText("PAUSED", 163.0f, 96.0f, 0.78f, C2D_Color32(245, 245, 245, 255));
         }
-        if (world.arena_transition && world.transition_timer > 0.0f) {
-            const float progress = 1.0f - world.transition_timer / 0.85f;
+        if ((world.arena_transition || world.field_transition) &&
+            world.transition_timer > 0.0f) {
+            const float duration = world.field_transition ? 1.05f : 0.85f;
+            const float progress = 1.0f - world.transition_timer / duration;
             const u8 alpha = static_cast<u8>(std::fmax(0.0f, std::fmin(220.0f, progress * 255.0f)));
-            C2D_DrawRectSolid(0.0f, 0.0f, 0.8f, 400.0f, 240.0f, C2D_Color32(8, 6, 10, alpha));
+            const u32 fade = world.field_transition ? C2D_Color32(244, 221, 154, alpha)
+                                                    : C2D_Color32(8, 6, 10, alpha);
+            C2D_DrawRectSolid(0.0f, 0.0f, 0.8f, 400.0f, 240.0f, fade);
         }
     }
 
@@ -717,9 +835,10 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
     C2D_SceneBegin(bottom_target_);
     drawText(ZoneManager::name(world.zone), 16.0f, 12.0f, 0.50f, C2D_Color32(222, 188, 112, 255));
     char status[96];
-    std::snprintf(status, sizeof(status), "HP %.0f  ST %.0f  FLASKS %d  %s",
+    std::snprintf(status, sizeof(status), "HP %.0f  ST %.0f  FLASKS %d  %s%s",
                   world.player.health, world.player.stamina, world.player.flasks,
-                  quickItemName(world.player.selected_item));
+                  quickItemName(world.player.selected_item),
+                  world.player.mounted ? "  RIDING" : "");
     drawText(status, 16.0f, 31.0f, 0.34f, C2D_Color32(215, 215, 220, 255));
     drawText(objectiveFor(world), 16.0f, 45.0f, 0.35f, C2D_Color32(196, 167, 224, 255), 196.0f);
 
@@ -729,8 +848,10 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
     constexpr float map_height = 126.0f;
     C2D_DrawRectSolid(map_x, map_y, 0.1f, map_width, map_height,
                       C2D_Color32(6, 7, 10, 255));
-    C2D_DrawRectSolid(map_x + 3.0f, map_y + 3.0f, 0.2f, map_width - 6.0f, map_height - 6.0f,
-                      C2D_Color32(35, 31, 43, 255));
+    const u32 map_color = world.zone == Zone::Field ? C2D_Color32(40, 74, 38, 255)
+                                                    : C2D_Color32(35, 31, 43, 255);
+    C2D_DrawRectSolid(map_x + 3.0f, map_y + 3.0f, 0.2f,
+                      map_width - 6.0f, map_height - 6.0f, map_color);
 
     float min_x = -5.0f;
     float max_x = 5.0f;
@@ -746,6 +867,11 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
         max_x = 9.5f;
         min_z = -9.5f;
         max_z = 9.5f;
+    } else if (world.zone == Zone::Field) {
+        min_x = -42.0f;
+        max_x = 42.0f;
+        min_z = -24.0f;
+        max_z = 74.0f;
     }
     const auto mapPoint = [&](Vec2 point) {
         const float normalized_x = std::clamp((point.x - min_x) / (max_x - min_x), 0.0f, 1.0f);
@@ -759,11 +885,18 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
         objective = world.dialogue_complete ? Vec2{0.0f, 28.0f} : Vec2{0.0f, 15.5f};
     } else if (world.zone == Zone::Arena) {
         objective = world.boss.position;
+    } else if (world.zone == Zone::Field) {
+        objective = world.player.mounted ? Vec2{0.0f, 61.0f} : world.horse_position;
     }
     const Vec2 objective_map = mapPoint(objective);
     C2D_DrawRectSolid(objective_map.x - 4.0f, objective_map.z - 4.0f, 0.4f, 8.0f, 8.0f,
                       world.zone == Zone::Arena ? C2D_Color32(174, 48, 42, 255)
-                                                : C2D_Color32(200, 153, 62, 255));
+                                                : C2D_Color32(224, 178, 62, 255));
+    if (world.zone == Zone::Field) {
+        const Vec2 horse_map = mapPoint(world.horse_position);
+        C2D_DrawRectSolid(horse_map.x - 3.0f, horse_map.z - 3.0f, 0.45f, 6.0f, 6.0f,
+                          C2D_Color32(145, 82, 39, 255));
+    }
     const Vec2 player_map = mapPoint(world.player.position);
     C2D_DrawRectSolid(player_map.x - 3.0f, player_map.z - 3.0f, 0.5f, 7.0f, 7.0f,
                       C2D_Color32(230, 225, 210, 255));
@@ -775,16 +908,24 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
     const auto drawTouchButton = [&](const char* label, float y, u32 color) {
         C2D_DrawRectSolid(220.0f, y, 0.2f, 88.0f, 42.0f, C2D_Color32(8, 7, 11, 255));
         C2D_DrawRectSolid(223.0f, y + 3.0f, 0.3f, 82.0f, 36.0f, color);
-        drawText(label, 239.0f, y + 12.0f, 0.48f, C2D_Color32(245, 245, 245, 255));
+        const float label_x = std::strlen(label) > 5 ? 228.0f : 239.0f;
+        drawText(label, label_x, y + 12.0f, 0.48f, C2D_Color32(245, 245, 245, 255));
     };
-    drawTouchButton("ACT", 58.0f, C2D_Color32(82, 64, 100, 255));
+    const char* act_label = world.zone == Zone::Field
+                                ? (world.player.mounted ? "DISMOUNT" : "RIDE")
+                                : "ACT";
+    drawTouchButton(act_label, 58.0f, C2D_Color32(82, 64, 100, 255));
     drawTouchButton("HEAL", 108.0f, C2D_Color32(126, 70, 28, 255));
-    drawTouchButton("LOCK", 158.0f,
+    const char* utility_label = world.zone == Zone::Field ? "CALL" : "LOCK";
+    drawTouchButton(utility_label, 158.0f,
                     world.player.lock_on ? C2D_Color32(130, 42, 38, 255)
                                          : C2D_Color32(48, 58, 68, 255));
     C2D_DrawRectSolid(244.0f, 207.0f, 0.2f, 64.0f, 23.0f, C2D_Color32(38, 36, 44, 255));
     drawText("DEBUG", 253.0f, 212.0f, 0.30f, C2D_Color32(170, 170, 178, 255));
-    drawText("white: you   gold: objective", 16.0f, 207.0f, 0.29f,
+    const char* map_legend = world.zone == Zone::Field
+                                 ? "white: you   brown: horse   gold: waystone"
+                                 : "white: you   gold: objective";
+    drawText(map_legend, 16.0f, 207.0f, 0.29f,
              C2D_Color32(165, 165, 172, 255));
     if (world.debug_overlay) {
         char diagnostics[256];

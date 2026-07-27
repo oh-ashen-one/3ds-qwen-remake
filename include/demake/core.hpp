@@ -21,6 +21,7 @@ enum class Zone : std::uint8_t {
     Interior,
     Vista,
     Arena,
+    Field,
 };
 
 enum class PlayerState : std::uint8_t {
@@ -74,6 +75,7 @@ struct Player {
     float state_timer = 0.0f;
     bool action_applied = false;
     bool lock_on = false;
+    bool mounted = false;
 };
 
 const char* quickItemName(int selected_item);
@@ -81,7 +83,7 @@ const char* quickItemName(int selected_item);
 struct Boss {
     Vec2 position{0.0f, 5.0f};
     float facing = 3.14159265f;
-    float health = 260.0f;
+    float health = 140.0f;
     BossState state = BossState::Dormant;
     float state_timer = 0.0f;
     unsigned attack_cycle = 0;
@@ -95,10 +97,13 @@ struct WorldState {
     float door_progress = 0.0f;
     float transition_timer = 0.0f;
     float victory_timer = 0.0f;
+    Vec2 horse_position{2.0f, -12.0f};
+    float horse_facing = 0.0f;
     bool door_activated = false;
     bool dialogue_active = false;
     bool dialogue_complete = false;
     bool arena_transition = false;
+    bool field_transition = false;
     bool debug_overlay = false;
     std::uint8_t loaded_zone_mask = 0;
     std::uint32_t zone_resident_bytes = 0;
@@ -111,6 +116,7 @@ class ZoneManager {
 public:
     void reset(WorldState& world) const;
     void update(WorldState& world, const InputFrame& input, float dt) const;
+    void beginPostBossField(WorldState& world) const;
     static const char* name(Zone zone);
     static bool isLoaded(const WorldState& world, Zone zone);
 

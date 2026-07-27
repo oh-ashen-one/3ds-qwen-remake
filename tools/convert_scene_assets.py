@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "assets" / "scene_source.json"
 OUTPUT = ROOT / "include" / "demake" / "generated" / "scene_asset_data.hpp"
-ZONE_ORDER = ("interior", "vista", "arena")
+ZONE_ORDER = ("interior", "vista", "arena", "field")
 BLOB_OUTPUTS = {zone: ROOT / "romfs" / "zones" / f"{zone}.bin" for zone in ZONE_ORDER}
 BLOB_HEADER = struct.Struct("<4sHHI")
 BLOB_RECORD = struct.Struct("<10fbbB")
@@ -78,6 +78,28 @@ def expand_zone(zone: dict) -> list[dict]:
                     math.cos(angle) * radius,
                     angle,
                 ))
+        elif kind == "field_scatter":
+            count = int(generator["count"])
+            x_min = float(generator["x_min"])
+            x_max = float(generator["x_max"])
+            z_min = float(generator["z_min"])
+            z_max = float(generator["z_max"])
+            for index in range(count):
+                # Two co-prime integer walks create a repeatable natural scatter
+                # without runtime random state or a larger authored file.
+                x_phase = ((index * 37 + 11) % 101) / 100.0
+                z_phase = ((index * 61 + 23) % 103) / 102.0
+                x = x_min + (x_max - x_min) * x_phase
+                z = z_min + (z_max - z_min) * z_phase
+                rotation = (index * 1.61803398875) % math.tau
+                for template_index, template in enumerate(generator["templates"]):
+                    boxes.append(normalize_box(
+                        template,
+                        f"{generator['name']}_{index}_{template_index}",
+                        x,
+                        z,
+                        rotation + template_index * math.pi * 0.5,
+                    ))
         else:
             raise ValueError(f"unsupported scene generator {kind!r}")
     return sorted(boxes, key=lambda box: (box["cell_z"], box["cell_x"], box["name"]))
