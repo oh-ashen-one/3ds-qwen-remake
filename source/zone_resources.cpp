@@ -15,7 +15,7 @@ namespace {
 constexpr std::size_t kHeaderBytes = 12;
 constexpr std::size_t kRecordBytes = 43;
 constexpr std::uint16_t kFormatVersion = 1;
-constexpr std::size_t kMaximumBoxesPerZone = 384;
+constexpr std::size_t kMaximumBoxesPerZone = 512;
 
 unsigned zoneIndex(Zone zone) {
     return static_cast<unsigned>(zone);

@@ -37,7 +37,7 @@ Status meanings:
 | --- | --- | --- |
 | Clear GameApp/ZoneManager/Renderer/Player/Boss/Audio/Asset boundaries | Local pass | Native headers/sources and required linked-symbol verification |
 | Four independently loadable zones with masked overlap and prior-zone free | Local pass for allocation logic | `ZoneResources`, ASZN blobs, host parser/residency tests, native map without host-only all-zone arrays |
-| Original low-poly/Blender/rigid-animation/texture pipeline | Local pass | 422 authored props, editable `.blend` plus fingerprints, 15-bone clips, RGB565 T3X, generated registry/blobs |
+| Original low-poly/Blender/rigid-animation/texture pipeline | Local pass | 437 authored props, editable `.blend` plus fingerprints, 15-bone clips, RGB565 T3X, generated registry/blobs |
 | RomFS content and NDSP double-buffered original audio with zone-based exploration/boss music | Local pass for build/runtime path | Embedded marker/link verification and `AudioStreamer`; audible switching, balance, continuity, and underruns remain hardware-only |
 | No per-frame heap allocation in game loop | Local pass by inspection | Fixed members/buffers; transition-only linear allocations; preallocated renderer/audio resources |
 | Frame/draw/culling/zone/linear-memory/audio counters | Implemented, hardware pending | Bottom-screen diagnostics and verifier; performance values require physical sampling |

@@ -20,7 +20,7 @@
 
 On New-family systems, C-stick camera and ZR heavy attack remain optional compatibility inputs. The CTR-001 path above is the controlling layout and requires neither control.
 
-The bottom screen also shows the current objective and a live top-down map. The white marker is the player, its green pip shows facing, and the gold/red marker is the next objective or boss. In the Sunlit Reach, the map changes to a valley scale and shows all three horses in brown, the winding river in blue, and the distant mountain pass in gold.
+The bottom screen also shows the current objective and a live top-down map. The white marker is the player, its green pip shows facing, and the gold/red marker is the next objective or boss. In the Sunlit Reach, the map changes to a valley scale and shows all three horses in brown, both waterways in blue, and the distant mountain pass in gold.
 
 ## Sunlit Reach
 

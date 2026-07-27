@@ -87,7 +87,7 @@
       "output": "romfs/zones/field.bin",
       "provenance": "Original sunlit field scene converted to an independently loadable runtime blob",
       "license": "project-original",
-      "max_bytes": 16384,
+      "max_bytes": 32768,
       "zones": ["field"]
     },
     {

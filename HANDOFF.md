@@ -27,7 +27,8 @@ intentionally not committed. Rebuild them from source on the laptop.
   preload-before-unload transition into a fourth streamed zone: **The Sunlit
   Reach**.
 - The Reach is now a Japanese-alpine valley with a winding Azusa-inspired
-  river, bridge, ford, broad valley floor, raised meadow terraces, cedar groves,
+  river, a Hikari snowmelt tributary, bridge, ford, broad valley floor, raised
+  meadow terraces, cedar groves,
   pink/blue/gold flower families, a mountain-pass torii, stepped snowcapped
   ranges, a visible sun, and three drifting cloud banks.
 - The valley contains procedurally moving deer, foxes, and river cranes. Three
@@ -52,7 +53,7 @@ Primary files:
 ## Budget
 
 The game continues to reuse one indexed cube VBO. The expanded Sunlit Reach
-declares a 196-draw budget and 768 KiB runtime budget. Its 369 generated static
+declares a 204-draw budget and 768 KiB runtime budget. Its 384 generated static
 boxes are coarse-grid, view, sightline, and distance culled; horses and wildlife
 are fixed box assemblies with whole-creature range rejection. Re-run the
 validators whenever the scene source changes.

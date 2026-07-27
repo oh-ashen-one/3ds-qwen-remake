@@ -12,7 +12,7 @@ This is the intended first-completion and proof-recording route. It targets **7:
 | 3:05–3:45 | Pale gate | Gate approach, arena preload, fade, prior-zone unload |
 | 3:45–5:55 | Ashen Warden | Name card, lock-on, slash and slam telegraphs, dodge, heal, light/heavy attacks, defeat |
 | 5:55–6:10 | Golden crossing | Victory lockout, A continuation, field preload, arena unload |
-| 6:10–7:25 | Sunlit Reach | Japanese-alpine valley reveal, river/bridge/ford, flower and cedar slopes, running deer/foxes/cranes, cloud banks, three horses, mount/gallop/heal/dismount/recall, mountain-pass torii |
+| 6:10–7:25 | Sunlit Reach | Japanese-alpine valley reveal, river/tributary/bridge/ford, flower and cedar slopes, running deer/foxes/cranes, cloud banks, three horses, mount/gallop/heal/dismount/recall, mountain-pass torii |
 
 ## Recording rules
 

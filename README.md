@@ -9,7 +9,7 @@ The complete project contract is preserved in [MASTER_GOAL_PROMPT.md](MASTER_GOA
 ## Status
 
 - Native fixed-step gameplay, four-zone streaming state, combat, lifecycle handling, dual-screen UI, and NDSP audio are implemented.
-- Defeating the Ashen Warden now opens into the Sunlit Reach: a broad Japanese-alpine valley with a winding river, bridge and ford, cedar slopes, three flower families, layered snowcapped mountains, drifting cloud banks, running wildlife, and three rideable horses.
+- Defeating the Ashen Warden now opens into the Sunlit Reach: a broad Japanese-alpine valley with a winding river and snowmelt tributary, bridge and ford, cedar slopes, three flower families, layered snowcapped mountains, drifting cloud banks, running wildlife, and three rideable horses.
 - The lighting and material palette were lifted for original-3DS visibility, and the boss now has lower health, slower telegraphs, gentler pursuit, smaller hit zones, and clearer recovery windows.
 - The original-content pipeline includes generated asset IDs, per-zone manifests and budgets, independently loadable RomFS scene blobs, a Blender-editable scene source, 15-bone rigid animation clips, and an RGB565 `tex3ds` atlas.
 - Static props use generated fixed-size data, an indexed VBO, coarse-grid and view/distance culling, baked colors, a directional tint, fog-gate masking, blob shadows, and distant panorama panels.

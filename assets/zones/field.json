@@ -4,7 +4,7 @@
   "display_name": "The Sunlit Reach",
   "runtime_budget_bytes": 786432,
   "romfs_budget_bytes": 12600000,
-  "draw_call_budget": 196,
+  "draw_call_budget": 204,
   "grid_cell_size": 6.0,
   "preload_trigger": "warden_victory_confirm",
   "unload_after_enter": null,

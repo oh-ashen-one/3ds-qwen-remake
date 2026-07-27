@@ -58,7 +58,7 @@ void testGeneratedAssetRegistry() {
     const AssetRecord* field_blob = AssetRegistry::find("field_scene_blob");
     assert(field_blob != nullptr);
     assert(AssetRegistry::assetBelongsToZone(*field_blob, Zone::Field));
-    assert(AssetRegistry::zone(Zone::Field).draw_call_budget == 196);
+    assert(AssetRegistry::zone(Zone::Field).draw_call_budget == 204);
     assert(AssetRegistry::find("missing") == nullptr);
 }
 
@@ -66,7 +66,7 @@ void testGeneratedSceneData() {
     assert(SceneAssets::boxCount(Zone::Interior) == 16);
     assert(SceneAssets::boxCount(Zone::Vista) == 24);
     assert(SceneAssets::boxCount(Zone::Arena) == 13);
-    assert(SceneAssets::boxCount(Zone::Field) == 369);
+    assert(SceneAssets::boxCount(Zone::Field) == 384);
     std::size_t count = 0;
     const SceneBox* arena = SceneAssets::boxes(Zone::Arena, count);
     assert(arena != nullptr && count == 13);

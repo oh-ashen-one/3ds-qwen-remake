@@ -1056,6 +1056,15 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
                               0.32f, 6.0f, 10.0f,
                               C2D_Color32(54, 139, 184, 255));
         }
+        for (unsigned segment = 0; segment < 5; ++segment) {
+            const float world_z = 42.0f + static_cast<float>(segment) * 13.0f;
+            const float world_x =
+                27.0f + std::sin(static_cast<float>(segment) * 0.86f) * 8.0f;
+            const Vec2 stream_map = mapPoint({world_x, world_z});
+            C2D_DrawRectSolid(stream_map.x - 2.0f, stream_map.z - 5.0f,
+                              0.33f, 4.0f, 10.0f,
+                              C2D_Color32(78, 165, 205, 255));
+        }
     }
 
     Vec2 objective{0.0f, 4.6f};
@@ -1121,7 +1130,7 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
     C2D_DrawRectSolid(244.0f, 207.0f, 0.2f, 64.0f, 23.0f, C2D_Color32(38, 36, 44, 255));
     drawText("DEBUG", 253.0f, 212.0f, 0.30f, C2D_Color32(170, 170, 178, 255));
     const char* map_legend = world.zone == Zone::Field
-                                 ? "white you  brown horses  blue river  gold pass"
+                                 ? "white you  brown horses  blue rivers  gold pass"
                                  : "white: you   gold: objective";
     drawText(map_legend, 16.0f, 207.0f, 0.29f,
              C2D_Color32(165, 165, 172, 255));

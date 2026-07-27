@@ -21,7 +21,7 @@ Re-verify all of these facts before relying on them because local, GitHub, packa
 
 1. Maintain `oh-ashen-one/elden-ring-3ds-demake` as a **public** GitHub repository with an MIT license, privacy-safe history, and no secrets, personal paths, console-unique data, or backups.
 2. Produce a self-contained Homebrew Launcher `.3dsx` built with the official devkitPro stack.
-3. Implement a coherent 5–8 minute sequence: title screen, enclosed opening room, animated doorway/lift reveal, outdoor vista, short NPC interaction, fog-gate/transition, third-person boss fight, victory/death, and a golden transition into a broad, bright Japanese-alpine valley with a winding river, bridge and ford, cedar slopes, flower meadows, running wildlife, multiple rideable horses, sun, drifting clouds, layered snowcapped mountains, and a distant pass.
+3. Implement a coherent 5–8 minute sequence: title screen, enclosed opening room, animated doorway/lift reveal, outdoor vista, short NPC interaction, fog-gate/transition, third-person boss fight, victory/death, and a golden transition into a broad, bright Japanese-alpine valley with winding rivers, bridge and ford, cedar slopes, flower meadows, running wildlife, multiple rideable horses, sun, drifting clouds, layered snowcapped mountains, and a distant pass.
 4. Support physical-device iteration through both:
    - Wi-Fi netloading: Homebrew Launcher netloader + `3dslink`.
    - Persistent offline play: application bundle under `sdmc:/3ds/elden-ring-3ds-demake/`.
