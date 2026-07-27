@@ -61,34 +61,134 @@
     },
     "field": {
       "boxes": [
-        {"name": "sunlit_grassland", "position": [0.0, -0.48, 25.0], "scale": [90.0, 0.8, 110.0], "color": [0.38, 0.63, 0.22], "always": true},
-        {"name": "wind_path", "position": [0.0, -0.02, 25.0], "scale": [5.5, 0.12, 105.0], "color": [0.70, 0.68, 0.38], "always": true},
-        {"name": "left_meadow_rise", "position": [-27.0, 1.1, 18.0], "scale": [30.0, 2.8, 42.0], "rotation_y": -0.12, "color": [0.32, 0.56, 0.19]},
-        {"name": "right_meadow_rise", "position": [29.0, 1.4, 31.0], "scale": [34.0, 3.4, 48.0], "rotation_y": 0.10, "color": [0.35, 0.59, 0.20]},
-        {"name": "mountain_left_back", "position": [-39.0, 5.0, 91.0], "scale": [32.0, 10.0, 24.0], "rotation_y": -0.22, "color": [0.35, 0.47, 0.39], "always": true},
-        {"name": "mountain_left_peak", "position": [-22.0, 8.0, 99.0], "scale": [24.0, 16.0, 21.0], "rotation_y": 0.28, "color": [0.42, 0.54, 0.45], "always": true},
-        {"name": "mountain_center_peak", "position": [4.0, 9.0, 108.0], "scale": [30.0, 18.0, 24.0], "rotation_y": -0.14, "color": [0.47, 0.58, 0.49], "always": true},
-        {"name": "mountain_right_peak", "position": [29.0, 7.0, 98.0], "scale": [27.0, 14.0, 23.0], "rotation_y": 0.19, "color": [0.40, 0.52, 0.43], "always": true},
-        {"name": "mountain_right_back", "position": [48.0, 4.5, 90.0], "scale": [34.0, 9.0, 27.0], "rotation_y": -0.30, "color": [0.33, 0.45, 0.37], "always": true},
-        {"name": "distant_snow_cap_left", "position": [-22.0, 19.5, 98.0], "scale": [13.0, 7.0, 12.0], "rotation_y": 0.28, "color": [0.82, 0.88, 0.86], "always": true},
-        {"name": "distant_snow_cap_center", "position": [4.0, 22.0, 107.0], "scale": [16.0, 8.0, 14.0], "rotation_y": -0.14, "color": [0.88, 0.91, 0.89], "always": true},
-        {"name": "distant_snow_cap_right", "position": [29.0, 17.0, 97.0], "scale": [14.0, 6.0, 12.0], "rotation_y": 0.19, "color": [0.80, 0.86, 0.83], "always": true},
-        {"name": "waystone_left", "position": [-5.0, 2.3, 61.0], "scale": [0.8, 4.8, 0.8], "color": [0.51, 0.50, 0.42]},
-        {"name": "waystone_right", "position": [5.0, 2.3, 61.0], "scale": [0.8, 4.8, 0.8], "color": [0.51, 0.50, 0.42]},
-        {"name": "waystone_lintel", "position": [0.0, 4.6, 61.0], "scale": [11.0, 0.7, 0.8], "color": [0.58, 0.55, 0.43]}
+        {"name": "sunlit_grassland", "position": [0.0, -0.48, 45.0], "scale": [150.0, 0.8, 180.0], "color": [0.38, 0.65, 0.23], "always": true},
+        {"name": "alpine_valley_floor", "position": [0.0, -0.03, 47.0], "scale": [68.0, 0.14, 170.0], "color": [0.43, 0.70, 0.27], "always": true},
+        {"name": "wind_path", "position": [9.0, 0.04, 45.0], "scale": [6.0, 0.12, 170.0], "rotation_y": -0.04, "color": [0.73, 0.68, 0.40], "always": true},
+        {"name": "left_lower_meadow", "position": [-48.0, 1.2, 5.0], "scale": [46.0, 3.0, 54.0], "rotation_y": -0.10, "color": [0.32, 0.58, 0.20]},
+        {"name": "left_upper_meadow", "position": [-53.0, 2.1, 62.0], "scale": [52.0, 4.8, 66.0], "rotation_y": 0.08, "color": [0.30, 0.55, 0.19]},
+        {"name": "left_valley_terrace", "position": [-43.0, 3.7, 111.0], "scale": [55.0, 7.5, 34.0], "rotation_y": -0.13, "color": [0.34, 0.56, 0.24]},
+        {"name": "right_lower_meadow", "position": [50.0, 1.4, 13.0], "scale": [48.0, 3.4, 58.0], "rotation_y": 0.11, "color": [0.35, 0.61, 0.21]},
+        {"name": "right_upper_meadow", "position": [54.0, 2.4, 73.0], "scale": [51.0, 5.2, 68.0], "rotation_y": -0.08, "color": [0.33, 0.58, 0.20]},
+        {"name": "right_valley_terrace", "position": [46.0, 4.1, 117.0], "scale": [58.0, 8.0, 36.0], "rotation_y": 0.14, "color": [0.37, 0.59, 0.25]},
+        {"name": "mountain_far_left_ridge", "position": [-82.0, 5.0, 160.0], "scale": [52.0, 10.0, 36.0], "rotation_y": -0.16, "color": [0.27, 0.41, 0.35], "always": true},
+        {"name": "mountain_left_base", "position": [-58.0, 7.0, 169.0], "scale": [42.0, 14.0, 36.0], "rotation_y": 0.12, "color": [0.32, 0.46, 0.38], "always": true},
+        {"name": "mountain_left_middle", "position": [-54.0, 17.0, 173.0], "scale": [28.0, 18.0, 29.0], "rotation_y": -0.09, "color": [0.39, 0.52, 0.44], "always": true},
+        {"name": "mountain_left_summit", "position": [-50.0, 29.0, 176.0], "scale": [16.0, 12.0, 20.0], "rotation_y": 0.14, "color": [0.48, 0.59, 0.51], "always": true},
+        {"name": "snow_cap_left", "position": [-50.0, 37.0, 176.0], "scale": [11.0, 5.0, 14.0], "rotation_y": 0.14, "color": [0.84, 0.89, 0.88], "always": true},
+        {"name": "mountain_kita_base", "position": [-25.0, 7.0, 176.0], "scale": [43.0, 14.0, 37.0], "rotation_y": -0.10, "color": [0.35, 0.49, 0.41], "always": true},
+        {"name": "mountain_kita_middle", "position": [-21.0, 20.0, 180.0], "scale": [27.0, 24.0, 29.0], "rotation_y": 0.08, "color": [0.43, 0.55, 0.47], "always": true},
+        {"name": "mountain_kita_summit", "position": [-17.0, 36.0, 183.0], "scale": [14.0, 14.0, 19.0], "rotation_y": -0.12, "color": [0.52, 0.62, 0.55], "always": true},
+        {"name": "snow_cap_kita", "position": [-17.0, 45.0, 183.0], "scale": [10.0, 5.0, 13.0], "rotation_y": -0.12, "color": [0.91, 0.93, 0.92], "always": true},
+        {"name": "mountain_center_saddle", "position": [9.0, 4.0, 166.0], "scale": [34.0, 8.0, 33.0], "rotation_y": 0.10, "color": [0.31, 0.46, 0.38], "always": true},
+        {"name": "mountain_hikari_base", "position": [37.0, 7.0, 174.0], "scale": [43.0, 14.0, 38.0], "rotation_y": 0.11, "color": [0.34, 0.48, 0.40], "always": true},
+        {"name": "mountain_hikari_middle", "position": [41.0, 19.0, 178.0], "scale": [28.0, 22.0, 30.0], "rotation_y": -0.10, "color": [0.42, 0.54, 0.46], "always": true},
+        {"name": "mountain_hikari_summit", "position": [45.0, 34.0, 181.0], "scale": [15.0, 14.0, 19.0], "rotation_y": 0.13, "color": [0.50, 0.61, 0.53], "always": true},
+        {"name": "snow_cap_hikari", "position": [45.0, 43.0, 181.0], "scale": [10.0, 5.0, 13.0], "rotation_y": 0.13, "color": [0.88, 0.92, 0.90], "always": true},
+        {"name": "mountain_right_base", "position": [70.0, 6.0, 166.0], "scale": [43.0, 12.0, 37.0], "rotation_y": -0.14, "color": [0.31, 0.44, 0.37], "always": true},
+        {"name": "mountain_right_middle", "position": [72.0, 16.0, 170.0], "scale": [29.0, 17.0, 29.0], "rotation_y": 0.12, "color": [0.38, 0.50, 0.43], "always": true},
+        {"name": "snow_cap_right", "position": [72.0, 27.0, 171.0], "scale": [15.0, 5.0, 17.0], "rotation_y": 0.12, "color": [0.81, 0.87, 0.85], "always": true},
+        {"name": "mountain_far_right_ridge", "position": [98.0, 5.0, 157.0], "scale": [48.0, 10.0, 35.0], "rotation_y": 0.18, "color": [0.26, 0.39, 0.33], "always": true},
+        {"name": "river_bridge_deck", "position": [-12.0, 0.38, 25.0], "scale": [12.0, 0.28, 2.4], "rotation_y": -0.12, "color": [0.46, 0.30, 0.18]},
+        {"name": "river_bridge_rail_left", "position": [-12.0, 0.90, 23.9], "scale": [12.0, 0.55, 0.18], "rotation_y": -0.12, "color": [0.35, 0.22, 0.14]},
+        {"name": "river_bridge_rail_right", "position": [-12.0, 0.90, 26.1], "scale": [12.0, 0.55, 0.18], "rotation_y": -0.12, "color": [0.35, 0.22, 0.14]},
+        {"name": "ford_stone_one", "position": [-16.0, 0.18, 58.0], "scale": [1.5, 0.32, 1.2], "rotation_y": 0.12, "color": [0.48, 0.50, 0.45]},
+        {"name": "ford_stone_two", "position": [-12.5, 0.20, 58.6], "scale": [1.7, 0.35, 1.3], "rotation_y": -0.18, "color": [0.52, 0.53, 0.48]},
+        {"name": "ford_stone_three", "position": [-9.0, 0.17, 59.0], "scale": [1.4, 0.30, 1.1], "rotation_y": 0.22, "color": [0.46, 0.48, 0.43]},
+        {"name": "mountain_pass_torii_left", "position": [-5.3, 3.1, 116.0], "scale": [0.9, 6.4, 0.9], "color": [0.72, 0.17, 0.09]},
+        {"name": "mountain_pass_torii_right", "position": [5.3, 3.1, 116.0], "scale": [0.9, 6.4, 0.9], "color": [0.72, 0.17, 0.09]},
+        {"name": "mountain_pass_torii_lintel", "position": [0.0, 6.1, 116.0], "scale": [12.5, 0.8, 1.1], "color": [0.80, 0.21, 0.10]},
+        {"name": "mountain_pass_torii_cap", "position": [0.0, 6.75, 116.0], "scale": [15.0, 0.35, 1.35], "color": [0.28, 0.16, 0.10]}
       ],
       "generators": [
         {
           "type": "field_scatter",
           "name": "wind_grass",
-          "count": 28,
-          "x_min": -40.0,
-          "x_max": 40.0,
-          "z_min": -20.0,
-          "z_max": 70.0,
+          "count": 40,
+          "x_min": -68.0,
+          "x_max": 68.0,
+          "z_min": -37.0,
+          "z_max": 127.0,
           "templates": [
             {"position": [0.0, 0.38, 0.0], "scale": [0.16, 0.82, 1.25], "color": [0.50, 0.78, 0.24]},
             {"position": [0.0, 0.31, 0.0], "scale": [0.14, 0.66, 1.05], "color": [0.68, 0.83, 0.29]}
+          ]
+        },
+        {
+          "type": "river_curve",
+          "name": "azusa_river",
+          "count": 12,
+          "start_z": -35.0,
+          "step_z": 14.0,
+          "center_x": -15.0,
+          "amplitude": 12.0,
+          "frequency": 0.72,
+          "bank_offset": 4.7,
+          "water": {"position": [0.0, 0.04, 0.0], "scale": [8.0, 0.08, 15.2], "color": [0.20, 0.56, 0.76]},
+          "bank": {"position": [0.0, 0.16, 0.0], "scale": [1.5, 0.34, 15.2], "color": [0.42, 0.55, 0.28]}
+        },
+        {
+          "type": "field_scatter",
+          "name": "left_cedar_grove",
+          "count": 9,
+          "x_min": -66.0,
+          "x_max": -30.0,
+          "z_min": -25.0,
+          "z_max": 120.0,
+          "templates": [
+            {"position": [0.0, 1.3, 0.0], "scale": [0.42, 2.7, 0.42], "color": [0.34, 0.23, 0.15]},
+            {"position": [0.0, 3.4, 0.0], "scale": [2.4, 3.0, 2.4], "color": [0.18, 0.39, 0.24]}
+          ]
+        },
+        {
+          "type": "field_scatter",
+          "name": "right_cedar_grove",
+          "count": 9,
+          "x_min": 31.0,
+          "x_max": 67.0,
+          "z_min": -18.0,
+          "z_max": 124.0,
+          "templates": [
+            {"position": [0.0, 1.3, 0.0], "scale": [0.42, 2.7, 0.42], "color": [0.35, 0.24, 0.16]},
+            {"position": [0.0, 3.5, 0.0], "scale": [2.5, 3.1, 2.5], "color": [0.20, 0.42, 0.25]}
+          ]
+        },
+        {
+          "type": "field_scatter",
+          "name": "sakura_pink_flowers",
+          "count": 30,
+          "x_min": -60.0,
+          "x_max": 58.0,
+          "z_min": -30.0,
+          "z_max": 121.0,
+          "templates": [
+            {"position": [0.0, 0.22, 0.0], "scale": [0.07, 0.44, 0.07], "color": [0.20, 0.55, 0.20]},
+            {"position": [0.0, 0.47, 0.0], "scale": [0.34, 0.16, 0.34], "color": [0.96, 0.56, 0.70]}
+          ]
+        },
+        {
+          "type": "field_scatter",
+          "name": "alpine_blue_flowers",
+          "count": 30,
+          "x_min": -57.0,
+          "x_max": 62.0,
+          "z_min": -22.0,
+          "z_max": 128.0,
+          "templates": [
+            {"position": [0.0, 0.20, 0.0], "scale": [0.06, 0.40, 0.06], "color": [0.19, 0.51, 0.19]},
+            {"position": [0.0, 0.43, 0.0], "scale": [0.30, 0.14, 0.30], "color": [0.36, 0.55, 0.94]}
+          ]
+        },
+        {
+          "type": "field_scatter",
+          "name": "golden_valley_flowers",
+          "count": 30,
+          "x_min": -63.0,
+          "x_max": 55.0,
+          "z_min": -34.0,
+          "z_max": 118.0,
+          "templates": [
+            {"position": [0.0, 0.19, 0.0], "scale": [0.06, 0.38, 0.06], "color": [0.22, 0.54, 0.18]},
+            {"position": [0.0, 0.41, 0.0], "scale": [0.28, 0.14, 0.28], "color": [0.96, 0.76, 0.18]}
           ]
         }
       ]

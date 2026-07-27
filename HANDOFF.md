@@ -26,29 +26,36 @@ intentionally not committed. Rebuild them from source on the laptop.
 - Victory no longer immediately ends the slice. Pressing A begins a golden,
   preload-before-unload transition into a fourth streamed zone: **The Sunlit
   Reach**.
-- The Reach contains a broad grassland, pale road, meadow rises, deterministic
-  grass scatter, layered mountains and snowcaps, clouds, a visible sun, and a
-  distant waystone. Its camera and draw distance were widened for the vista.
-- The horse is a fully rendered low-poly figure with saddle, tail, ears, animated
-  legs, rider placement, mounting, dismounting, stamina-limited galloping, and
-  recall. The lower screen exposes contextual RIDE/DISMOUNT and CALL actions,
-  a field-scale map, horse/waystone markers, objective text, and RIDING status.
+- The Reach is now a Japanese-alpine valley with a winding Azusa-inspired
+  river, bridge, ford, broad valley floor, raised meadow terraces, cedar groves,
+  pink/blue/gold flower families, a mountain-pass torii, stepped snowcapped
+  ranges, a visible sun, and three drifting cloud banks.
+- The valley contains procedurally moving deer, foxes, and river cranes. Three
+  differently colored horses are independently mountable and retain saddle,
+  tail, ear, leg-gait, rider-placement, stamina-gallop, mounted-heal, dismount,
+  and recall behavior. The lower screen maps the river, every horse, the active
+  horse, the pass, objective text, and RIDING status.
 - The fourth zone has its own RomFS scene blob, manifest, generated asset
   registry membership, Blender source objects, streaming/budget validation, and
   host flow tests. Exploration music continues through the field.
 
 Primary files:
 
+- `assets/scene_source.json`
+- `source/core.cpp`
 - `source/renderer.cpp`
+- `include/demake/core.hpp`
 - `include/demake/renderer.hpp`
+- `tests/core_tests.cpp`
 - `tests/original_3ds_contract_tests.py`
 
 ## Budget
 
-The game continues to reuse one indexed cube VBO. The Sunlit Reach declares a
-128-draw budget and 512 KiB runtime budget. Its 71 generated static boxes are
-coarse-grid, view, and distance culled; the horse and rider are small fixed box
-assemblies. Re-run the validators whenever the scene source changes.
+The game continues to reuse one indexed cube VBO. The expanded Sunlit Reach
+declares a 196-draw budget and 768 KiB runtime budget. Its 369 generated static
+boxes are coarse-grid, view, sightline, and distance culled; horses and wildlife
+are fixed box assemblies with whole-creature range rejection. Re-run the
+validators whenever the scene source changes.
 
 ## Verified Locally
 
@@ -62,10 +69,12 @@ make package-sd
 make audit-repo
 ```
 
-Official Azahar 2125.1.3 rendered both the unmounted and mounted Reach at 60
-application FPS during development (roughly 0.9–1.0 ms reported emulator frame
-time). This is only emulator evidence. The latest artifact has not been copied
-to and replayed on the physical 3DS, so hardware acceptance remains pending.
+Official Azahar 2125.1.3 rendered the expanded unmounted valley at 60
+application FPS during development (roughly 2.6–2.8 ms reported emulator frame
+time in the initial river view). Multi-horse behavior is host-tested; a full
+latest-build mounted traversal still needs emulator and physical capture. This
+is only local evidence. The latest artifact has not been copied to and replayed
+on the physical 3DS, so hardware acceptance remains pending.
 
 ## Rebuild
 
@@ -96,8 +105,9 @@ Azahar.app/Contents/MacOS/azahar --windowed ./elden-ring-3ds-demake.3dsx
    readable.
 2. Confirm all Warden telegraphs, damage, recovery openings, death transition,
    and music changes. Tune only after observing the real console.
-3. Ride, gallop, heal while mounted, dismount, recall the horse, reach every
-   field edge, and inspect mountain/grass pop-in while rotating the camera.
+3. Ride all three horses, gallop, heal while mounted, dismount, recall, traverse
+   the river/bridge/ford, reach every field edge, and inspect wildlife,
+   cloud/mountain silhouettes, flowers, and cedar pop-in while rotating.
 4. Record diagnostics at the field's busiest view. Target 30 FPS with a 24 FPS
    floor, then update the hardware report with measured—not emulator—results.
 5. Copy the freshly verified SD bundle only with the 3DS fully powered off and

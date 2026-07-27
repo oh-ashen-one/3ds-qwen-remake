@@ -20,11 +20,11 @@
 
 On New-family systems, C-stick camera and ZR heavy attack remain optional compatibility inputs. The CTR-001 path above is the controlling layout and requires neither control.
 
-The bottom screen also shows the current objective and a live top-down map. The white marker is the player, its green pip shows facing, and the gold/red marker is the next objective or boss. In the Sunlit Reach, the map changes to a field scale and shows the horse in brown and the distant waystone in gold.
+The bottom screen also shows the current objective and a live top-down map. The white marker is the player, its green pip shows facing, and the gold/red marker is the next objective or boss. In the Sunlit Reach, the map changes to a valley scale and shows all three horses in brown, the winding river in blue, and the distant mountain pass in gold.
 
 ## Sunlit Reach
 
 Defeat the Ashen Warden and press A to cross the golden transition into the
-field. Approach the horse and press A (or touch RIDE) to mount. Hold B while
+field. Approach any horse and press A (or touch RIDE) to mount it. Hold B while
 moving to gallop, press A again to dismount, and press L (or touch CALL) while
-unmounted to bring the horse back if it is lost.
+unmounted to bring the last selected horse back if it is lost.

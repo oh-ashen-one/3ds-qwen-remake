@@ -12,8 +12,12 @@ constexpr float kPi = 3.14159265f;
 constexpr Vec2 kDoor{0.0f, 4.3f};
 constexpr Vec2 kNpc{0.0f, 15.5f};
 constexpr Vec2 kFogGate{0.0f, 27.5f};
-constexpr Vec2 kFieldSpawn{0.0f, -20.0f};
-constexpr Vec2 kHorseSpawn{2.0f, -12.0f};
+constexpr Vec2 kFieldSpawn{0.0f, -38.0f};
+constexpr std::array<FieldHorse, kFieldHorseCount> kFieldHorseSpawns{{
+    {{2.0f, -28.0f}, 0.0f},
+    {{-38.0f, 26.0f}, 1.15f},
+    {{36.0f, 68.0f}, -0.80f},
+}};
 
 float clamp(float value, float low, float high) {
     return std::max(low, std::min(value, high));
@@ -33,6 +37,19 @@ Vec2 forwardOf(float facing) {
 
 Vec2 offset(Vec2 origin, Vec2 direction, float amount) {
     return {origin.x + direction.x * amount, origin.z + direction.z * amount};
+}
+
+unsigned nearestHorseIndex(const WorldState& world) {
+    unsigned nearest = 0;
+    float nearest_distance = distance(world.player.position, world.horses[0].position);
+    for (unsigned index = 1; index < kFieldHorseCount; ++index) {
+        const float candidate = distance(world.player.position, world.horses[index].position);
+        if (candidate < nearest_distance) {
+            nearest = index;
+            nearest_distance = candidate;
+        }
+    }
+    return nearest;
 }
 
 } // namespace
@@ -80,8 +97,8 @@ void ZoneManager::reset(WorldState& world) const {
     world.dialogue_complete = false;
     world.arena_transition = false;
     world.field_transition = false;
-    world.horse_position = kHorseSpawn;
-    world.horse_facing = 0.0f;
+    world.horses = kFieldHorseSpawns;
+    world.active_horse = 0;
     world.loaded_zone_mask = 0;
     world.zone_resident_bytes = 0;
     world.zone_loads = 0;
@@ -205,8 +222,8 @@ void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) c
                 world.player.state = PlayerState::Idle;
                 world.player.state_timer = 0.0f;
                 world.player.mounted = false;
-                world.horse_position = kHorseSpawn;
-                world.horse_facing = 0.0f;
+                world.horses = kFieldHorseSpawns;
+                world.active_horse = 0;
                 world.field_transition = false;
             }
         }
@@ -216,21 +233,27 @@ void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) c
     if (world.zone == Zone::Field && playerCanAct(world.player.state)) {
         if (input.lock_toggle && !world.player.mounted) {
             const Vec2 forward = forwardOf(world.player.facing);
-            world.horse_position = offset(world.player.position, forward, 1.8f);
-            world.horse_facing = world.player.facing;
+            FieldHorse& horse = world.horses[world.active_horse];
+            horse.position = offset(world.player.position, forward, 1.8f);
+            horse.facing = world.player.facing;
         }
         if (input.interact) {
             if (world.player.mounted) {
                 const Vec2 side{std::cos(world.player.facing), -std::sin(world.player.facing)};
+                FieldHorse& horse = world.horses[world.active_horse];
                 world.player.mounted = false;
-                world.horse_position = world.player.position;
-                world.horse_facing = world.player.facing;
+                horse.position = world.player.position;
+                horse.facing = world.player.facing;
                 world.player.position.x += side.x * 1.35f;
                 world.player.position.z += side.z * 1.35f;
-            } else if (distance(world.player.position, world.horse_position) < 2.4f) {
-                world.player.mounted = true;
-                world.player.position = world.horse_position;
-                world.player.facing = world.horse_facing;
+            } else {
+                const unsigned nearest = nearestHorseIndex(world);
+                if (distance(world.player.position, world.horses[nearest].position) < 2.6f) {
+                    world.active_horse = nearest;
+                    world.player.mounted = true;
+                    world.player.position = world.horses[nearest].position;
+                    world.player.facing = world.horses[nearest].facing;
+                }
             }
             world.player.state = PlayerState::Interact;
             world.player.state_timer = 0.28f;
@@ -407,11 +430,12 @@ void PlayerController::update(WorldState& world_, const InputFrame& input, float
         player.position.x = clamp(player.position.x, -8.5f, 8.5f);
         player.position.z = clamp(player.position.z, -8.5f, 8.5f);
     } else {
-        player.position.x = clamp(player.position.x, -42.0f, 42.0f);
-        player.position.z = clamp(player.position.z, -24.0f, 74.0f);
+        player.position.x = clamp(player.position.x, -72.0f, 72.0f);
+        player.position.z = clamp(player.position.z, -42.0f, 132.0f);
         if (player.mounted) {
-            world_.horse_position = player.position;
-            world_.horse_facing = player.facing;
+            FieldHorse& horse = world_.horses[world_.active_horse];
+            horse.position = player.position;
+            horse.facing = player.facing;
         }
     }
 }

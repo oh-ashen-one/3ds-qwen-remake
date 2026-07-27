@@ -52,6 +52,11 @@ def main() -> None:
     require(renderer, 'drawTouchButton(act_label', "bottom-screen action button")
     require(renderer, 'world.zone == Zone::Field ? "CALL" : "LOCK"',
             "field horse-call touch control")
+    require(renderer, "kFieldHorseCount", "multiple field horses")
+    require(renderer, "renderWildlife", "animated field wildlife")
+    require(renderer, "renderDeer", "running deer herd")
+    require(renderer, "renderFox", "running foxes")
+    require(renderer, "renderCrane", "river cranes")
     require(renderer, "distanceToSegment", "cross-zone camera occluder filter")
     require(renderer, "occluder_radius", "generated-prop camera clearance")
     require(renderer, "std::clamp(camera_ground_.x", "interior camera wall constraint")

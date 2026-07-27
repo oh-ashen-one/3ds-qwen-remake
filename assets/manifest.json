@@ -46,7 +46,7 @@
       "output": "include/demake/generated/scene_asset_data.hpp",
       "provenance": "Original Blender-readable scene descriptor converted to compact fixed-size runtime data",
       "license": "project-original",
-      "max_bytes": 100000,
+      "max_bytes": 220000,
       "runtime": false,
       "zones": ["interior", "vista", "arena", "field"]
     },
@@ -87,7 +87,7 @@
       "output": "romfs/zones/field.bin",
       "provenance": "Original sunlit field scene converted to an independently loadable runtime blob",
       "license": "project-original",
-      "max_bytes": 8192,
+      "max_bytes": 16384,
       "zones": ["field"]
     },
     {
@@ -97,7 +97,7 @@
       "output": "assets/blender/ashen-rift-source.blend",
       "provenance": "Original editable Blender scene for the four zones and 15-bone rigid rig",
       "license": "project-original",
-      "max_bytes": 393216,
+      "max_bytes": 1048576,
       "runtime": false,
       "zones": ["interior", "vista", "arena", "field"]
     },

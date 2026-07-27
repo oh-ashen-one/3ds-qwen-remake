@@ -100,6 +100,37 @@ def expand_zone(zone: dict) -> list[dict]:
                         z,
                         rotation + template_index * math.pi * 0.5,
                     ))
+        elif kind == "river_curve":
+            count = int(generator["count"])
+            start_z = float(generator["start_z"])
+            step_z = float(generator["step_z"])
+            center_x = float(generator["center_x"])
+            amplitude = float(generator["amplitude"])
+            frequency = float(generator["frequency"])
+            bank_offset = float(generator["bank_offset"])
+            for index in range(count):
+                phase = index * frequency
+                x = center_x + math.sin(phase) * amplitude
+                z = start_z + index * step_z
+                next_x = center_x + math.sin(phase + frequency) * amplitude
+                rotation = math.atan2(next_x - x, step_z)
+                boxes.append(normalize_box(
+                    generator["water"],
+                    f"{generator['name']}_water_{index}",
+                    x,
+                    z,
+                    rotation,
+                ))
+                side_x = math.cos(rotation)
+                side_z = -math.sin(rotation)
+                for side in (-1.0, 1.0):
+                    boxes.append(normalize_box(
+                        generator["bank"],
+                        f"{generator['name']}_bank_{index}_{int(side)}",
+                        x + side_x * bank_offset * side,
+                        z + side_z * bank_offset * side,
+                        rotation,
+                    ))
         else:
             raise ValueError(f"unsupported scene generator {kind!r}")
     return sorted(boxes, key=lambda box: (box["cell_z"], box["cell_x"], box["name"]))

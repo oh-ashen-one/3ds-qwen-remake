@@ -66,7 +66,8 @@ Required: a coherent 5–8 minute sequence, no crash, no audio underrun, no sust
 - [ ] Win, cross into the Reach, and restart after a later death or relaunch.
 - [ ] Repeat all three zone transitions at least five times across sessions.
 - [ ] Orbit the camera beside columns/trees/mountains in all four zones with no full-screen obstruction.
-- [ ] Mount, gallop, heal while mounted, dismount, recall the horse, and reach every field boundary.
+- [ ] Mount each of the three horses, gallop, heal while mounted, dismount, recall the selected horse, and reach every field boundary.
+- [ ] Ride the river from its lower bend through the bridge and ford to the mountain pass; confirm flowers, cedars, deer, foxes, cranes, clouds, and snowcaps do not cause sustained drops below 24 FPS.
 - [ ] Verify the bottom-screen map, objective changes, facing/horse/waystone markers, and ACT/RIDE/DISMOUNT, HEAL, LOCK/CALL, DEBUG touch targets.
 - [ ] Confirm Ashen Deep Hall plays in the interior/vista/field and switches once to Ashen Gate at the arena without a crash, long gap, or underrun.
 

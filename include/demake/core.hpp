@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 namespace demake {
@@ -89,6 +90,13 @@ struct Boss {
     unsigned attack_cycle = 0;
 };
 
+struct FieldHorse {
+    Vec2 position{};
+    float facing = 0.0f;
+};
+
+constexpr unsigned kFieldHorseCount = 3;
+
 struct WorldState {
     Zone zone = Zone::Interior;
     Player player{};
@@ -97,8 +105,12 @@ struct WorldState {
     float door_progress = 0.0f;
     float transition_timer = 0.0f;
     float victory_timer = 0.0f;
-    Vec2 horse_position{2.0f, -12.0f};
-    float horse_facing = 0.0f;
+    std::array<FieldHorse, kFieldHorseCount> horses{{
+        {{2.0f, -28.0f}, 0.0f},
+        {{-38.0f, 26.0f}, 1.15f},
+        {{36.0f, 68.0f}, -0.80f},
+    }};
+    unsigned active_horse = 0;
     bool door_activated = false;
     bool dialogue_active = false;
     bool dialogue_complete = false;

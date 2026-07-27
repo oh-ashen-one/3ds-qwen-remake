@@ -12,12 +12,12 @@ This is the intended first-completion and proof-recording route. It targets **7:
 | 3:05–3:45 | Pale gate | Gate approach, arena preload, fade, prior-zone unload |
 | 3:45–5:55 | Ashen Warden | Name card, lock-on, slash and slam telegraphs, dodge, heal, light/heavy attacks, defeat |
 | 5:55–6:10 | Golden crossing | Victory lockout, A continuation, field preload, arena unload |
-| 6:10–7:25 | Sunlit Reach | Bright grassland reveal, sun/clouds/mountains, lower-screen field map, horse mount, gallop, heal, dismount/recall, distant waystone |
+| 6:10–7:25 | Sunlit Reach | Japanese-alpine valley reveal, river/bridge/ford, flower and cedar slopes, running deer/foxes/cranes, cloud banks, three horses, mount/gallop/heal/dismount/recall, mountain-pass torii |
 
 ## Recording rules
 
 - Use one continuous take for the acceptance proof; no cuts or speed changes.
-- Start the timer when the title first appears and stop when the mounted player reaches the distant waystone.
+- Start the timer when the title first appears and stop when the mounted player reaches the mountain-pass torii.
 - Enable diagnostics briefly in each zone, then turn them off for readability.
 - Record the measured duration, minimum sustained FPS, peak linear-memory use, and audio-underrun count in `HARDWARE_TEST.md`.
 - If the natural route falls outside 5–8 minutes, adjust content or pacing and retest; do not pad the recording by idling.

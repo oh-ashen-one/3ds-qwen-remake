@@ -27,7 +27,7 @@ Status meanings:
 | Useful lower screen: live objective, zone-scale map, facing/objective/horse markers, status, and contextual touch actions | Implemented, hardware pending | `Renderer::renderUi`, `CONTROLS.md`, source-contract tests; legibility and touch ergonomics require the console |
 | Player combat states, health, stamina, flasks, invulnerability, lock-on, hit reactions | Local pass | `PlayerController`, rigid-pose sampler, combat and edge-case host tests |
 | Rebalanced boss with multiple telegraphed attacks, hitboxes, health/name UI, and victory-to-field transition | Local pass for logic | `BossController`, arena renderer, deterministic slash/slam/death/victory/field tests |
-| Bright post-boss grassland with sun, clouds, mountains, horse riding, gallop, healing, dismount, and recall | Local pass for logic/render path | `Zone::Field`, `Renderer::renderField`, contextual lower UI, and deterministic mount/gallop/heal/recall tests |
+| Bright post-boss Japanese-alpine valley with river, bridge/ford, cedar and flower slopes, drifting clouds, snowcapped ranges, running wildlife, and multiple rideable horses | Local pass for logic/render path | `Zone::Field`, generated field blob, `Renderer::renderField`/`renderWildlife`, contextual lower UI, and deterministic multi-horse mount/gallop/heal/recall tests |
 | Original text-only NPC presentation | Local pass | UTF-8 `romfs/dialogue/keeper.txt` is validated and loaded into a fixed renderer buffer from RomFS |
 | Coherent 5–8-minute completion | Implemented route, hardware pending | `PLAYTHROUGH_ROUTE.md` targets 7:25; the checklist requires three measured physical runs and forbids idle padding |
 
@@ -37,7 +37,7 @@ Status meanings:
 | --- | --- | --- |
 | Clear GameApp/ZoneManager/Renderer/Player/Boss/Audio/Asset boundaries | Local pass | Native headers/sources and required linked-symbol verification |
 | Four independently loadable zones with masked overlap and prior-zone free | Local pass for allocation logic | `ZoneResources`, ASZN blobs, host parser/residency tests, native map without host-only all-zone arrays |
-| Original low-poly/Blender/rigid-animation/texture pipeline | Local pass | 124 authored props, editable `.blend` plus fingerprints, 15-bone clips, RGB565 T3X, generated registry/blobs |
+| Original low-poly/Blender/rigid-animation/texture pipeline | Local pass | 422 authored props, editable `.blend` plus fingerprints, 15-bone clips, RGB565 T3X, generated registry/blobs |
 | RomFS content and NDSP double-buffered original audio with zone-based exploration/boss music | Local pass for build/runtime path | Embedded marker/link verification and `AudioStreamer`; audible switching, balance, continuity, and underruns remain hardware-only |
 | No per-frame heap allocation in game loop | Local pass by inspection | Fixed members/buffers; transition-only linear allocations; preallocated renderer/audio resources |
 | Frame/draw/culling/zone/linear-memory/audio counters | Implemented, hardware pending | Bottom-screen diagnostics and verifier; performance values require physical sampling |

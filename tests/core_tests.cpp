@@ -58,7 +58,7 @@ void testGeneratedAssetRegistry() {
     const AssetRecord* field_blob = AssetRegistry::find("field_scene_blob");
     assert(field_blob != nullptr);
     assert(AssetRegistry::assetBelongsToZone(*field_blob, Zone::Field));
-    assert(AssetRegistry::zone(Zone::Field).draw_call_budget == 128);
+    assert(AssetRegistry::zone(Zone::Field).draw_call_budget == 196);
     assert(AssetRegistry::find("missing") == nullptr);
 }
 
@@ -66,7 +66,7 @@ void testGeneratedSceneData() {
     assert(SceneAssets::boxCount(Zone::Interior) == 16);
     assert(SceneAssets::boxCount(Zone::Vista) == 24);
     assert(SceneAssets::boxCount(Zone::Arena) == 13);
-    assert(SceneAssets::boxCount(Zone::Field) == 71);
+    assert(SceneAssets::boxCount(Zone::Field) == 369);
     std::size_t count = 0;
     const SceneBox* arena = SceneAssets::boxes(Zone::Arena, count);
     assert(arena != nullptr && count == 13);
@@ -492,9 +492,11 @@ void testSunlitReachHorseMountAndGallop() {
     assert(game.world().zone == Zone::Field);
     assert(!game.world().player.mounted);
 
-    game.mutableWorld().player.position = game.world().horse_position;
+    assert(game.world().horses.size() == kFieldHorseCount);
+    game.mutableWorld().player.position = game.world().horses[1].position;
     game.step(interact, kFixedStep);
     assert(game.world().player.mounted);
+    assert(game.world().active_horse == 1);
     stepMany(game, InputFrame{}, 10);
 
     const float start_z = game.world().player.position.z;
@@ -503,7 +505,7 @@ void testSunlitReachHorseMountAndGallop() {
     gallop.sprint_held = true;
     stepMany(game, gallop, 30);
     assert(game.world().player.position.z > start_z + 9.5f);
-    assert(distance(game.world().player.position, game.world().horse_position) < 0.001f);
+    assert(distance(game.world().player.position, game.world().horses[1].position) < 0.001f);
     assert(game.world().player.stamina < 100.0f);
 
     game.mutableWorld().player.health = 40.0f;
@@ -517,7 +519,14 @@ void testSunlitReachHorseMountAndGallop() {
 
     game.step(interact, kFixedStep);
     assert(!game.world().player.mounted);
-    assert(distance(game.world().player.position, game.world().horse_position) > 1.0f);
+    assert(distance(game.world().player.position, game.world().horses[1].position) > 1.0f);
+
+    stepMany(game, InputFrame{}, 10);
+    game.mutableWorld().player.position = {12.0f, 12.0f};
+    InputFrame call{};
+    call.lock_toggle = true;
+    game.step(call, kFixedStep);
+    assert(distance(game.world().player.position, game.world().horses[1].position) < 2.0f);
 }
 
 void testDeathAndRestart() {
