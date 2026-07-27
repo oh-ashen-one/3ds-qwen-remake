@@ -53,6 +53,8 @@ def main() -> None:
     require(renderer, "occluder_radius", "generated-prop camera clearance")
     require(renderer, "std::clamp(camera_ground_.x", "interior camera wall constraint")
     require(renderer, "std::min(camera_ground_.z", "interior camera door constraint")
+    require(renderer, "void Renderer::renderPlayer", "distinct player box model")
+    require(renderer, "ember visor", "Warden box-model identity")
     require(controls, "D-pad Left / Right", "documented camera controls")
     require(controls, "| Y | Heavy attack |", "documented heavy attack")
     require(controls, "Touch ACT", "documented touchscreen gameplay")

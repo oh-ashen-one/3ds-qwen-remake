@@ -41,6 +41,7 @@ private:
     void renderInterior(const WorldState& world);
     void renderVista(const WorldState& world);
     void renderArena(const WorldState& world);
+    void renderPlayer(const Player& player, const RigidPose& pose);
     void renderHumanoid(Vec2 position, float facing, float scale, const RigidPose& pose,
                         float red, float green, float blue, bool weapon);
     void renderBoss(const Boss& boss, float elapsed);

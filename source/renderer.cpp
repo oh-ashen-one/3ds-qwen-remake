@@ -268,8 +268,7 @@ void Renderer::renderWorld(const WorldState& world, const SceneBox* scene_boxes,
     }
     RigidPose player_pose{};
     samplePlayerPose(world.player, world.elapsed, player_pose);
-    renderHumanoid(world.player.position, world.player.facing, 1.0f,
-                   player_pose, 0.42f, 0.48f, 0.55f, true);
+    renderPlayer(world.player, player_pose);
 }
 
 void Renderer::renderPanorama(Zone zone) {
@@ -336,6 +335,90 @@ void Renderer::renderVista(const WorldState& world) {
 
 void Renderer::renderArena(const WorldState& world) {
     renderBoss(world.boss, world.elapsed);
+}
+
+void Renderer::renderPlayer(const Player& player, const RigidPose& pose) {
+    constexpr float scale = 1.0f;
+    const Vec2 position = player.position;
+    const float facing = player.facing;
+    const float side_x = std::cos(facing);
+    const float side_z = -std::sin(facing);
+    const float forward_x = std::sin(facing);
+    const float forward_z = std::cos(facing);
+    const float root_y = pose.at(Bone::Root).vertical * scale;
+
+    // Keep the animated 15-bone body, then spend the remaining box budget on
+    // the player's readable identity: slit helm, mantle, tabard, and short sword.
+    renderHumanoid(position, facing, scale, pose, 0.30f, 0.31f, 0.35f, false);
+
+    for (int side = -1; side <= 1; side += 2) {
+        drawBox(position.x + side_x * side * 0.48f,
+                1.73f + root_y,
+                position.z + side_z * side * 0.48f,
+                0.34f, 0.22f, 0.42f, facing,
+                0.19f, 0.20f, 0.23f);
+    }
+
+    const float torso_forward = pose.at(Bone::Torso).forward;
+    drawBox(position.x + forward_x * (torso_forward - 0.24f),
+            1.72f + root_y,
+            position.z + forward_z * (torso_forward - 0.24f),
+            0.88f, 0.16f, 0.54f, facing,
+            0.13f, 0.13f, 0.16f);
+    drawBox(position.x - forward_x * 0.28f,
+            1.30f + root_y,
+            position.z - forward_z * 0.28f,
+            0.66f, 0.70f, 0.08f, facing,
+            0.12f, 0.12f, 0.14f);
+
+    drawBox(position.x + forward_x * (torso_forward + 0.24f),
+            1.43f + root_y,
+            position.z + forward_z * (torso_forward + 0.24f),
+            0.19f, 0.55f, 0.045f, facing,
+            0.42f, 0.12f, 0.11f);
+    drawBox(position.x + forward_x * 0.24f,
+            0.82f + root_y,
+            position.z + forward_z * 0.24f,
+            0.21f, 0.42f, 0.045f, facing,
+            0.38f, 0.10f, 0.09f);
+
+    const float head_forward = pose.at(Bone::Head).forward;
+    const float head_y = 2.06f + root_y + pose.at(Bone::Head).vertical;
+    const float visor_x = position.x + forward_x * (head_forward + 0.255f);
+    const float visor_z = position.z + forward_z * (head_forward + 0.255f);
+    drawBox(visor_x, head_y + 0.03f, visor_z,
+            0.39f, 0.14f, 0.025f, facing,
+            0.035f, 0.03f, 0.04f);
+    for (int side = -1; side <= 1; side += 2) {
+        drawBox(visor_x + side_x * side * 0.10f,
+                head_y + 0.03f,
+                visor_z + side_z * side * 0.10f,
+                0.025f, 0.17f, 0.035f, facing,
+                0.30f, 0.30f, 0.33f);
+    }
+
+    const BoneTransform& weapon_pose = pose.at(Bone::Weapon);
+    const float weapon_yaw = facing + weapon_pose.yaw;
+    const float weapon_forward_x = std::sin(weapon_yaw);
+    const float weapon_forward_z = std::cos(weapon_yaw);
+    const float hand_x = position.x + side_x * 0.70f +
+                         forward_x * (0.38f + weapon_pose.forward);
+    const float hand_z = position.z + side_z * 0.70f +
+                         forward_z * (0.38f + weapon_pose.forward);
+    const float weapon_y = 1.13f + root_y;
+    drawBox(hand_x, weapon_y, hand_z,
+            0.09f, 0.11f, 0.30f, weapon_yaw,
+            0.22f, 0.15f, 0.10f);
+    drawBox(hand_x + weapon_forward_x * 0.21f,
+            weapon_y,
+            hand_z + weapon_forward_z * 0.21f,
+            0.48f, 0.10f, 0.10f, weapon_yaw,
+            0.28f, 0.28f, 0.31f);
+    drawBox(hand_x + weapon_forward_x * 0.90f,
+            weapon_y,
+            hand_z + weapon_forward_z * 0.90f,
+            0.13f, 0.09f, 1.36f, weapon_yaw,
+            0.58f, 0.59f, 0.62f);
 }
 
 void Renderer::renderHumanoid(Vec2 position, float facing, float scale, const RigidPose& pose,
@@ -422,23 +505,113 @@ void Renderer::drawBlobShadow(Vec2 position, float scale) {
 
 void Renderer::renderBoss(const Boss& boss, float elapsed) {
     if (boss.state == BossState::Dead) {
-        drawBox(boss.position.x, 0.25f, boss.position.z, 2.8f, 0.45f, 1.2f,
-                boss.facing + 1.57f, 0.35f, 0.12f, 0.10f, true);
+        const float side_x = std::cos(boss.facing);
+        const float side_z = -std::sin(boss.facing);
+        const float forward_x = std::sin(boss.facing);
+        const float forward_z = std::cos(boss.facing);
+        drawBox(boss.position.x, 0.34f, boss.position.z,
+                2.3f, 0.52f, 1.25f, boss.facing + 1.30f,
+                0.16f, 0.16f, 0.18f, true);
+        drawBox(boss.position.x + side_x * 1.15f,
+                0.28f,
+                boss.position.z + side_z * 1.15f,
+                0.72f, 0.55f, 0.72f, boss.facing + 0.40f,
+                0.18f, 0.18f, 0.20f, true);
+        drawBox(boss.position.x - side_x * 0.85f + forward_x * 0.25f,
+                0.24f,
+                boss.position.z - side_z * 0.85f + forward_z * 0.25f,
+                0.78f, 0.40f, 0.82f, boss.facing - 0.55f,
+                0.13f, 0.13f, 0.15f, true);
+        drawBox(boss.position.x + forward_x * 0.80f,
+                0.36f,
+                boss.position.z + forward_z * 0.80f,
+                0.80f, 0.70f, 0.72f, boss.facing + 0.95f,
+                0.19f, 0.18f, 0.20f, true);
+        drawBox(boss.position.x - side_x * 1.25f - forward_x * 0.90f,
+                0.13f,
+                boss.position.z - side_z * 1.25f - forward_z * 0.90f,
+                0.42f, 0.15f, 3.30f, boss.facing - 0.72f,
+                0.31f, 0.30f, 0.32f, true);
         return;
     }
     RigidPose boss_pose{};
     sampleBossPose(boss, elapsed, boss_pose);
     renderHumanoid(boss.position, boss.facing, 1.75f,
                    boss_pose,
-                   0.46f, 0.16f, 0.12f, true);
+                   0.24f, 0.24f, 0.27f, false);
     const float side_x = std::cos(boss.facing);
     const float side_z = -std::sin(boss.facing);
+    const float forward_x = std::sin(boss.facing);
+    const float forward_z = std::cos(boss.facing);
+    const float root_y = boss_pose.at(Bone::Root).vertical * 1.75f;
+
+    // The Warden remains pure box geometry, but the oversized shoulders,
+    // ember visor, hanging plates, and gate-blade make it readable at 400x240.
     for (int side = -1; side <= 1; side += 2) {
-        drawBox(boss.position.x + side_x * side * 0.30f, 4.05f,
-                boss.position.z + side_z * side * 0.30f,
-                0.18f, 0.75f, 0.18f, boss.facing + side * 0.35f,
-                0.70f, 0.55f, 0.32f);
+        drawBox(boss.position.x + side_x * side * 0.92f,
+                3.08f + root_y,
+                boss.position.z + side_z * side * 0.92f,
+                0.92f, 0.58f, 0.94f, boss.facing,
+                0.18f, 0.18f, 0.21f);
     }
+
+    const float head_forward = boss_pose.at(Bone::Head).forward * 1.75f;
+    const float head_y = 3.60f + root_y + boss_pose.at(Bone::Head).vertical * 1.75f;
+    const float visor_x = boss.position.x + forward_x * (head_forward + 0.45f);
+    const float visor_z = boss.position.z + forward_z * (head_forward + 0.45f);
+    drawBox(visor_x, head_y + 0.05f, visor_z,
+            0.62f, 0.16f, 0.035f, boss.facing,
+            0.86f, 0.25f, 0.08f);
+    drawBox(visor_x, head_y - 0.15f, visor_z,
+            0.09f, 0.54f, 0.04f, boss.facing,
+            0.72f, 0.16f, 0.06f);
+
+    const float torso_forward = boss_pose.at(Bone::Torso).forward * 1.75f;
+    drawBox(boss.position.x + forward_x * (torso_forward + 0.42f),
+            2.56f + root_y,
+            boss.position.z + forward_z * (torso_forward + 0.42f),
+            1.06f, 0.88f, 0.10f, boss.facing,
+            0.17f, 0.17f, 0.20f);
+    drawBox(boss.position.x + forward_x * 0.44f,
+            1.46f + root_y,
+            boss.position.z + forward_z * 0.44f,
+            0.48f, 1.15f, 0.10f, boss.facing,
+            0.28f, 0.25f, 0.22f);
+    for (int side = -1; side <= 1; side += 2) {
+        drawBox(boss.position.x + side_x * side * 0.48f + forward_x * 0.28f,
+                1.42f + root_y - (side > 0 ? 0.10f : 0.0f),
+                boss.position.z + side_z * side * 0.48f + forward_z * 0.28f,
+                0.34f, 0.94f, 0.14f, boss.facing + side * 0.05f,
+                0.17f, 0.16f, 0.17f);
+        drawBox(boss.position.x + side_x * side * 0.36f - forward_x * 0.50f,
+                2.12f + root_y - (side > 0 ? 0.18f : 0.0f),
+                boss.position.z + side_z * side * 0.36f - forward_z * 0.50f,
+                0.54f, 1.56f, 0.12f, boss.facing,
+                0.12f, 0.12f, 0.14f);
+    }
+
+    const BoneTransform& weapon_pose = boss_pose.at(Bone::Weapon);
+    const float weapon_yaw = boss.facing + weapon_pose.yaw;
+    const float weapon_forward_x = std::sin(weapon_yaw);
+    const float weapon_forward_z = std::cos(weapon_yaw);
+    const float hand_x = boss.position.x + side_x * 1.16f +
+                         forward_x * (0.66f + weapon_pose.forward * 1.75f);
+    const float hand_z = boss.position.z + side_z * 1.16f +
+                         forward_z * (0.66f + weapon_pose.forward * 1.75f);
+    const float weapon_y = 2.02f + root_y;
+    drawBox(hand_x, weapon_y, hand_z,
+            0.17f, 0.18f, 0.52f, weapon_yaw,
+            0.20f, 0.13f, 0.09f);
+    drawBox(hand_x + weapon_forward_x * 0.34f,
+            weapon_y,
+            hand_z + weapon_forward_z * 0.34f,
+            1.05f, 0.20f, 0.18f, weapon_yaw,
+            0.24f, 0.23f, 0.25f);
+    drawBox(hand_x + weapon_forward_x * 1.76f,
+            weapon_y,
+            hand_z + weapon_forward_z * 1.76f,
+            0.58f, 0.20f, 2.85f, weapon_yaw,
+            0.31f, 0.30f, 0.33f);
 }
 
 void Renderer::drawBox(float x, float y, float z, float sx, float sy, float sz,
