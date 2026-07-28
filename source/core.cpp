@@ -13,6 +13,8 @@ constexpr Vec2 kDoor{0.0f, 4.3f};
 constexpr Vec2 kNpc{0.0f, 15.5f};
 constexpr Vec2 kFogGate{0.0f, 27.5f};
 constexpr Vec2 kFieldSpawn{0.0f, -38.0f};
+constexpr Vec2 kBoarSpawn{0.0f, -37.0f};
+constexpr Vec2 kOgreClimbSpawn{0.0f, -42.0f};
 constexpr std::array<FieldHorse, kFieldHorseCount> kFieldHorseSpawns{{
     {{2.0f, -28.0f}, 0.0f},
     {{-38.0f, 26.0f}, 1.15f},
@@ -52,6 +54,20 @@ unsigned nearestHorseIndex(const WorldState& world) {
     return nearest;
 }
 
+void prepareBoss(WorldState& world, Zone zone) {
+    world.boss = Boss{};
+    world.boss.state = BossState::Dormant;
+    world.boss.health = bossMaximumHealth(zone);
+    world.boss.position = zone == Zone::BoarValley ? Vec2{0.0f, 29.0f}
+                                                   : Vec2{0.0f, 105.0f};
+    if ((zone == Zone::BoarValley && world.boar_defeated) ||
+        (zone == Zone::CloudPlateau && world.ogre_defeated)) {
+        world.boss.health = 0.0f;
+        world.boss.state = BossState::Dead;
+    }
+    world.victory_timer = 0.0f;
+}
+
 } // namespace
 
 float length(Vec2 value) {
@@ -79,6 +95,42 @@ float sampleRigidSwing(float normalized_time) {
     return std::sin(phase * kPi) * 1.45f;
 }
 
+bool isBossZone(Zone zone) {
+    return zone == Zone::Arena || zone == Zone::BoarValley ||
+           zone == Zone::CloudPlateau;
+}
+
+float bossMaximumHealth(Zone zone) {
+    switch (zone) {
+        case Zone::Arena: return 140.0f;
+        case Zone::BoarValley: return 105.0f;
+        case Zone::CloudPlateau: return 185.0f;
+        default: return 1.0f;
+    }
+}
+
+const char* bossDisplayName(Zone zone) {
+    switch (zone) {
+        case Zone::Arena: return "THE ASHEN WARDEN";
+        case Zone::BoarValley: return "GORE-TUSK, VALLEY KING";
+        case Zone::CloudPlateau: return "ARASHI, MOUNTAIN OGRE";
+        default: return "";
+    }
+}
+
+float zoneGroundHeight(Zone zone, Vec2 position) {
+    if (zone != Zone::CloudPlateau) {
+        return 0.0f;
+    }
+    if (position.z <= -28.0f) {
+        return 0.0f;
+    }
+    if (position.z >= 76.0f) {
+        return 26.0f;
+    }
+    return (position.z + 28.0f) * 0.25f;
+}
+
 const char* quickItemName(int selected_item) {
     switch (selected_item) {
         case 0: return "Crimson Flask";
@@ -97,6 +149,8 @@ void ZoneManager::reset(WorldState& world) const {
     world.dialogue_complete = false;
     world.arena_transition = false;
     world.field_transition = false;
+    world.boar_defeated = false;
+    world.ogre_defeated = false;
     world.horses = kFieldHorseSpawns;
     world.active_horse = 0;
     world.loaded_zone_mask = 0;
@@ -231,6 +285,33 @@ void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) c
     }
 
     if (world.zone == Zone::Field && playerCanAct(world.player.state)) {
+        if (world.player.position.x > 68.0f &&
+            world.player.position.z > -8.0f && world.player.position.z < 54.0f) {
+            preload(world, Zone::BoarValley);
+            enter(world, Zone::BoarValley);
+            world.player.position = kBoarSpawn;
+            world.player.facing = 0.0f;
+            world.player.mounted = false;
+            world.player.state = PlayerState::Idle;
+            prepareBoss(world, Zone::BoarValley);
+            return;
+        }
+        if (world.player.position.x < -68.0f &&
+            world.player.position.z > -8.0f && world.player.position.z < 54.0f) {
+            const bool arrived_mounted = world.player.mounted;
+            preload(world, Zone::CloudPlateau);
+            enter(world, Zone::CloudPlateau);
+            world.player.position = kOgreClimbSpawn;
+            world.player.facing = 0.0f;
+            world.player.state = PlayerState::Idle;
+            world.player.mounted = arrived_mounted;
+            if (arrived_mounted) {
+                world.horses[world.active_horse].position = world.player.position;
+                world.horses[world.active_horse].facing = world.player.facing;
+            }
+            prepareBoss(world, Zone::CloudPlateau);
+            return;
+        }
         if (input.lock_toggle && !world.player.mounted) {
             const Vec2 forward = forwardOf(world.player.facing);
             FieldHorse& horse = world.horses[world.active_horse];
@@ -258,6 +339,65 @@ void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) c
             world.player.state = PlayerState::Interact;
             world.player.state_timer = 0.28f;
         }
+        return;
+    }
+
+    if (world.zone == Zone::BoarValley) {
+        if (world.player.position.z < -40.0f) {
+            preload(world, Zone::Field);
+            enter(world, Zone::Field);
+            world.player.position = {66.0f, 18.0f};
+            world.player.facing = -1.5707963f;
+            world.player.state = PlayerState::Idle;
+            world.player.lock_on = false;
+        }
+        return;
+    }
+
+    if (world.zone == Zone::CloudPlateau) {
+        if (world.player.position.z < -44.0f) {
+            const bool leaving_mounted = world.player.mounted;
+            preload(world, Zone::Field);
+            enter(world, Zone::Field);
+            world.player.position = {-66.0f, 18.0f};
+            world.player.facing = 1.5707963f;
+            world.player.state = PlayerState::Idle;
+            world.player.lock_on = false;
+            if (leaving_mounted) {
+                world.horses[world.active_horse].position = world.player.position;
+                world.horses[world.active_horse].facing = world.player.facing;
+            }
+            return;
+        }
+        if (world.player.position.z > 82.0f && world.player.mounted) {
+            FieldHorse& horse = world.horses[world.active_horse];
+            horse.position = {world.player.position.x - 2.0f, world.player.position.z - 1.5f};
+            horse.facing = world.player.facing;
+            world.player.mounted = false;
+        }
+        if (playerCanAct(world.player.state)) {
+            if (input.lock_toggle && !world.player.mounted) {
+                FieldHorse& horse = world.horses[world.active_horse];
+                const Vec2 forward = forwardOf(world.player.facing);
+                horse.position = offset(world.player.position, forward, 1.8f);
+                horse.facing = world.player.facing;
+            }
+            if (input.interact) {
+                FieldHorse& horse = world.horses[world.active_horse];
+                if (world.player.mounted) {
+                    world.player.mounted = false;
+                    horse.position = world.player.position;
+                    horse.facing = world.player.facing;
+                    world.player.position.x += 1.35f;
+                } else if (distance(world.player.position, horse.position) < 2.6f) {
+                    world.player.mounted = true;
+                    world.player.position = horse.position;
+                    world.player.facing = horse.facing;
+                }
+                world.player.state = PlayerState::Interact;
+                world.player.state_timer = 0.28f;
+            }
+        }
     }
 }
 
@@ -267,6 +407,8 @@ const char* ZoneManager::name(Zone zone) {
         case Zone::Vista: return "The Sable Expanse";
         case Zone::Arena: return "Warden's Hollow";
         case Zone::Field: return "The Sunlit Reach";
+        case Zone::BoarValley: return "Twinfang Ravine";
+        case Zone::CloudPlateau: return "Cloudbreak Ascent";
     }
     return "Unknown";
 }
@@ -307,7 +449,7 @@ void GameSimulation::step(const InputFrame& input, float dt) {
 
     zones_.update(world_, input, dt);
     player_controller_.update(world_, input, dt);
-    if (world_.zone == Zone::Arena && !world_.field_transition) {
+    if (isBossZone(world_.zone) && !world_.field_transition) {
         boss_controller_.update(world_, dt);
     }
 }
@@ -321,15 +463,19 @@ void PlayerController::update(WorldState& world_, const InputFrame& input, float
     if (player.state == PlayerState::Attack && !player.action_applied && player.state_timer <= 0.22f) {
         player.action_applied = true;
         const Vec2 hit_center = offset(player.position, forwardOf(player.facing), 1.25f);
-        if (world_.zone == Zone::Arena &&
-            circlesOverlap(hit_center, 1.25f, world_.boss.position, 0.9f)) {
+        const float boss_radius = world_.zone == Zone::BoarValley ? 1.45f
+                                  : (world_.zone == Zone::CloudPlateau ? 1.35f : 0.9f);
+        if (isBossZone(world_.zone) &&
+            circlesOverlap(hit_center, 1.25f, world_.boss.position, boss_radius)) {
             BossController::damage(world_, 20.0f);
         }
     } else if (player.state == PlayerState::HeavyAttack && !player.action_applied && player.state_timer <= 0.30f) {
         player.action_applied = true;
         const Vec2 hit_center = offset(player.position, forwardOf(player.facing), 1.45f);
-        if (world_.zone == Zone::Arena &&
-            circlesOverlap(hit_center, 1.55f, world_.boss.position, 0.9f)) {
+        const float boss_radius = world_.zone == Zone::BoarValley ? 1.45f
+                                  : (world_.zone == Zone::CloudPlateau ? 1.35f : 0.9f);
+        if (isBossZone(world_.zone) &&
+            circlesOverlap(hit_center, 1.55f, world_.boss.position, boss_radius)) {
             BossController::damage(world_, 38.0f);
         }
     } else if (player.state == PlayerState::Heal && !player.action_applied && player.state_timer <= 0.25f) {
@@ -344,17 +490,19 @@ void PlayerController::update(WorldState& world_, const InputFrame& input, float
     }
 
     if (player.lock_on &&
-        (world_.zone != Zone::Arena || world_.boss.state == BossState::Dead ||
-         distance(player.position, world_.boss.position) > 14.0f)) {
+        (!isBossZone(world_.zone) || world_.boss.state == BossState::Dead ||
+         distance(player.position, world_.boss.position) > 18.0f)) {
         player.lock_on = false;
     }
 
-    if (input.lock_toggle && world_.zone == Zone::Arena && world_.boss.state != BossState::Dead) {
+    if (input.lock_toggle && isBossZone(world_.zone) &&
+        world_.boss.state != BossState::Dead &&
+        distance(player.position, world_.boss.position) <= 18.0f) {
         player.lock_on = !player.lock_on;
     }
 
     if (!player.mounted && input.light_attack && player.stamina >= 12.0f &&
-        world_.zone == Zone::Arena) {
+        isBossZone(world_.zone)) {
         player.state = PlayerState::Attack;
         player.state_timer = 0.46f;
         player.action_applied = false;
@@ -362,7 +510,7 @@ void PlayerController::update(WorldState& world_, const InputFrame& input, float
         return;
     }
     if (!player.mounted && input.heavy_attack && player.stamina >= 24.0f &&
-        world_.zone == Zone::Arena) {
+        isBossZone(world_.zone)) {
         player.state = PlayerState::HeavyAttack;
         player.state_timer = 0.78f;
         player.action_applied = false;
@@ -410,7 +558,8 @@ void PlayerController::update(WorldState& world_, const InputFrame& input, float
         player.state = PlayerState::Idle;
     }
 
-    if (player.lock_on && world_.zone == Zone::Arena && world_.boss.state != BossState::Dead) {
+    if (player.lock_on && isBossZone(world_.zone) &&
+        world_.boss.state != BossState::Dead) {
         player.facing = facingTo(player.position, world_.boss.position);
     }
 
@@ -429,6 +578,18 @@ void PlayerController::update(WorldState& world_, const InputFrame& input, float
     } else if (world_.zone == Zone::Arena) {
         player.position.x = clamp(player.position.x, -8.5f, 8.5f);
         player.position.z = clamp(player.position.z, -8.5f, 8.5f);
+    } else if (world_.zone == Zone::BoarValley) {
+        player.position.x = clamp(player.position.x, -25.0f, 25.0f);
+        player.position.z = clamp(player.position.z, -43.0f, 57.0f);
+    } else if (world_.zone == Zone::CloudPlateau) {
+        const float path_half_width = player.position.z < 76.0f ? 12.0f : 34.0f;
+        player.position.x = clamp(player.position.x, -path_half_width, path_half_width);
+        player.position.z = clamp(player.position.z, -47.0f, 126.0f);
+        if (player.mounted) {
+            FieldHorse& horse = world_.horses[world_.active_horse];
+            horse.position = player.position;
+            horse.facing = player.facing;
+        }
     } else {
         player.position.x = clamp(player.position.x, -72.0f, 72.0f);
         player.position.z = clamp(player.position.z, -42.0f, 132.0f);
@@ -465,7 +626,7 @@ void BossController::update(WorldState& world_, float dt) const {
     Player& player = world_.player;
     if (boss.state == BossState::Dead) {
         world_.victory_timer += dt;
-        if (world_.victory_timer >= 1.4f) {
+        if (world_.zone == Zone::Arena && world_.victory_timer >= 1.4f) {
             player.state = PlayerState::Victory;
             player.lock_on = false;
         }
@@ -475,21 +636,35 @@ void BossController::update(WorldState& world_, float dt) const {
     boss.facing = facingTo(boss.position, player.position);
     boss.state_timer = std::max(0.0f, boss.state_timer - dt);
     const float gap = distance(boss.position, player.position);
+    const bool boar = world_.zone == Zone::BoarValley;
+    const bool ogre = world_.zone == Zone::CloudPlateau;
 
     switch (boss.state) {
         case BossState::Dormant:
-            boss.state = BossState::Approach;
+            if (gap < (ogre ? 20.0f : 17.0f)) {
+                boss.state = BossState::Approach;
+            }
             break;
         case BossState::Approach: {
-            if (gap > 3.0f) {
+            const float attack_gap = boar ? 4.3f : (ogre ? 5.0f : 3.0f);
+            if (gap > attack_gap) {
                 const Vec2 direction = normalized({player.position.x - boss.position.x,
                                                    player.position.z - boss.position.z});
-                boss.position.x += direction.x * 1.25f * dt;
-                boss.position.z += direction.z * 1.25f * dt;
+                const float speed = boar ? 1.85f : (ogre ? 0.82f : 1.25f);
+                boss.position.x += direction.x * speed * dt;
+                boss.position.z += direction.z * speed * dt;
             } else {
-                const bool slam = (boss.attack_cycle++ % 3U) == 2U;
-                boss.state = slam ? BossState::WindupSlam : BossState::WindupSlash;
-                boss.state_timer = slam ? 1.20f : 0.80f;
+                const unsigned cycle = boss.attack_cycle++ % (ogre ? 4U : 3U);
+                if (ogre && cycle == 3U) {
+                    boss.state = BossState::WindupMagic;
+                    boss.state_timer = 1.55f;
+                    boss.magic_target = player.position;
+                } else {
+                    const bool slam = cycle == 2U;
+                    boss.state = slam ? BossState::WindupSlam : BossState::WindupSlash;
+                    boss.state_timer = slam ? (ogre ? 1.40f : 1.10f)
+                                            : (boar ? 0.95f : (ogre ? 1.05f : 0.80f));
+                }
             }
             break;
         }
@@ -497,10 +672,15 @@ void BossController::update(WorldState& world_, float dt) const {
             if (boss.state_timer <= 0.0f) {
                 boss.state = BossState::Slash;
                 boss.state_timer = 0.18f;
-                const Vec2 hit_center = offset(boss.position, forwardOf(boss.facing), 1.45f);
-                if (circlesOverlap(hit_center, 1.20f, player.position, 0.55f) &&
+                if (boar) {
+                    boss.position = offset(boss.position, forwardOf(boss.facing), 2.4f);
+                }
+                const float reach = boar ? 2.0f : (ogre ? 2.2f : 1.45f);
+                const Vec2 hit_center = offset(boss.position, forwardOf(boss.facing), reach);
+                const float hit_radius = boar ? 1.65f : (ogre ? 1.75f : 1.20f);
+                if (circlesOverlap(hit_center, hit_radius, player.position, 0.55f) &&
                     player.state != PlayerState::Dodge) {
-                    PlayerController::damage(world_, 16.0f);
+                    PlayerController::damage(world_, boar ? 18.0f : (ogre ? 22.0f : 16.0f));
                 }
             }
             break;
@@ -508,17 +688,34 @@ void BossController::update(WorldState& world_, float dt) const {
             if (boss.state_timer <= 0.0f) {
                 boss.state = BossState::Slam;
                 boss.state_timer = 0.25f;
-                if (circlesOverlap(boss.position, 2.75f, player.position, 0.55f) &&
+                const float slam_radius = boar ? 3.1f : (ogre ? 4.25f : 2.75f);
+                if (circlesOverlap(boss.position, slam_radius, player.position, 0.55f) &&
+                    player.state != PlayerState::Dodge) {
+                    PlayerController::damage(world_, ogre ? 26.0f : (boar ? 20.0f : 24.0f));
+                }
+            }
+            break;
+        case BossState::WindupMagic:
+            if (boss.state_timer <= 0.0f) {
+                boss.state = BossState::Magic;
+                boss.state_timer = 0.42f;
+                if (circlesOverlap(boss.magic_target, 2.6f, player.position, 0.55f) &&
                     player.state != PlayerState::Dodge) {
                     PlayerController::damage(world_, 24.0f);
                 }
+            }
+            break;
+        case BossState::Magic:
+            if (boss.state_timer <= 0.0f) {
+                boss.state = BossState::Recover;
+                boss.state_timer = 1.15f;
             }
             break;
         case BossState::Slash:
         case BossState::Slam:
             if (boss.state_timer <= 0.0f) {
                 boss.state = BossState::Recover;
-                boss.state_timer = 0.90f;
+                boss.state_timer = boar ? 1.05f : (ogre ? 1.20f : 0.90f);
             }
             break;
         case BossState::Recover:
@@ -557,6 +754,12 @@ void BossController::damage(WorldState& world_, float amount) {
         boss.state = BossState::Dead;
         boss.state_timer = 0.0f;
         world_.player.lock_on = false;
+        world_.victory_timer = 0.0f;
+        if (world_.zone == Zone::BoarValley) {
+            world_.boar_defeated = true;
+        } else if (world_.zone == Zone::CloudPlateau) {
+            world_.ogre_defeated = true;
+        }
     }
 }
 

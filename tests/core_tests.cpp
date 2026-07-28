@@ -29,7 +29,7 @@ void testMathAndCollision() {
 }
 
 void testGeneratedAssetRegistry() {
-    assert(AssetRegistry::assetCount() == 16);
+    assert(AssetRegistry::assetCount() == 20);
     const AssetRecord* exploration_music = AssetRegistry::find("music_ashen_deep_hall");
     assert(exploration_music != nullptr);
     assert(AssetRegistry::assetBelongsToZone(*exploration_music, Zone::Interior));
@@ -41,6 +41,8 @@ void testGeneratedAssetRegistry() {
     assert(!AssetRegistry::assetBelongsToZone(*boss_music, Zone::Interior));
     assert(!AssetRegistry::assetBelongsToZone(*boss_music, Zone::Vista));
     assert(AssetRegistry::assetBelongsToZone(*boss_music, Zone::Arena));
+    assert(AssetRegistry::assetBelongsToZone(*boss_music, Zone::BoarValley));
+    assert(AssetRegistry::assetBelongsToZone(*boss_music, Zone::CloudPlateau));
     const AssetRecord* field_music = AssetRegistry::find("music_valley_after_dawn");
     assert(field_music != nullptr);
     assert(!AssetRegistry::assetBelongsToZone(*field_music, Zone::Interior));
@@ -64,6 +66,14 @@ void testGeneratedAssetRegistry() {
     assert(field_blob != nullptr);
     assert(AssetRegistry::assetBelongsToZone(*field_blob, Zone::Field));
     assert(AssetRegistry::zone(Zone::Field).draw_call_budget == 204);
+    const AssetRecord* boar_blob = AssetRegistry::find("boar_valley_scene_blob");
+    assert(boar_blob != nullptr);
+    assert(AssetRegistry::assetBelongsToZone(*boar_blob, Zone::BoarValley));
+    const AssetRecord* cloud_blob = AssetRegistry::find("cloud_plateau_scene_blob");
+    assert(cloud_blob != nullptr);
+    assert(AssetRegistry::assetBelongsToZone(*cloud_blob, Zone::CloudPlateau));
+    assert(AssetRegistry::zone(Zone::BoarValley).draw_call_budget == 188);
+    assert(AssetRegistry::zone(Zone::CloudPlateau).draw_call_budget == 214);
     assert(AssetRegistry::find("missing") == nullptr);
 }
 
@@ -72,6 +82,8 @@ void testGeneratedSceneData() {
     assert(SceneAssets::boxCount(Zone::Vista) == 24);
     assert(SceneAssets::boxCount(Zone::Arena) == 13);
     assert(SceneAssets::boxCount(Zone::Field) == 384);
+    assert(SceneAssets::boxCount(Zone::BoarValley) == 142);
+    assert(SceneAssets::boxCount(Zone::CloudPlateau) == 144);
     std::size_t count = 0;
     const SceneBox* arena = SceneAssets::boxes(Zone::Arena, count);
     assert(arena != nullptr && count == 13);
@@ -127,10 +139,20 @@ void testZoneResourceStreaming() {
     assert(resources.loadCount() == 4);
     assert(resources.unloadCount() == 3);
 
+    assert(resources.sync(1U << static_cast<unsigned>(Zone::BoarValley)));
+    assert(resources.loadedMask() == 0x10U);
+    assert(resources.boxes(Zone::BoarValley, count) != nullptr);
+    assert(count == SceneAssets::boxCount(Zone::BoarValley));
+
+    assert(resources.sync(1U << static_cast<unsigned>(Zone::CloudPlateau)));
+    assert(resources.loadedMask() == 0x20U);
+    assert(resources.boxes(Zone::CloudPlateau, count) != nullptr);
+    assert(count == SceneAssets::boxCount(Zone::CloudPlateau));
+
     resources.shutdown();
     assert(resources.loadedMask() == 0);
     assert(resources.residentBytes() == 0);
-    assert(resources.unloadCount() == 4);
+    assert(resources.unloadCount() == 6);
 }
 
 void testRigidPoseSampling() {
@@ -534,6 +556,57 @@ void testSunlitReachHorseMountAndGallop() {
     assert(distance(game.world().player.position, game.world().horses[1].position) < 2.0f);
 }
 
+void testOutdoorBranchesAndPersistentBosses() {
+    GameSimulation game;
+    WorldState& world = game.mutableWorld();
+    world.zone = Zone::Field;
+    world.loaded_zone_mask = 1U << static_cast<unsigned>(Zone::Field);
+    world.player.position = {69.0f, 18.0f};
+    game.step(InputFrame{}, kFixedStep);
+    assert(game.world().zone == Zone::BoarValley);
+    assert(game.world().boss.health == bossMaximumHealth(Zone::BoarValley));
+    assert(!game.world().player.mounted);
+    BossController::damage(game.mutableWorld(), 1000.0f);
+    assert(game.world().boar_defeated);
+    game.mutableWorld().player.position.z = -42.0f;
+    game.step(InputFrame{}, kFixedStep);
+    assert(game.world().zone == Zone::Field);
+    game.mutableWorld().player.position = {69.0f, 18.0f};
+    game.step(InputFrame{}, kFixedStep);
+    assert(game.world().zone == Zone::BoarValley);
+    assert(game.world().boss.state == BossState::Dead);
+
+    game.mutableWorld().player.position.z = -42.0f;
+    game.step(InputFrame{}, kFixedStep);
+    assert(game.world().zone == Zone::Field);
+    game.mutableWorld().player.position = {-69.0f, 18.0f};
+    game.mutableWorld().player.mounted = true;
+    game.mutableWorld().active_horse = 0;
+    game.step(InputFrame{}, kFixedStep);
+    assert(game.world().zone == Zone::CloudPlateau);
+    assert(game.world().player.mounted);
+    assert(zoneGroundHeight(Zone::CloudPlateau, {0.0f, 76.0f}) == 26.0f);
+
+    game.mutableWorld().player.position = {0.0f, 84.0f};
+    game.step(InputFrame{}, kFixedStep);
+    assert(!game.world().player.mounted);
+    game.mutableWorld().player.position = {0.0f, 101.0f};
+    game.mutableWorld().boss.position = {0.0f, 105.0f};
+    game.mutableWorld().boss.state = BossState::Approach;
+    game.mutableWorld().boss.attack_cycle = 3;
+    game.step(InputFrame{}, kFixedStep);
+    assert(game.world().boss.state == BossState::WindupMagic);
+    game.mutableWorld().boss.state_timer = 0.01f;
+    game.step(InputFrame{}, kFixedStep);
+    assert(game.world().boss.state == BossState::Magic);
+
+    BossController::damage(game.mutableWorld(), 1000.0f);
+    assert(game.world().ogre_defeated);
+    game.mutableWorld().player.position.z = -46.0f;
+    game.step(InputFrame{}, kFixedStep);
+    assert(game.world().zone == Zone::Field);
+}
+
 void testDeathAndRestart() {
     GameSimulation game;
     WorldState& world = game.mutableWorld();
@@ -575,6 +648,7 @@ int main() {
     testHealing();
     testBossDeathClearsLockAndProducesVictory();
     testSunlitReachHorseMountAndGallop();
+    testOutdoorBranchesAndPersistentBosses();
     testDeathAndRestart();
     std::cout << "core_tests: all deterministic gameplay checks passed\n";
     return 0;

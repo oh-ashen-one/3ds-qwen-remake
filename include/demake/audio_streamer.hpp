@@ -11,7 +11,7 @@ namespace demake {
 class AudioStreamer {
 public:
     bool initialize();
-    void setZone(Zone zone);
+    void setZone(Zone zone, float player_z);
     void update();
     void playHit(float pitch = 1.0f);
     void suspend();

@@ -29,7 +29,7 @@ private:
     bool load(Zone zone);
     void unload(Zone zone);
 
-    std::array<Slot, 4> slots_{};
+    std::array<Slot, kZoneCount> slots_{};
     std::uint32_t resident_bytes_ = 0;
     std::uint8_t loaded_mask_ = 0;
     unsigned load_count_ = 0;

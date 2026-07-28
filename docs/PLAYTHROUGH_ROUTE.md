@@ -14,10 +14,21 @@ This is the intended first-completion and proof-recording route. It targets **7:
 | 5:55–6:10 | Golden crossing | Victory lockout, A continuation, field preload, arena unload |
 | 6:10–7:25 | Sunlit Reach | Japanese-alpine valley reveal, river/tributary/bridge/ford, flower and cedar slopes, running deer/foxes/cranes, cloud banks, three horses, mount/gallop/heal/dismount/recall, mountain-pass torii |
 
+The 7:25 route remains the core vertical-slice timing gate. The optional
+expansion proof continues without a cut:
+
+| Added time | Branch beat | Required visible evidence |
+| --- | --- | --- |
+| +0:00–1:20 | Eastern ride and Twinfang Ravine | Red map exit, zone stream, mountain walls, flowers, hog charge/stomp, defeat, return south |
+| +1:20–3:20 | Western ride and Cloudbreak Ascent | Cyan map exit, mounted zigzag climb, increasing elevation, four moving cloud layers, summit dismount |
+| +3:20–5:10 | Arashi plateau fight | Ogre scale, club/slam, orbiting runes, visible ground telegraph, magic pillar, defeat |
+| +5:10–5:40 | Persistence and return | Re-enter each branch, confirm both bosses remain defeated, return to Reach |
+
 ## Recording rules
 
 - Use one continuous take for the acceptance proof; no cuts or speed changes.
 - Start the timer when the title first appears and stop when the mounted player reaches the mountain-pass torii.
+- Record a second uncut extended take for both optional boss branches; do not use its longer duration as the core 5–8-minute timing result.
 - Enable diagnostics briefly in each zone, then turn them off for readability.
 - Record the measured duration, minimum sustained FPS, peak linear-memory use, and audio-underrun count in `HARDWARE_TEST.md`.
 - If the natural route falls outside 5–8 minutes, adjust content or pacing and retest; do not pad the recording by idling.

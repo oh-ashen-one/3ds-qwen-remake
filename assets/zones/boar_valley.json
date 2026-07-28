@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "boar_valley",
+  "display_name": "Twinfang Ravine",
+  "runtime_budget_bytes": 655360,
+  "romfs_budget_bytes": 14500000,
+  "draw_call_budget": 188,
+  "grid_cell_size": 6.0,
+  "preload_trigger": "sunlit_reach_east_exit",
+  "unload_after_enter": "field",
+  "assets": [
+    "music_ashen_gate",
+    "generated_low_poly_geometry",
+    "boar_valley_scene_blob",
+    "environment_texture_atlas",
+    "rigid_animation_clips",
+    "boar_valley_zone_manifest"
+  ]
+}

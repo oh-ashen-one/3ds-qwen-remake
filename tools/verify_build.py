@@ -87,8 +87,11 @@ def verify_asset_budget_report() -> dict[str, object]:
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         fail(f"asset budget report is unreadable: {error}")
     zones = budget.get("zones", [])
-    if [zone.get("id") for zone in zones] != ["interior", "vista", "arena", "field"]:
-        fail("asset budget report must contain the four ordered runtime zones")
+    expected_zones = [
+        "interior", "vista", "arena", "field", "boar_valley", "cloud_plateau"
+    ]
+    if [zone.get("id") for zone in zones] != expected_zones:
+        fail("asset budget report must contain the six ordered runtime zones")
     for zone in zones:
         actual = int(zone.get("actual_romfs_bytes", -1))
         budget_bytes = int(zone.get("romfs_budget_bytes", -1))
@@ -134,6 +137,8 @@ def main() -> None:
         b"romfs:/zones/vista.bin",
         b"romfs:/zones/arena.bin",
         b"romfs:/zones/field.bin",
+        b"romfs:/zones/boar_valley.bin",
+        b"romfs:/zones/cloud_plateau.bin",
     )
     missing_markers = [marker.decode("ascii") for marker in required_romfs_markers if marker not in binary]
     if missing_markers:

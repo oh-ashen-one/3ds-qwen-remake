@@ -27,7 +27,7 @@
       "sample_rate": 22050,
       "channels": 1,
       "sample_width_bytes": 2,
-      "zones": ["arena"]
+      "zones": ["arena", "boar_valley", "cloud_plateau"]
     },
     {
       "id": "music_valley_after_dawn",
@@ -40,7 +40,7 @@
       "sample_rate": 22050,
       "channels": 1,
       "sample_width_bytes": 2,
-      "zones": ["field"]
+      "zones": ["field", "cloud_plateau"]
     },
     {
       "id": "veiled_keeper_dialogue",
@@ -61,7 +61,7 @@
       "license": "project-original",
       "max_bytes": 220000,
       "runtime": false,
-      "zones": ["interior", "vista", "arena", "field"]
+      "zones": ["interior", "vista", "arena", "field", "boar_valley", "cloud_plateau"]
     },
     {
       "id": "interior_scene_blob",
@@ -104,15 +104,35 @@
       "zones": ["field"]
     },
     {
+      "id": "boar_valley_scene_blob",
+      "kind": "zone_scene_blob",
+      "source": "assets/scene_source.json",
+      "output": "romfs/zones/boar_valley.bin",
+      "provenance": "Original mountain-ravine scene converted to an independently loadable runtime blob",
+      "license": "project-original",
+      "max_bytes": 16384,
+      "zones": ["boar_valley"]
+    },
+    {
+      "id": "cloud_plateau_scene_blob",
+      "kind": "zone_scene_blob",
+      "source": "assets/scene_source.json",
+      "output": "romfs/zones/cloud_plateau.bin",
+      "provenance": "Original cloud-ascent and summit scene converted to an independently loadable runtime blob",
+      "license": "project-original",
+      "max_bytes": 16384,
+      "zones": ["cloud_plateau"]
+    },
+    {
       "id": "blender_authoring_source",
       "kind": "blender_source",
       "source": "assets/blender/author_lowpoly.py",
       "output": "assets/blender/ashen-rift-source.blend",
-      "provenance": "Original editable Blender scene for the four zones and 15-bone rigid rig",
+      "provenance": "Original editable Blender scene for the six zones and 15-bone rigid rig",
       "license": "project-original",
-      "max_bytes": 1048576,
+      "max_bytes": 2097152,
       "runtime": false,
-      "zones": ["interior", "vista", "arena", "field"]
+      "zones": ["interior", "vista", "arena", "field", "boar_valley", "cloud_plateau"]
     },
     {
       "id": "environment_texture_atlas",
@@ -122,7 +142,7 @@
       "provenance": "Original hand-authored stone-and-ash palette converted offline by tex3ds",
       "license": "project-original",
       "max_bytes": 4096,
-      "zones": ["interior", "vista", "arena", "field"]
+      "zones": ["interior", "vista", "arena", "field", "boar_valley", "cloud_plateau"]
     },
     {
       "id": "rigid_animation_clips",
@@ -132,7 +152,7 @@
       "provenance": "Original 15-bone rigid transform clips created for this project",
       "license": "project-original",
       "max_bytes": 8192,
-      "zones": ["interior", "vista", "arena", "field"]
+      "zones": ["interior", "vista", "arena", "field", "boar_valley", "cloud_plateau"]
     },
     {
       "id": "interior_zone_manifest",
@@ -173,12 +193,34 @@
       "license": "project-original",
       "max_bytes": 2048,
       "zones": ["field"]
+    },
+    {
+      "id": "boar_valley_zone_manifest",
+      "kind": "zone_manifest",
+      "source": "assets/zones/boar_valley.json",
+      "output": "assets/zones/boar_valley.json",
+      "provenance": "Original authored zone metadata",
+      "license": "project-original",
+      "max_bytes": 2048,
+      "zones": ["boar_valley"]
+    },
+    {
+      "id": "cloud_plateau_zone_manifest",
+      "kind": "zone_manifest",
+      "source": "assets/zones/cloud_plateau.json",
+      "output": "assets/zones/cloud_plateau.json",
+      "provenance": "Original authored zone metadata",
+      "license": "project-original",
+      "max_bytes": 2048,
+      "zones": ["cloud_plateau"]
     }
   ],
   "zone_manifests": {
     "interior": "assets/zones/interior.json",
     "vista": "assets/zones/vista.json",
     "arena": "assets/zones/arena.json",
-    "field": "assets/zones/field.json"
+    "field": "assets/zones/field.json",
+    "boar_valley": "assets/zones/boar_valley.json",
+    "cloud_plateau": "assets/zones/cloud_plateau.json"
   }
 }

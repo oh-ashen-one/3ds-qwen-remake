@@ -65,11 +65,12 @@ Required: a coherent 5–8 minute sequence, no crash, no audio underrun, no sust
 - [ ] Die during each boss attack class and restart.
 - [ ] Win, cross into the Reach, and restart after a later death or relaunch.
 - [ ] Repeat all three zone transitions at least five times across sessions.
-- [ ] Orbit the camera beside columns/trees/mountains in all four zones with no full-screen obstruction.
+- [ ] Orbit the camera beside columns/trees/mountains in all six zones with no full-screen obstruction.
 - [ ] Mount each of the three horses, gallop, heal while mounted, dismount, recall the selected horse, and reach every field boundary.
 - [ ] Ride the river system from its lower bend past the tributary, bridge, and ford to the mountain pass; confirm flowers, cedars, deer, foxes, cranes, clouds, and snowcaps do not cause sustained drops below 24 FPS.
 - [ ] Verify the bottom-screen map, objective changes, facing/horse/waystone markers, and ACT/RIDE/DISMOUNT, HEAL, LOCK/CALL, DEBUG touch targets.
-- [ ] Confirm Ashen Deep Hall plays in the interior/vista, switches to Ashen Gate in the arena, then switches to Valley After Dawn in the Sunlit Reach without a crash, long gap, or underrun.
+- [ ] Confirm Ashen Deep Hall plays in the interior/vista, Ashen Gate plays in all three boss zones, and Valley After Dawn plays in the Sunlit Reach without a crash, long gap, or underrun.
+- [ ] Complete the extended branch route: hog charge/stomp, defeat persistence, mounted cloud climb, summit dismount, ogre magic telegraph/impact, second defeat persistence, and both return paths.
 
 ## Proof recording
 

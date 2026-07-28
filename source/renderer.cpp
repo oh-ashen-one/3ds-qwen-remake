@@ -91,7 +91,7 @@ const char* objectiveFor(const WorldState& world) {
     }
     if (world.zone == Zone::Field) {
         if (world.player.mounted) {
-            return "Follow the river toward the mountain pass";
+            return "East: boar ravine   West: cloud mountain";
         }
         float nearest_distance = distance(world.player.position, world.horses[0].position);
         for (unsigned index = 1; index < kFieldHorseCount; ++index) {
@@ -101,7 +101,20 @@ const char* objectiveFor(const WorldState& world) {
         if (nearest_distance < 2.6f) {
             return "Press ACT to mount this horse";
         }
-        return "Explore the alpine valley - tap CALL for your horse";
+        return "Ride east to the ravine or west to Cloudbreak";
+    }
+    if (world.zone == Zone::BoarValley) {
+        return world.boar_defeated ? "The valley is quiet - return south"
+                                   : "Hunt Gore-Tusk in the open ravine";
+    }
+    if (world.zone == Zone::CloudPlateau) {
+        if (world.ogre_defeated) {
+            return "The summit is yours - descend south";
+        }
+        if (world.player.position.z < 76.0f) {
+            return "Ride the ragged path up through the clouds";
+        }
+        return "Defeat Arashi and evade the violet runes";
     }
     return world.player.lock_on ? "Defeat the Warden - target locked"
                                 : "Defeat the Warden - tap LOCK";
@@ -220,7 +233,7 @@ void Renderer::bind3DState() {
 
 void Renderer::updateCamera(const WorldState& world) {
     const Player& player = world.player;
-    if (player.lock_on && world.zone == Zone::Arena && world.boss.state != BossState::Dead) {
+    if (player.lock_on && isBossZone(world.zone) && world.boss.state != BossState::Dead) {
         camera_yaw_ = std::atan2(world.boss.position.x - player.position.x,
                                  world.boss.position.z - player.position.z);
     } else {
@@ -228,7 +241,8 @@ void Renderer::updateCamera(const WorldState& world) {
     }
     const float forward_x = std::sin(camera_yaw_);
     const float forward_z = std::cos(camera_yaw_);
-    const float camera_distance = world.zone == Zone::Field ? 8.6f : kCameraDistance;
+    const bool wide_camera = world.zone == Zone::Field || world.zone == Zone::CloudPlateau;
+    const float camera_distance = wide_camera ? 8.6f : kCameraDistance;
     camera_ground_ = {player.position.x - forward_x * camera_distance,
                       player.position.z - forward_z * camera_distance};
     float camera_height = kExteriorCameraHeight;
@@ -242,14 +256,16 @@ void Renderer::updateCamera(const WorldState& world) {
                                       kInteriorCameraWallLimit);
         camera_ground_.z = std::min(camera_ground_.z, kInteriorCameraFrontLimit);
         camera_height = kInteriorCameraHeight;
-    } else if (world.zone == Zone::Field) {
-        camera_height = player.mounted ? 5.5f : 5.0f;
+    } else if (wide_camera) {
+        camera_height = zoneGroundHeight(world.zone, player.position) +
+                        (player.mounted ? 5.5f : 5.0f);
     }
     const C3D_FVec camera = FVec3_New(camera_ground_.x, camera_height, camera_ground_.z);
-    const float target_y = world.zone == Zone::Field
-                               ? (player.mounted ? 3.3f : 3.0f)
+    const float target_y = wide_camera
+                               ? zoneGroundHeight(world.zone, player.position) +
+                                     (player.mounted ? 3.3f : 3.0f)
                                : 1.1f;
-    const float target_forward = world.zone == Zone::Field ? 7.5f : 1.2f;
+    const float target_forward = wide_camera ? 7.5f : 1.2f;
     const C3D_FVec target =
         FVec3_New(player.position.x + forward_x * target_forward,
                   target_y,
@@ -273,7 +289,12 @@ void Renderer::render(const WorldState& world, bool title_screen, bool paused,
 
     const u32 clear_color = world.zone == Zone::Interior
                                 ? 0x30283BFF
-                                : (world.zone == Zone::Field ? 0x9FC9E7FF : 0x8A786FFF);
+                                : (world.zone == Zone::Field ||
+                                           world.zone == Zone::CloudPlateau
+                                       ? 0xA9D4EEFF
+                                       : (world.zone == Zone::BoarValley
+                                              ? 0x91B6C8FF
+                                              : 0x8A786FFF));
     C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
     C3D_RenderTargetClear(top_target_, C3D_CLEAR_ALL, clear_color, 0);
     C3D_FrameDrawOn(top_target_);
@@ -293,6 +314,8 @@ void Renderer::renderWorld(const WorldState& world, const SceneBox* scene_boxes,
         case Zone::Vista: renderVista(world); break;
         case Zone::Arena: renderArena(world); break;
         case Zone::Field: renderField(world); break;
+        case Zone::BoarValley: renderBoarValley(world); break;
+        case Zone::CloudPlateau: renderCloudPlateau(world); break;
     }
     if (world.zone == Zone::Field) {
         for (unsigned index = 0; index < kFieldHorseCount; ++index) {
@@ -304,6 +327,12 @@ void Renderer::renderWorld(const WorldState& world, const SceneBox* scene_boxes,
                 index);
         }
         renderWildlife(world);
+    } else if (world.zone == Zone::CloudPlateau) {
+        const FieldHorse& horse = world.horses[world.active_horse];
+        renderHorse(horse.position, horse.facing, world.elapsed,
+                    world.player.mounted && world.player.state == PlayerState::Move,
+                    world.active_horse,
+                    zoneGroundHeight(world.zone, horse.position));
     }
     Player displayed_player = world.player;
     if (displayed_player.mounted) {
@@ -311,21 +340,30 @@ void Renderer::renderWorld(const WorldState& world, const SceneBox* scene_boxes,
     }
     RigidPose player_pose{};
     samplePlayerPose(displayed_player, world.elapsed, player_pose);
-    renderPlayer(displayed_player, player_pose, displayed_player.mounted ? 1.55f : 0.0f);
+    renderPlayer(displayed_player, player_pose,
+                 zoneGroundHeight(world.zone, displayed_player.position) +
+                     (displayed_player.mounted ? 1.55f : 0.0f));
 }
 
 void Renderer::renderPanorama(Zone zone) {
     if (zone == Zone::Interior) {
         return;
     }
-    const float red = zone == Zone::Vista ? 0.52f : (zone == Zone::Field ? 0.49f : 0.34f);
-    const float green = zone == Zone::Vista ? 0.46f : (zone == Zone::Field ? 0.70f : 0.29f);
-    const float blue = zone == Zone::Vista ? 0.58f : (zone == Zone::Field ? 0.88f : 0.34f);
-    const float back_z = zone == Zone::Field ? 205.0f : 78.0f;
-    const float side_x = zone == Zone::Field ? 112.0f : 58.0f;
-    const float side_z = zone == Zone::Field ? 80.0f : 34.0f;
-    const float sky_height = zone == Zone::Field ? 68.0f : 30.0f;
-    const float side_depth = zone == Zone::Field ? 270.0f : 88.0f;
+    const bool grand_outdoor = zone == Zone::Field || zone == Zone::CloudPlateau;
+    const float red = zone == Zone::Vista ? 0.52f
+                      : (grand_outdoor ? 0.53f
+                         : (zone == Zone::BoarValley ? 0.43f : 0.34f));
+    const float green = zone == Zone::Vista ? 0.46f
+                        : (grand_outdoor ? 0.73f
+                           : (zone == Zone::BoarValley ? 0.61f : 0.29f));
+    const float blue = zone == Zone::Vista ? 0.58f
+                       : (grand_outdoor ? 0.91f
+                          : (zone == Zone::BoarValley ? 0.70f : 0.34f));
+    const float back_z = grand_outdoor ? 205.0f : 78.0f;
+    const float side_x = grand_outdoor ? 112.0f : 58.0f;
+    const float side_z = grand_outdoor ? 80.0f : 34.0f;
+    const float sky_height = grand_outdoor ? 82.0f : 38.0f;
+    const float side_depth = grand_outdoor ? 270.0f : 120.0f;
     drawBox(0.0f, sky_height * 0.5f, back_z, side_x * 2.0f, sky_height, 1.0f,
             0.0f, red, green, blue, true);
     drawBox(-side_x, sky_height * 0.5f, side_z, 1.0f, sky_height, side_depth,
@@ -382,7 +420,7 @@ void Renderer::renderVista(const WorldState& world) {
 }
 
 void Renderer::renderArena(const WorldState& world) {
-    renderBoss(world.boss, world.elapsed);
+    renderWarden(world.boss, world.elapsed);
 }
 
 void Renderer::renderField(const WorldState& world) {
@@ -416,6 +454,36 @@ void Renderer::renderField(const WorldState& world) {
             0.05f, 0.91f, 0.95f, 0.97f, true);
     drawBox(67.0f - cloud_drift * 0.35f, 24.2f, 80.0f, 7.5f, 3.60f, 3.3f,
             -0.04f, 0.97f, 0.98f, 0.98f, true);
+}
+
+void Renderer::renderBoarValley(const WorldState& world) {
+    const float mist = std::sin(world.elapsed * 0.18f) * 4.0f;
+    drawBox(-8.0f + mist, 7.5f, 40.0f, 18.0f, 1.1f, 3.2f,
+            0.02f, 0.78f, 0.86f, 0.85f, true);
+    drawBox(10.0f - mist * 0.6f, 9.2f, 48.0f, 15.0f, 1.3f, 3.5f,
+            -0.03f, 0.83f, 0.88f, 0.87f, true);
+    renderBoar(world.boss, world.elapsed);
+}
+
+void Renderer::renderCloudPlateau(const WorldState& world) {
+    const float drift = std::sin(world.elapsed * 0.12f) * 5.0f;
+    for (unsigned layer = 0; layer < 4; ++layer) {
+        const float z = 8.0f + static_cast<float>(layer) * 17.0f;
+        const float height = zoneGroundHeight(Zone::CloudPlateau, {0.0f, z}) + 2.0f;
+        const float direction = (layer & 1U) == 0U ? 1.0f : -1.0f;
+        drawBox(-11.0f + drift * direction * 0.45f, height, z,
+                11.0f, 1.35f, 4.6f, 0.03f,
+                0.92f, 0.96f, 0.97f, true);
+        drawBox(10.5f - drift * direction * 0.35f, height + 1.0f, z + 2.0f,
+                9.0f, 2.0f, 4.2f, -0.04f,
+                0.98f, 0.98f, 0.97f, true);
+    }
+    const float summit_drift = std::sin(world.elapsed * 0.07f + 1.0f) * 6.0f;
+    drawBox(-18.0f + summit_drift, 40.0f, 112.0f, 15.0f, 2.5f, 4.2f,
+            0.02f, 0.93f, 0.96f, 0.98f, true);
+    drawBox(12.0f - summit_drift, 43.0f, 118.0f, 19.0f, 3.0f, 4.5f,
+            -0.03f, 0.97f, 0.98f, 0.99f, true);
+    renderMountainOgre(world.boss, world.elapsed);
 }
 
 void Renderer::renderWildlife(const WorldState& world) {
@@ -614,11 +682,11 @@ void Renderer::renderHumanoid(Vec2 position, float facing, float scale, const Ri
 }
 
 void Renderer::renderHorse(Vec2 position, float facing, float elapsed, bool moving,
-                           unsigned coat) {
+                           unsigned coat, float vertical_offset) {
     if (distance(camera_ground_, position) > 54.0f) {
         return;
     }
-    drawBlobShadow(position, 1.55f);
+    drawBlobShadow(position, 1.55f, vertical_offset);
     const float side_x = std::cos(facing);
     const float side_z = -std::sin(facing);
     const float forward_x = std::sin(facing);
@@ -635,32 +703,32 @@ void Renderer::renderHorse(Vec2 position, float facing, float elapsed, bool movi
     const float coat_green = coats[palette][1];
     const float coat_blue = coats[palette][2];
 
-    drawBox(position.x, 1.02f + body_bob, position.z,
+    drawBox(position.x, 1.02f + body_bob + vertical_offset, position.z,
             0.92f, 0.86f, 1.82f, facing,
             coat_red, coat_green, coat_blue);
-    drawBox(position.x, 1.48f + body_bob, position.z - forward_z * 0.10f,
+    drawBox(position.x, 1.48f + body_bob + vertical_offset, position.z - forward_z * 0.10f,
             0.78f, 0.18f, 1.20f, facing,
             0.22f, 0.13f, 0.08f);
-    drawBox(position.x + forward_x * 0.88f, 1.47f + body_bob,
+    drawBox(position.x + forward_x * 0.88f, 1.47f + body_bob + vertical_offset,
             position.z + forward_z * 0.88f,
             0.56f, 1.02f, 0.64f, facing,
             coat_red * 1.06f, coat_green * 1.06f, coat_blue * 1.06f);
-    drawBox(position.x + forward_x * 1.30f, 1.86f + body_bob,
+    drawBox(position.x + forward_x * 1.30f, 1.86f + body_bob + vertical_offset,
             position.z + forward_z * 1.30f,
             0.64f, 0.56f, 0.86f, facing,
             coat_red * 1.10f, coat_green * 1.10f, coat_blue * 1.10f);
-    drawBox(position.x + forward_x * 1.73f, 1.72f + body_bob,
+    drawBox(position.x + forward_x * 1.73f, 1.72f + body_bob + vertical_offset,
             position.z + forward_z * 1.73f,
             0.50f, 0.34f, 0.52f, facing,
             coat_red * 1.16f, coat_green * 1.16f, coat_blue * 1.16f);
     for (int side = -1; side <= 1; side += 2) {
         drawBox(position.x + forward_x * 1.22f + side_x * side * 0.22f,
-                2.22f + body_bob,
+                2.22f + body_bob + vertical_offset,
                 position.z + forward_z * 1.22f + side_z * side * 0.22f,
                 0.16f, 0.42f, 0.16f, facing + side * 0.08f,
                 coat_red * 0.62f, coat_green * 0.65f, coat_blue * 0.68f);
     }
-    drawBox(position.x - forward_x * 1.18f, 1.12f + body_bob,
+    drawBox(position.x - forward_x * 1.18f, 1.12f + body_bob + vertical_offset,
             position.z - forward_z * 1.18f,
             0.22f, 0.22f, 1.18f, facing,
             coat_red * 0.48f, coat_green * 0.52f, coat_blue * 0.55f);
@@ -674,10 +742,10 @@ void Renderer::renderHorse(Vec2 position, float facing, float elapsed, bool movi
                 position.x + forward_x * along + side_x * static_cast<float>(side) * 0.33f;
             const float leg_z =
                 position.z + forward_z * along + side_z * static_cast<float>(side) * 0.33f;
-            drawBox(leg_x, 0.48f + lift, leg_z,
+            drawBox(leg_x, 0.48f + lift + vertical_offset, leg_z,
                     0.19f, 0.76f, 0.21f, facing,
                     coat_red * 0.82f, coat_green * 0.84f, coat_blue * 0.86f);
-            drawBox(leg_x + forward_x * 0.08f, 0.10f + lift,
+            drawBox(leg_x + forward_x * 0.08f, 0.10f + lift + vertical_offset,
                     leg_z + forward_z * 0.08f,
                     0.24f, 0.16f, 0.38f, facing,
                     0.18f, 0.14f, 0.11f);
@@ -776,13 +844,141 @@ void Renderer::renderCrane(Vec2 position, float facing, float elapsed) {
             0.08f, 0.84f, 0.08f, facing, 0.42f, 0.30f, 0.20f);
 }
 
-void Renderer::drawBlobShadow(Vec2 position, float scale) {
-    drawBox(position.x, 0.012f, position.z,
+void Renderer::drawBlobShadow(Vec2 position, float scale, float vertical_offset) {
+    drawBox(position.x, 0.012f + vertical_offset, position.z,
             1.15f * scale, 0.025f, 0.72f * scale,
             0.0f, 0.055f, 0.045f, 0.055f, true);
 }
 
-void Renderer::renderBoss(const Boss& boss, float elapsed) {
+void Renderer::renderBoar(const Boss& boss, float elapsed) {
+    const float forward_x = std::sin(boss.facing);
+    const float forward_z = std::cos(boss.facing);
+    const float side_x = std::cos(boss.facing);
+    const float side_z = -std::sin(boss.facing);
+    if (boss.state == BossState::Dead) {
+        drawBlobShadow(boss.position, 1.8f);
+        drawBox(boss.position.x, 0.62f, boss.position.z,
+                2.6f, 0.85f, 3.4f, boss.facing + 1.15f,
+                0.25f, 0.16f, 0.10f, true);
+        return;
+    }
+    const float charge_bob =
+        boss.state == BossState::Slash ? std::sin(elapsed * 18.0f) * 0.12f : 0.0f;
+    drawBlobShadow(boss.position, 2.0f);
+    drawBox(boss.position.x, 1.20f + charge_bob, boss.position.z,
+            2.45f, 1.75f, 3.55f, boss.facing,
+            0.34f, 0.20f, 0.12f);
+    drawBox(boss.position.x - forward_x * 0.75f, 1.95f + charge_bob,
+            boss.position.z - forward_z * 0.75f,
+            2.25f, 0.85f, 1.9f, boss.facing,
+            0.20f, 0.14f, 0.10f);
+    drawBox(boss.position.x + forward_x * 1.62f, 1.36f + charge_bob,
+            boss.position.z + forward_z * 1.62f,
+            1.90f, 1.65f, 1.65f, boss.facing,
+            0.39f, 0.23f, 0.13f);
+    drawBox(boss.position.x + forward_x * 2.36f, 1.08f + charge_bob,
+            boss.position.z + forward_z * 2.36f,
+            1.25f, 0.82f, 1.08f, boss.facing,
+            0.43f, 0.25f, 0.14f);
+    for (int side = -1; side <= 1; side += 2) {
+        drawBox(boss.position.x + forward_x * 2.42f + side_x * side * 0.72f,
+                0.98f + charge_bob,
+                boss.position.z + forward_z * 2.42f + side_z * side * 0.72f,
+                0.24f, 0.24f, 1.35f,
+                boss.facing + side * 0.32f,
+                0.88f, 0.82f, 0.63f);
+        drawBox(boss.position.x + forward_x * 1.40f + side_x * side * 0.70f,
+                2.42f + charge_bob,
+                boss.position.z + forward_z * 1.40f + side_z * side * 0.70f,
+                0.34f, 0.72f, 0.30f, boss.facing + side * 0.12f,
+                0.24f, 0.16f, 0.11f);
+    }
+    for (int front = -1; front <= 1; front += 2) {
+        for (int side = -1; side <= 1; side += 2) {
+            const float along = static_cast<float>(front) * 1.05f;
+            drawBox(boss.position.x + forward_x * along + side_x * side * 0.78f,
+                    0.42f,
+                    boss.position.z + forward_z * along + side_z * side * 0.78f,
+                    0.44f, 0.84f, 0.50f, boss.facing,
+                    0.27f, 0.17f, 0.11f);
+        }
+    }
+}
+
+void Renderer::renderMountainOgre(const Boss& boss, float elapsed) {
+    const float ground = zoneGroundHeight(Zone::CloudPlateau, boss.position);
+    const float forward_x = std::sin(boss.facing);
+    const float forward_z = std::cos(boss.facing);
+    const float side_x = std::cos(boss.facing);
+    const float side_z = -std::sin(boss.facing);
+    if (boss.state == BossState::Dead) {
+        drawBlobShadow(boss.position, 2.4f, ground);
+        drawBox(boss.position.x, ground + 0.72f, boss.position.z,
+                3.8f, 1.2f, 3.0f, boss.facing + 1.18f,
+                0.30f, 0.34f, 0.32f, true);
+        return;
+    }
+
+    drawBlobShadow(boss.position, 2.3f, ground);
+    RigidPose pose{};
+    sampleBossPose(boss, elapsed, pose);
+    renderHumanoid(boss.position, boss.facing, 2.45f, pose,
+                   0.40f, 0.46f, 0.41f, false, ground);
+    drawBox(boss.position.x, ground + 4.48f, boss.position.z,
+            2.0f, 1.32f, 1.65f, boss.facing,
+            0.31f, 0.37f, 0.33f);
+    for (int side = -1; side <= 1; side += 2) {
+        drawBox(boss.position.x + side_x * side * 1.05f - forward_x * 0.10f,
+                ground + 5.48f,
+                boss.position.z + side_z * side * 1.05f - forward_z * 0.10f,
+                0.34f, 1.25f, 0.34f,
+                boss.facing + side * 0.38f,
+                0.73f, 0.68f, 0.55f);
+        drawBox(boss.position.x + side_x * side * 1.32f,
+                ground + 3.45f,
+                boss.position.z + side_z * side * 1.32f,
+                1.05f, 0.75f, 1.10f, boss.facing,
+                0.25f, 0.28f, 0.27f);
+    }
+    const float club_yaw =
+        boss.facing + (boss.state == BossState::WindupSlam ? -0.85f : 0.25f);
+    const float club_x = boss.position.x + side_x * 1.82f + forward_x * 0.35f;
+    const float club_z = boss.position.z + side_z * 1.82f + forward_z * 0.35f;
+    drawBox(club_x, ground + 3.05f, club_z,
+            0.52f, 0.58f, 4.8f, club_yaw,
+            0.25f, 0.18f, 0.12f);
+    drawBox(club_x + std::sin(club_yaw) * 2.1f, ground + 3.05f,
+            club_z + std::cos(club_yaw) * 2.1f,
+            1.35f, 1.15f, 1.55f, club_yaw,
+            0.31f, 0.29f, 0.27f);
+
+    if (boss.state == BossState::WindupMagic || boss.state == BossState::Magic) {
+        const float pulse = 0.65f + std::sin(elapsed * 9.0f) * 0.25f;
+        for (unsigned rune = 0; rune < 6; ++rune) {
+            const float angle = elapsed * 1.8f + static_cast<float>(rune) * 1.0472f;
+            drawBox(boss.position.x + std::sin(angle) * 3.2f,
+                    ground + 2.2f + std::sin(angle * 2.0f) * 0.7f,
+                    boss.position.z + std::cos(angle) * 3.2f,
+                    0.48f, 0.48f, 0.48f, angle,
+                    0.55f + pulse * 0.25f, 0.24f, 0.88f);
+        }
+        const float target_ground =
+            zoneGroundHeight(Zone::CloudPlateau, boss.magic_target);
+        drawBox(boss.magic_target.x, target_ground + 0.05f, boss.magic_target.z,
+                5.2f, 0.10f, 0.30f, elapsed * 1.4f,
+                0.67f, 0.28f, 0.94f, true);
+        drawBox(boss.magic_target.x, target_ground + 0.06f, boss.magic_target.z,
+                0.30f, 0.11f, 5.2f, -elapsed * 1.1f,
+                0.34f, 0.65f, 0.96f, true);
+        if (boss.state == BossState::Magic) {
+            drawBox(boss.magic_target.x, target_ground + 5.0f, boss.magic_target.z,
+                    1.0f, 10.0f, 1.0f, 0.0f,
+                    0.64f, 0.31f, 0.92f, true);
+        }
+    }
+}
+
+void Renderer::renderWarden(const Boss& boss, float elapsed) {
     if (boss.state == BossState::Dead) {
         const float side_x = std::cos(boss.facing);
         const float side_z = -std::sin(boss.facing);
@@ -962,11 +1158,15 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
         C2D_DrawRectSolid(12.0f, 23.0f, 0.3f, 106.0f, 6.0f, C2D_Color32(25, 24, 25, 220));
         C2D_DrawRectSolid(14.0f, 25.0f, 0.4f, 102.0f * world.player.stamina / 100.0f, 2.0f,
                           C2D_Color32(66, 145, 76, 255));
-        if (world.zone == Zone::Arena && world.boss.state != BossState::Dead) {
+        if (isBossZone(world.zone) && world.boss.state != BossState::Dead &&
+            world.boss.state != BossState::Dormant) {
             C2D_DrawRectSolid(72.0f, 211.0f, 0.3f, 256.0f, 10.0f, C2D_Color32(18, 14, 14, 230));
-            C2D_DrawRectSolid(75.0f, 214.0f, 0.4f, 250.0f * world.boss.health / 140.0f, 4.0f,
+            C2D_DrawRectSolid(75.0f, 214.0f, 0.4f,
+                              250.0f * world.boss.health / bossMaximumHealth(world.zone), 4.0f,
                               C2D_Color32(126, 28, 24, 255));
-            drawText("THE ASHEN WARDEN", 139.0f, 190.0f, 0.40f, C2D_Color32(230, 220, 205, 255));
+            drawText(bossDisplayName(world.zone),
+                     world.zone == Zone::CloudPlateau ? 104.0f : 118.0f,
+                     190.0f, 0.40f, C2D_Color32(230, 220, 205, 255));
         }
         if (world.dialogue_active) {
             C2D_DrawRectSolid(24.0f, 158.0f, 0.3f, 352.0f, 67.0f, C2D_Color32(7, 7, 10, 225));
@@ -1014,8 +1214,11 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
     constexpr float map_height = 126.0f;
     C2D_DrawRectSolid(map_x, map_y, 0.1f, map_width, map_height,
                       C2D_Color32(6, 7, 10, 255));
-    const u32 map_color = world.zone == Zone::Field ? C2D_Color32(40, 74, 38, 255)
-                                                    : C2D_Color32(35, 31, 43, 255);
+    const u32 map_color =
+        world.zone == Zone::Field ? C2D_Color32(40, 74, 38, 255)
+        : (world.zone == Zone::BoarValley ? C2D_Color32(48, 69, 43, 255)
+        : (world.zone == Zone::CloudPlateau ? C2D_Color32(62, 79, 78, 255)
+                                             : C2D_Color32(35, 31, 43, 255)));
     C2D_DrawRectSolid(map_x + 3.0f, map_y + 3.0f, 0.2f,
                       map_width - 6.0f, map_height - 6.0f, map_color);
 
@@ -1038,6 +1241,16 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
         max_x = 72.0f;
         min_z = -42.0f;
         max_z = 132.0f;
+    } else if (world.zone == Zone::BoarValley) {
+        min_x = -26.0f;
+        max_x = 26.0f;
+        min_z = -43.0f;
+        max_z = 58.0f;
+    } else if (world.zone == Zone::CloudPlateau) {
+        min_x = -35.0f;
+        max_x = 35.0f;
+        min_z = -47.0f;
+        max_z = 128.0f;
     }
     const auto mapPoint = [&](Vec2 point) {
         const float normalized_x = std::clamp((point.x - min_x) / (max_x - min_x), 0.0f, 1.0f);
@@ -1065,6 +1278,21 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
                               0.33f, 4.0f, 10.0f,
                               C2D_Color32(78, 165, 205, 255));
         }
+        const Vec2 east_exit = mapPoint({70.0f, 18.0f});
+        const Vec2 west_exit = mapPoint({-70.0f, 18.0f});
+        C2D_DrawRectSolid(east_exit.x - 5.0f, east_exit.z - 5.0f,
+                          0.35f, 10.0f, 10.0f, C2D_Color32(174, 72, 42, 255));
+        C2D_DrawRectSolid(west_exit.x - 5.0f, west_exit.z - 5.0f,
+                          0.35f, 10.0f, 10.0f, C2D_Color32(134, 183, 218, 255));
+    } else if (world.zone == Zone::CloudPlateau) {
+        for (unsigned step = 0; step < 8; ++step) {
+            const float world_z = -20.0f + static_cast<float>(step) * 12.0f;
+            const float world_x = (step & 1U) == 0U ? -2.8f : 3.2f;
+            const Vec2 path_map = mapPoint({world_x, world_z});
+            C2D_DrawRectSolid(path_map.x - 5.0f, path_map.z - 3.0f,
+                              0.32f, 10.0f, 6.0f,
+                              C2D_Color32(146, 125, 91, 255));
+        }
     }
 
     Vec2 objective{0.0f, 4.6f};
@@ -1089,11 +1317,19 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
             }
             objective = world.horses[nearest].position;
         }
+    } else if (world.zone == Zone::BoarValley) {
+        objective = world.boar_defeated ? Vec2{0.0f, -42.0f} : world.boss.position;
+    } else if (world.zone == Zone::CloudPlateau) {
+        objective = world.ogre_defeated ? Vec2{0.0f, -46.0f}
+                                       : (world.player.position.z < 76.0f
+                                              ? Vec2{0.0f, 82.0f}
+                                              : world.boss.position);
     }
     const Vec2 objective_map = mapPoint(objective);
     C2D_DrawRectSolid(objective_map.x - 4.0f, objective_map.z - 4.0f, 0.4f, 8.0f, 8.0f,
-                      world.zone == Zone::Arena ? C2D_Color32(174, 48, 42, 255)
-                                                : C2D_Color32(224, 178, 62, 255));
+                      isBossZone(world.zone) && world.boss.state != BossState::Dead
+                          ? C2D_Color32(174, 48, 42, 255)
+                          : C2D_Color32(224, 178, 62, 255));
     if (world.zone == Zone::Field) {
         for (unsigned index = 0; index < kFieldHorseCount; ++index) {
             const Vec2 horse_map = mapPoint(world.horses[index].position);
@@ -1103,6 +1339,11 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
                                   ? C2D_Color32(190, 109, 45, 255)
                                   : C2D_Color32(126, 82, 52, 255));
         }
+    } else if (world.zone == Zone::CloudPlateau) {
+        const Vec2 horse_map = mapPoint(world.horses[world.active_horse].position);
+        C2D_DrawRectSolid(horse_map.x - 3.0f, horse_map.z - 3.0f,
+                          0.45f, 6.0f, 6.0f,
+                          C2D_Color32(190, 109, 45, 255));
     }
     const Vec2 player_map = mapPoint(world.player.position);
     C2D_DrawRectSolid(player_map.x - 3.0f, player_map.z - 3.0f, 0.5f, 7.0f, 7.0f,
@@ -1118,20 +1359,26 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
         const float label_x = std::strlen(label) > 5 ? 228.0f : 239.0f;
         drawText(label, label_x, y + 12.0f, 0.48f, C2D_Color32(245, 245, 245, 255));
     };
-    const char* act_label = world.zone == Zone::Field
+    const bool horse_zone = world.zone == Zone::Field || world.zone == Zone::CloudPlateau;
+    const char* act_label = horse_zone
                                 ? (world.player.mounted ? "DISMOUNT" : "RIDE")
                                 : "ACT";
     drawTouchButton(act_label, 58.0f, C2D_Color32(82, 64, 100, 255));
     drawTouchButton("HEAL", 108.0f, C2D_Color32(126, 70, 28, 255));
-    const char* utility_label = world.zone == Zone::Field ? "CALL" : "LOCK";
+    const char* utility_label = world.zone == Zone::Field
+                                    ? "CALL"
+                                    : (world.zone == Zone::CloudPlateau ? "CALL/LOCK" : "LOCK");
     drawTouchButton(utility_label, 158.0f,
                     world.player.lock_on ? C2D_Color32(130, 42, 38, 255)
                                          : C2D_Color32(48, 58, 68, 255));
     C2D_DrawRectSolid(244.0f, 207.0f, 0.2f, 64.0f, 23.0f, C2D_Color32(38, 36, 44, 255));
     drawText("DEBUG", 253.0f, 212.0f, 0.30f, C2D_Color32(170, 170, 178, 255));
-    const char* map_legend = world.zone == Zone::Field
-                                 ? "white you  brown horses  blue rivers  gold pass"
-                                 : "white: you   gold: objective";
+    const char* map_legend =
+        world.zone == Zone::Field
+            ? "white you  brown horse  blue river  red east  cyan west"
+        : (world.zone == Zone::CloudPlateau
+               ? "white you  brown horse  tan path  red boss"
+               : "white: you   gold: objective");
     drawText(map_legend, 16.0f, 207.0f, 0.29f,
              C2D_Color32(165, 165, 172, 255));
     if (world.debug_overlay) {

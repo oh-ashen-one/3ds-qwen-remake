@@ -205,6 +205,122 @@
           ]
         }
       ]
+    },
+    "boar_valley": {
+      "boxes": [
+        {"name": "ravine_floor", "position": [0.0, -0.22, 8.0], "scale": [50.0, 0.44, 104.0], "color": [0.39, 0.58, 0.27], "always": true},
+        {"name": "ravine_path", "position": [0.0, 0.04, 5.0], "scale": [12.0, 0.10, 92.0], "color": [0.50, 0.43, 0.29]},
+        {"name": "west_mountain_near", "position": [-30.0, 8.0, -20.0], "scale": [18.0, 18.0, 58.0], "rotation_y": -0.08, "color": [0.27, 0.32, 0.25], "always": true},
+        {"name": "west_mountain_far", "position": [-34.0, 12.0, 37.0], "scale": [23.0, 27.0, 61.0], "rotation_y": 0.10, "color": [0.24, 0.29, 0.23], "always": true},
+        {"name": "east_mountain_near", "position": [30.0, 8.5, -18.0], "scale": [18.0, 19.0, 60.0], "rotation_y": 0.07, "color": [0.29, 0.34, 0.25], "always": true},
+        {"name": "east_mountain_far", "position": [34.0, 12.5, 39.0], "scale": [23.0, 28.0, 60.0], "rotation_y": -0.11, "color": [0.25, 0.30, 0.23], "always": true},
+        {"name": "north_ridge", "position": [0.0, 9.0, 66.0], "scale": [62.0, 20.0, 18.0], "color": [0.26, 0.31, 0.24], "always": true},
+        {"name": "arena_stone_left", "position": [-8.5, 0.9, 24.0], "scale": [3.2, 1.8, 4.0], "rotation_y": 0.43, "color": [0.38, 0.40, 0.36]},
+        {"name": "arena_stone_right", "position": [9.0, 1.2, 32.0], "scale": [4.0, 2.4, 3.4], "rotation_y": -0.36, "color": [0.35, 0.38, 0.34]},
+        {"name": "tusk_shrine", "position": [0.0, 0.8, 50.0], "scale": [5.8, 1.6, 2.4], "color": [0.42, 0.36, 0.28]}
+      ],
+      "generators": [
+        {
+          "type": "field_scatter",
+          "name": "ravine_grass",
+          "count": 34,
+          "x_min": -22.0,
+          "x_max": 22.0,
+          "z_min": -36.0,
+          "z_max": 54.0,
+          "templates": [
+            {"position": [0.0, 0.34, 0.0], "scale": [0.15, 0.72, 1.0], "color": [0.44, 0.70, 0.22]},
+            {"position": [0.0, 0.28, 0.0], "scale": [0.12, 0.58, 0.82], "color": [0.65, 0.75, 0.27]}
+          ]
+        },
+        {
+          "type": "field_scatter",
+          "name": "ravine_pines",
+          "count": 12,
+          "x_min": -23.0,
+          "x_max": 23.0,
+          "z_min": -28.0,
+          "z_max": 52.0,
+          "templates": [
+            {"position": [0.0, 1.2, 0.0], "scale": [0.38, 2.5, 0.38], "color": [0.31, 0.22, 0.14]},
+            {"position": [0.0, 3.1, 0.0], "scale": [2.0, 2.5, 2.0], "color": [0.15, 0.35, 0.20]}
+          ]
+        },
+        {
+          "type": "field_scatter",
+          "name": "ravine_red_flowers",
+          "count": 20,
+          "x_min": -20.0,
+          "x_max": 20.0,
+          "z_min": -30.0,
+          "z_max": 49.0,
+          "templates": [
+            {"position": [0.0, 0.20, 0.0], "scale": [0.06, 0.40, 0.06], "color": [0.20, 0.49, 0.17]},
+            {"position": [0.0, 0.43, 0.0], "scale": [0.30, 0.14, 0.30], "color": [0.88, 0.24, 0.20]}
+          ]
+        }
+      ]
+    },
+    "cloud_plateau": {
+      "boxes": [
+        {"name": "ascent_approach", "position": [0.0, -0.2, -36.0], "scale": [24.0, 0.4, 18.0], "color": [0.34, 0.52, 0.25], "always": true},
+        {"name": "path_00", "position": [0.0, 1.5, -20.0], "scale": [15.0, 1.0, 14.0], "rotation_y": 0.10, "color": [0.49, 0.43, 0.31], "always": true},
+        {"name": "path_01", "position": [3.5, 4.5, -8.0], "scale": [14.0, 1.0, 14.0], "rotation_y": -0.18, "color": [0.48, 0.42, 0.30], "always": true},
+        {"name": "path_02", "position": [-2.8, 7.5, 4.0], "scale": [14.0, 1.0, 14.0], "rotation_y": 0.22, "color": [0.46, 0.41, 0.30], "always": true},
+        {"name": "path_03", "position": [3.2, 10.5, 16.0], "scale": [13.5, 1.0, 14.0], "rotation_y": -0.22, "color": [0.45, 0.40, 0.30], "always": true},
+        {"name": "path_04", "position": [-3.4, 13.5, 28.0], "scale": [13.5, 1.0, 14.0], "rotation_y": 0.24, "color": [0.43, 0.39, 0.29], "always": true},
+        {"name": "path_05", "position": [3.0, 16.5, 40.0], "scale": [13.0, 1.0, 14.0], "rotation_y": -0.20, "color": [0.42, 0.38, 0.29], "always": true},
+        {"name": "path_06", "position": [-2.5, 19.5, 52.0], "scale": [13.0, 1.0, 14.0], "rotation_y": 0.18, "color": [0.41, 0.38, 0.30], "always": true},
+        {"name": "path_07", "position": [2.0, 22.5, 64.0], "scale": [13.0, 1.0, 14.0], "rotation_y": -0.12, "color": [0.40, 0.38, 0.31], "always": true},
+        {"name": "plateau_floor", "position": [0.0, 25.55, 101.0], "scale": [68.0, 0.9, 58.0], "color": [0.39, 0.58, 0.30], "always": true},
+        {"name": "west_cliff_low", "position": [-18.0, 6.0, 0.0], "scale": [14.0, 16.0, 50.0], "rotation_y": -0.14, "color": [0.30, 0.33, 0.29], "always": true},
+        {"name": "east_cliff_low", "position": [18.0, 7.0, 8.0], "scale": [14.0, 18.0, 58.0], "rotation_y": 0.12, "color": [0.31, 0.34, 0.30], "always": true},
+        {"name": "west_cliff_high", "position": [-23.0, 20.0, 55.0], "scale": [18.0, 28.0, 58.0], "rotation_y": 0.10, "color": [0.29, 0.32, 0.30], "always": true},
+        {"name": "east_cliff_high", "position": [23.0, 21.0, 60.0], "scale": [18.0, 30.0, 62.0], "rotation_y": -0.10, "color": [0.30, 0.33, 0.31], "always": true},
+        {"name": "summit_ridge", "position": [0.0, 38.0, 140.0], "scale": [84.0, 25.0, 24.0], "color": [0.29, 0.33, 0.32], "always": true},
+        {"name": "ogre_altar", "position": [0.0, 26.2, 110.0], "scale": [11.0, 1.2, 9.0], "color": [0.44, 0.43, 0.39]}
+      ],
+      "generators": [
+        {
+          "type": "field_scatter",
+          "name": "summit_grass",
+          "count": 30,
+          "x_min": -30.0,
+          "x_max": 30.0,
+          "z_min": 80.0,
+          "z_max": 124.0,
+          "templates": [
+            {"position": [0.0, 26.34, 0.0], "scale": [0.14, 0.70, 1.0], "color": [0.50, 0.75, 0.24]},
+            {"position": [0.0, 26.31, 0.0], "scale": [0.12, 0.58, 0.84], "color": [0.72, 0.82, 0.29]}
+          ]
+        },
+        {
+          "type": "field_scatter",
+          "name": "summit_pines",
+          "count": 10,
+          "x_min": -30.0,
+          "x_max": 30.0,
+          "z_min": 82.0,
+          "z_max": 122.0,
+          "templates": [
+            {"position": [0.0, 27.1, 0.0], "scale": [0.36, 2.4, 0.36], "color": [0.31, 0.22, 0.14]},
+            {"position": [0.0, 28.9, 0.0], "scale": [1.9, 2.4, 1.9], "color": [0.16, 0.37, 0.22]}
+          ]
+        },
+        {
+          "type": "field_scatter",
+          "name": "summit_white_flowers",
+          "count": 24,
+          "x_min": -28.0,
+          "x_max": 28.0,
+          "z_min": 80.0,
+          "z_max": 123.0,
+          "templates": [
+            {"position": [0.0, 26.20, 0.0], "scale": [0.06, 0.40, 0.06], "color": [0.20, 0.52, 0.18]},
+            {"position": [0.0, 26.43, 0.0], "scale": [0.31, 0.14, 0.31], "color": [0.94, 0.94, 0.90]}
+          ]
+        }
+      ]
     }
   }
 }

@@ -73,11 +73,15 @@ bool AudioStreamer::switchMusic(const char* path, MusicTrack track) {
     return true;
 }
 
-void AudioStreamer::setZone(Zone zone) {
+void AudioStreamer::setZone(Zone zone, float player_z) {
+    const bool summit_combat =
+        zone == Zone::CloudPlateau && player_z >= 76.0f;
     const MusicTrack wanted_track =
-        zone == Zone::Arena ? MusicTrack::AshenGate
-                            : (zone == Zone::Field ? MusicTrack::ValleyAfterDawn
-                                                  : MusicTrack::DeepHall);
+        (zone == Zone::Arena || zone == Zone::BoarValley || summit_combat)
+            ? MusicTrack::AshenGate
+            : ((zone == Zone::Field || zone == Zone::CloudPlateau)
+                   ? MusicTrack::ValleyAfterDawn
+                   : MusicTrack::DeepHall);
     if (wanted_track == music_track_) {
         return;
     }

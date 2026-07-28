@@ -32,7 +32,7 @@ private:
     bool new_family_hardware_ = false;
     float camera_yaw_ = 0.0f;
     std::size_t linear_baseline_ = 0;
-    std::size_t zone_peak_bytes_[4]{};
+    std::size_t zone_peak_bytes_[kZoneCount]{};
 };
 
 } // namespace demake

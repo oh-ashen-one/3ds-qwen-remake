@@ -1,4 +1,4 @@
-# Laptop Handoff: Sunlit Reach Quality Upgrade
+# Laptop Handoff: Six-Zone Mountain Expansion
 
 ## Checkout
 
@@ -24,7 +24,7 @@ intentionally not committed. Rebuild them from source on the laptop.
   smaller hit radii, gentler pursuit, and longer recovery. Light/heavy player
   attacks now deal 20/38 damage, and the dodge travels farther.
 - Victory no longer immediately ends the slice. Pressing A begins a golden,
-  preload-before-unload transition into a fourth streamed zone: **The Sunlit
+  preload-before-unload transition into the fourth streamed zone: **The Sunlit
   Reach**.
 - The Reach is now a Japanese-alpine valley with a winding Azusa-inspired
   river, a Hikari snowmelt tributary, bridge, ford, broad valley floor, raised
@@ -36,10 +36,21 @@ intentionally not committed. Rebuild them from source on the laptop.
   tail, ear, leg-gait, rider-placement, stamina-gallop, mounted-heal, dismount,
   and recall behavior. The lower screen maps the river, every horse, the active
   horse, the pass, objective text, and RIDING status.
-- The fourth zone has its own RomFS scene blob, manifest, generated asset
+- Every outdoor zone has its own RomFS scene blob, manifest, generated asset
   registry membership, Blender source objects, streaming/budget validation, and
   host flow tests. The field now switches to its dedicated Valley After Dawn
   track after the boss.
+- Running through the Reach's east edge streams **Twinfang Ravine**, dismounts
+  the rider, and begins an open fight with Gore-Tusk, a large boar with a
+  readable charge and stomp. Its defeat persists after returning south.
+- Running through the west edge streams **Cloudbreak Ascent** while preserving
+  the active mount. The ragged path climbs 26 world units through four moving
+  cloud layers, automatically dismounts at the plateau, and ends at Arashi, a
+  huge horned ogre with club attacks, slams, orbiting runes, a ground
+  telegraph, and a vertical magic strike. Its defeat also persists.
+- Both branches have their own lower-screen map scale, objective routing,
+  resident-memory budgets, return paths, deterministic flow tests, and
+  original-3DS-safe fixed box assemblies.
 
 Primary files:
 
@@ -56,11 +67,11 @@ Primary files:
 
 ## Budget
 
-The game continues to reuse one indexed cube VBO. The expanded Sunlit Reach
-declares a 204-draw budget and 768 KiB runtime budget. Its 384 generated static
-boxes are coarse-grid, view, sightline, and distance culled; horses and wildlife
-are fixed box assemblies with whole-creature range rejection. Re-run the
-validators whenever the scene source changes.
+The game continues to reuse one indexed cube VBO. The Reach, ravine, and ascent
+declare 204/188/214 draw budgets and 768/640/704 KiB runtime budgets. Their
+384/142/144 generated static boxes are coarse-grid, view, sightline, and
+distance culled; creatures are fixed box assemblies with whole-creature range
+rejection. Re-run the validators whenever the scene source changes.
 
 ## Verified Locally
 
@@ -113,7 +124,9 @@ Azahar.app/Contents/MacOS/azahar --windowed ./elden-ring-3ds-demake.3dsx
 3. Ride all three horses, gallop, heal while mounted, dismount, recall, traverse
    the river/bridge/ford, reach every field edge, and inspect wildlife,
    cloud/mountain silhouettes, flowers, and cedar pop-in while rotating.
-4. Record diagnostics at the field's busiest view. Target 30 FPS with a 24 FPS
+4. Enter both field exits; defeat and revisit the hog, climb through every cloud
+   layer on horseback, defeat and revisit the ogre, and verify both return paths.
+5. Record diagnostics at each outdoor zone's busiest view. Target 30 FPS with a 24 FPS
    floor, then update the hardware report with measured—not emulator—results.
-5. Copy the freshly verified SD bundle only with the 3DS fully powered off and
+6. Copy the freshly verified SD bundle only with the 3DS fully powered off and
    verify its hash before ejecting the card.

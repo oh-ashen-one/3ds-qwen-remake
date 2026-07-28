@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "assets" / "scene_source.json"
 OUTPUT = ROOT / "include" / "demake" / "generated" / "scene_asset_data.hpp"
-ZONE_ORDER = ("interior", "vista", "arena", "field")
+ZONE_ORDER = ("interior", "vista", "arena", "field", "boar_valley", "cloud_plateau")
 BLOB_OUTPUTS = {zone: ROOT / "romfs" / "zones" / f"{zone}.bin" for zone in ZONE_ORDER}
 BLOB_HEADER = struct.Struct("<4sHHI")
 BLOB_RECORD = struct.Struct("<10fbbB")
@@ -142,6 +142,10 @@ def format_float(value: float) -> str:
     return f"{value:.6f}f"
 
 
+def cpp_symbol(zone_id: str) -> str:
+    return "".join(part.title() for part in zone_id.split("_"))
+
+
 def generate() -> str:
     data = json.loads(SOURCE.read_text(encoding="utf-8"))
     lines = [
@@ -152,7 +156,7 @@ def generate() -> str:
     ]
     for zone_id in ZONE_ORDER:
         boxes = expand_zone(data["zones"][zone_id])
-        symbol = zone_id.title()
+        symbol = cpp_symbol(zone_id)
         lines.append(f"inline constexpr SceneBox k{symbol}Boxes[] = {{")
         for box in boxes:
             values = [

@@ -2,7 +2,7 @@
 
 Execute the complete specification in `MASTER_GOAL_PROMPT.md`. Read it first and treat it as the authoritative, decision-complete contract, including the 2026-07-19 hardware pivot.
 
-Re-verify current state, then maintain the public repository `oh-ashen-one/elden-ring-3ds-demake` for the user's exact Japanese original Nintendo 3DS (CTR-001). Remove every New-3DS-only startup, control, CPU, documentation, and acceptance assumption while preserving the complete 5–8 minute vertical slice. Use original-3DS controls from the master prompt, retain optional New-family compatibility only where it cannot hide an Old-3DS defect, and keep the official devkitPro asset pipeline, tests, CI, diagnostics, Wi-Fi netloading, persistent SD installation, and video-evidence workflow healthy.
+Re-verify current state, then maintain the public repository `oh-ashen-one/elden-ring-3ds-demake` for the user's exact Japanese original Nintendo 3DS (CTR-001). Remove every New-3DS-only startup, control, CPU, documentation, and acceptance assumption while preserving the complete 5–8 minute core slice plus its optional hog-ravine and cloud-ascent/ogre branches. Use original-3DS controls from the master prompt, retain optional New-family compatibility only where it cannot hide an Old-3DS defect, and keep the six-zone devkitPro asset pipeline, tests, CI, diagnostics, Wi-Fi netloading, persistent SD installation, and video-evidence workflow healthy.
 
 Preserve unrelated user work and never include ripped commercial assets, credentials, console-unique files, personal paths, or SD backups. Follow current official documentation for toolchain and homebrew operations. Make coherent commits and push them to the public repository only after privacy and secret audits pass.
 
