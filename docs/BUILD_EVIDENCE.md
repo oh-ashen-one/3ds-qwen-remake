@@ -1,5 +1,42 @@
 # Build evidence
 
+## Six-zone showcase release candidate
+
+- Date: 2026-07-28
+- Source branch: `agent/character-redesign-handoff` before merge to `main`
+- Clean local gate: 20-asset provenance validation, six-zone/733-prop scene
+  validation, deterministic host and original-3DS contract tests, hardware
+  report validator tests, native cross-build, artifact verification, and the
+  full reachable-history privacy audit passed.
+- Sanitizer gate: the complete deterministic host suite passed under Address
+  Sanitizer and UndefinedBehaviorSanitizer (`detect_leaks=0` because macOS does
+  not support that ASan option).
+- Local production `.3dsx`: `33,166,632` bytes; SHA-256
+  `e9377274aa7d8043e8d4f1b9e4afb5690ed6c2061fbf9ab809dc27c0fb88e000`.
+- Branch-streaming stress: 12 alternating Reach/ravine/ascent round trips
+  completed in one deterministic run (24 masked transitions), verifying
+  two-zone preload overlap, prior-zone unload, resident-byte accounting, safe
+  mount transfer, and one resident zone after every arrival.
+- Route hardening: both Reach exits now have distinct in-world gates; every
+  branch/return uses a departure mask, arrival fade, and zone title. Boss-area
+  graces restore the correct encounter, branch victories restore 35 health and
+  one flask, and defeated optional bosses remain dead on revisit.
+- Audio hardening: Ashen Deep Hall, Valley After Dawn, and Ashen Gate remain
+  double-buffered, but zone changes now fade the active channel down before the
+  new stream begins and fade it back up afterward.
+- Official Azahar 2125.1.3 native previews rendered the production title and
+  unobstructed vestibule at 60 application FPS, the field gate and Gore-Tusk at
+  60 FPS, the brighter mounted Cloudbreak climb at 59–60 FPS, and Arashi's
+  rune-magic windup at 60 FPS. A rejected large-ridge embellishment produced a
+  full-camera occlusion during this pass and was removed before the clean build.
+
+The preview zone shortcuts used to inspect the late-game scenes were temporary
+and removed before the clean production artifact. These emulator observations
+prove native boot/render smoke and support visual review; they do not prove
+physical-console frame pacing, audio continuity, input feel, sleep/wake,
+netloading, or the complete uncut playthrough. Those remain explicit CTR-001
+hardware gates in `HARDWARE_TEST.md`.
+
 ## Original-3DS rebuild candidate
 
 - Date: 2026-07-19

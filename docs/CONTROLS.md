@@ -9,9 +9,9 @@
 | R | Light attack |
 | Y | Heavy attack |
 | B | Dodge; hold with movement to sprint; gallop while mounted |
-| A | Interact, advance dialogue, mount/dismount, restart |
+| A | Interact, advance dialogue, mount/dismount, or return to the latest grace after death |
 | X | Use healing flask |
-| Touch ACT / RIDE / DISMOUNT | Interact, ride, dismount, advance dialogue, restart, or begin from title |
+| Touch ACT / RIDE / DISMOUNT | Interact, ride, dismount, advance dialogue, return to grace, or begin from title |
 | Touch HEAL | Use healing flask |
 | Touch LOCK / CALL / CALL/LOCK | Toggle target lock or call the active horse |
 | Touch DEBUG | Toggle diagnostics |
@@ -29,6 +29,10 @@ field. Approach any horse and press A (or touch RIDE) to mount it. Hold B while
 moving to gallop, press A again to dismount, and press L (or touch CALL) while
 unmounted to bring the last selected horse back if it is lost.
 
-Ride through the Reach's eastern edge for Twinfang Ravine. Ride through its
-western edge for Cloudbreak Ascent; follow the tan zigzag on the lower map.
+Ride through the Reach's red eastern gate for Twinfang Ravine. Ride through its
+pale-cloud western gate for Cloudbreak Ascent; follow the tan zigzag on the lower map.
 The horse is automatically left safely below the summit combat plateau.
+
+All boss zones act as graces for this demo. If the player falls, A restarts the
+current fight with restored health, stamina, and flasks; the Cloudbreak grace
+also returns the active horse for the climb.

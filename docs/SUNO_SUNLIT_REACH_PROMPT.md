@@ -20,4 +20,3 @@ intensity. Instrumental only; no vocals, chanting, EDM, trap drums, distorted
 guitars, trailer braams, or overpowering bass. Target length 3–4 minutes.
 
 Suggested title: **River Beneath the Hikari Peaks**
-

@@ -111,6 +111,7 @@ struct WorldState {
     float elapsed = 0.0f;
     float door_progress = 0.0f;
     float transition_timer = 0.0f;
+    float arrival_fade_timer = 0.0f;
     float victory_timer = 0.0f;
     std::array<FieldHorse, kFieldHorseCount> horses{{
         {{2.0f, -28.0f}, 0.0f},
@@ -123,6 +124,8 @@ struct WorldState {
     bool dialogue_complete = false;
     bool arena_transition = false;
     bool field_transition = false;
+    bool branch_transition = false;
+    Zone pending_zone = Zone::Interior;
     bool boar_defeated = false;
     bool ogre_defeated = false;
     bool debug_overlay = false;
@@ -147,6 +150,7 @@ public:
     static bool isLoaded(const WorldState& world, Zone zone);
 
 private:
+    static void beginBranchTransition(WorldState& world, Zone target);
     static void preload(WorldState& world, Zone zone);
     static void unload(WorldState& world, Zone zone);
     static void enter(WorldState& world, Zone zone);
@@ -177,6 +181,8 @@ public:
     WorldState& mutableWorld() { return world_; }
 
 private:
+    void restartFromCheckpoint();
+
     WorldState world_{};
     ZoneManager zones_{};
     PlayerController player_controller_{};

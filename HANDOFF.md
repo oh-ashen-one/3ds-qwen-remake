@@ -51,6 +51,13 @@ intentionally not committed. Rebuild them from source on the laptop.
 - Both branches have their own lower-screen map scale, objective routing,
   resident-memory budgets, return paths, deterministic flow tests, and
   original-3DS-safe fixed box assemblies.
+- The red eastern gate and pale-cloud western gate now make both exits visible
+  in the world. A preload-backed departure mask, arrival fade, and zone title
+  replace the prior instantaneous edge switch in both directions.
+- Music now fades between the three original tracks instead of hard switching.
+  Branch victories show a short payoff card, restore 35 health and one flask,
+  and late deaths return to the current boss-area grace rather than destroying
+  a recording take.
 
 Primary files:
 
@@ -69,7 +76,7 @@ Primary files:
 
 The game continues to reuse one indexed cube VBO. The Reach, ravine, and ascent
 declare 204/188/214 draw budgets and 768/640/704 KiB runtime budgets. Their
-384/142/144 generated static boxes are coarse-grid, view, sightline, and
+394/142/144 generated static boxes are coarse-grid, view, sightline, and
 distance culled; creatures are fixed box assemblies with whole-creature range
 rejection. Re-run the validators whenever the scene source changes.
 
@@ -125,7 +132,8 @@ Azahar.app/Contents/MacOS/azahar --windowed ./elden-ring-3ds-demake.3dsx
    the river/bridge/ford, reach every field edge, and inspect wildlife,
    cloud/mountain silhouettes, flowers, and cedar pop-in while rotating.
 4. Enter both field exits; defeat and revisit the hog, climb through every cloud
-   layer on horseback, defeat and revisit the ogre, and verify both return paths.
+   layer on horseback, defeat and revisit the ogre, verify both return paths,
+   and listen for clean exploration/combat fades.
 5. Record diagnostics at each outdoor zone's busiest view. Target 30 FPS with a 24 FPS
    floor, then update the hardware report with measured—not emulator—results.
 6. Copy the freshly verified SD bundle only with the 3DS fully powered off and

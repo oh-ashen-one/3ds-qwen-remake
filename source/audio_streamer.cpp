@@ -1,5 +1,6 @@
 #include "demake/audio_streamer.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 
@@ -46,7 +47,8 @@ void AudioStreamer::configureMusicChannel() {
     ndspChnSetRate(0, static_cast<float>(kSampleRate));
     ndspChnSetFormat(0, NDSP_FORMAT_MONO_PCM16);
     float music_mix[12]{};
-    const float volume = music_track_ == MusicTrack::AshenGate ? 0.32f : 0.24f;
+    const float base_volume = music_track_ == MusicTrack::AshenGate ? 0.32f : 0.24f;
+    const float volume = base_volume * music_gain_;
     music_mix[0] = volume;
     music_mix[1] = volume;
     ndspChnSetMix(0, music_mix);
@@ -73,6 +75,15 @@ bool AudioStreamer::switchMusic(const char* path, MusicTrack track) {
     return true;
 }
 
+const char* AudioStreamer::musicPath(MusicTrack track) {
+    switch (track) {
+        case MusicTrack::AshenGate: return "romfs:/audio/ashen_gate.pcm";
+        case MusicTrack::ValleyAfterDawn: return "romfs:/audio/valley_after_dawn.pcm";
+        case MusicTrack::DeepHall: return "romfs:/audio/ashen_deep_hall.pcm";
+    }
+    return "romfs:/audio/ashen_deep_hall.pcm";
+}
+
 void AudioStreamer::setZone(Zone zone, float player_z) {
     const bool summit_combat =
         zone == Zone::CloudPlateau && player_z >= 76.0f;
@@ -82,15 +93,11 @@ void AudioStreamer::setZone(Zone zone, float player_z) {
             : ((zone == Zone::Field || zone == Zone::CloudPlateau)
                    ? MusicTrack::ValleyAfterDawn
                    : MusicTrack::DeepHall);
-    if (wanted_track == music_track_) {
+    if (wanted_track == music_track_ && !music_fading_out_) {
         return;
     }
-    const char* path = wanted_track == MusicTrack::AshenGate
-                           ? "romfs:/audio/ashen_gate.pcm"
-                           : (wanted_track == MusicTrack::ValleyAfterDawn
-                                  ? "romfs:/audio/valley_after_dawn.pcm"
-                                  : "romfs:/audio/ashen_deep_hall.pcm");
-    switchMusic(path, wanted_track);
+    pending_track_ = wanted_track;
+    music_fading_out_ = wanted_track != music_track_;
 }
 
 void AudioStreamer::fillMusic(int index) {
@@ -125,6 +132,22 @@ void AudioStreamer::fillMusic(int index) {
 void AudioStreamer::update() {
     if (!ndsp_ready_ || !music_file_) {
         return;
+    }
+    if (music_fading_out_) {
+        music_gain_ = std::max(0.0f, music_gain_ - 0.065f);
+        configureMusicChannel();
+        if (music_gain_ <= 0.0f) {
+            if (switchMusic(musicPath(pending_track_), pending_track_)) {
+                music_fading_out_ = false;
+            } else {
+                music_gain_ = 1.0f;
+                music_fading_out_ = false;
+                configureMusicChannel();
+            }
+        }
+    } else if (music_gain_ < 1.0f) {
+        music_gain_ = std::min(1.0f, music_gain_ + 0.055f);
+        configureMusicChannel();
     }
     bool any_queued = false;
     for (int index = 0; index < 2; ++index) {
@@ -183,6 +206,8 @@ void AudioStreamer::shutdown() {
         ndspExit();
         ndsp_ready_ = false;
         suspended_ = false;
+        music_fading_out_ = false;
+        music_gain_ = 1.0f;
     }
     if (music_samples_) {
         linearFree(music_samples_);

@@ -11,6 +11,8 @@ The complete project contract is preserved in [MASTER_GOAL_PROMPT.md](MASTER_GOA
 - Native fixed-step gameplay, six-zone streaming state, combat, lifecycle handling, dual-screen UI, and NDSP audio are implemented.
 - Defeating the Ashen Warden now opens into the Sunlit Reach: a broad Japanese-alpine valley with a winding river and snowmelt tributary, bridge and ford, cedar slopes, three flower families, layered snowcapped mountains, drifting cloud banks, running wildlife, and three rideable horses.
 - The field now branches east into Twinfang Ravine and its charging giant hog, or west into Cloudbreak Ascent: a horse-scale ragged climb through moving cloud layers to a high plateau and a horned mountain ogre with telegraphed violet rune magic. Both branches return to the field and preserve defeated bosses on revisit.
+- Red and cloudstone gates now mark those branches in the world. Every branch handoff preloads the destination behind a departure/arrival mask, and zone-title reveals replace the old edge teleport.
+- Exploration and boss tracks fade between Ashen Deep Hall, Valley After Dawn, and Ashen Gate. Boss-area deaths return to the latest grace with restored resources; branch victories restore health and one flask so the extended showcase remains practical in one take.
 - The lighting and material palette were lifted for original-3DS visibility, and the boss now has lower health, slower telegraphs, gentler pursuit, smaller hit zones, and clearer recovery windows.
 - The original-content pipeline includes generated asset IDs, per-zone manifests and budgets, independently loadable RomFS scene blobs, a Blender-editable scene source, 15-bone rigid animation clips, and an RGB565 `tex3ds` atlas.
 - Static props use generated fixed-size data, an indexed VBO, coarse-grid and view/distance culling, baked colors, a directional tint, fog-gate masking, blob shadows, and distant panorama panels.
@@ -21,7 +23,7 @@ The complete project contract is preserved in [MASTER_GOAL_PROMPT.md](MASTER_GOA
 
 ## Architecture
 
-`GameApp` owns fixed-step input/lifecycle, `GameSession` owns title/pause/suspend state, `ZoneManager` owns logical preload/enter/unload handoffs, `ZoneResources` mirrors that mask with real RomFS loads and linear-memory frees, `PlayerController` and `BossController` own their independent combat state machines, `Renderer` owns citro3d/citro2d output and counters, `AudioStreamer` owns NDSP double buffers, and generated `AssetRegistry` data connects runtime assets to each zone without per-frame allocation.
+`GameApp` owns fixed-step input/lifecycle, `GameSession` owns title/pause/suspend state, `ZoneManager` owns logical preload/masked-enter/unload handoffs and grace checkpoints, `ZoneResources` mirrors that mask with real RomFS loads and linear-memory frees, `PlayerController` and `BossController` own their independent combat state machines, `Renderer` owns citro3d/citro2d output and counters, `AudioStreamer` owns NDSP double buffers and track fades, and generated `AssetRegistry` data connects runtime assets to each zone without per-frame allocation.
 
 ## Build
 

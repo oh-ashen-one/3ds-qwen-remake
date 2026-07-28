@@ -19,9 +19,9 @@ expansion proof continues without a cut:
 
 | Added time | Branch beat | Required visible evidence |
 | --- | --- | --- |
-| +0:00–1:20 | Eastern ride and Twinfang Ravine | Red map exit, zone stream, mountain walls, flowers, hog charge/stomp, defeat, return south |
-| +1:20–3:20 | Western ride and Cloudbreak Ascent | Cyan map exit, mounted zigzag climb, increasing elevation, four moving cloud layers, summit dismount |
-| +3:20–5:10 | Arashi plateau fight | Ogre scale, club/slam, orbiting runes, visible ground telegraph, magic pillar, defeat |
+| +0:00–1:20 | Eastern ride and Twinfang Ravine | Red map exit and in-world gate, masked zone stream/title, mountain walls, flowers, hog charge/stomp, victory card, return south |
+| +1:20–3:20 | Western ride and Cloudbreak Ascent | Cyan map exit and cloudstone gate, masked stream/title, mounted zigzag climb, increasing elevation, four moving cloud layers, summit dismount |
+| +3:20–5:10 | Arashi plateau fight | Exploration-to-boss music fade, ogre scale, club/slam, orbiting runes, visible ground telegraph, magic pillar, victory card |
 | +5:10–5:40 | Persistence and return | Re-enter each branch, confirm both bosses remain defeated, return to Reach |
 
 ## Recording rules
@@ -29,6 +29,7 @@ expansion proof continues without a cut:
 - Use one continuous take for the acceptance proof; no cuts or speed changes.
 - Start the timer when the title first appears and stop when the mounted player reaches the mountain-pass torii.
 - Record a second uncut extended take for both optional boss branches; do not use its longer duration as the core 5–8-minute timing result.
+- Let each track fade complete before speaking over a zone reveal so Ashen Deep Hall, Valley After Dawn, and Ashen Gate are all audible in the finished video.
 - Enable diagnostics briefly in each zone, then turn them off for readability.
 - Record the measured duration, minimum sustained FPS, peak linear-memory use, and audio-underrun count in `HARDWARE_TEST.md`.
 - If the natural route falls outside 5–8 minutes, adjust content or pacing and retest; do not pad the recording by idling.

@@ -19,6 +19,13 @@ void stepMany(GameSimulation& game, const InputFrame& input, int count) {
     }
 }
 
+void finishBranchTransition(GameSimulation& game) {
+    assert(game.world().branch_transition);
+    stepMany(game, InputFrame{}, 23);
+    assert(!game.world().branch_transition);
+    assert(game.world().arrival_fade_timer > 0.0f);
+}
+
 void testMathAndCollision() {
     assert(std::fabs(length({3.0f, 4.0f}) - 5.0f) < 0.001f);
     assert(circlesOverlap({0.0f, 0.0f}, 1.0f, {1.5f, 0.0f}, 0.6f));
@@ -81,7 +88,7 @@ void testGeneratedSceneData() {
     assert(SceneAssets::boxCount(Zone::Interior) == 16);
     assert(SceneAssets::boxCount(Zone::Vista) == 24);
     assert(SceneAssets::boxCount(Zone::Arena) == 13);
-    assert(SceneAssets::boxCount(Zone::Field) == 384);
+    assert(SceneAssets::boxCount(Zone::Field) == 394);
     assert(SceneAssets::boxCount(Zone::BoarValley) == 142);
     assert(SceneAssets::boxCount(Zone::CloudPlateau) == 144);
     std::size_t count = 0;
@@ -511,6 +518,9 @@ void testSunlitReachHorseMountAndGallop() {
     world.loaded_zone_mask = 1U << static_cast<unsigned>(Zone::Arena);
     world.boss.state = BossState::Dead;
     world.player.state = PlayerState::Victory;
+    world.player.health = 12.0f;
+    world.player.stamina = 7.0f;
+    world.player.flasks = 0;
 
     InputFrame interact{};
     interact.interact = true;
@@ -518,6 +528,9 @@ void testSunlitReachHorseMountAndGallop() {
     stepMany(game, InputFrame{}, 33);
     assert(game.world().zone == Zone::Field);
     assert(!game.world().player.mounted);
+    assert(game.world().player.health == 100.0f);
+    assert(game.world().player.stamina == 100.0f);
+    assert(game.world().player.flasks == 3);
 
     assert(game.world().horses.size() == kFieldHorseCount);
     game.mutableWorld().player.position = game.world().horses[1].position;
@@ -563,26 +576,40 @@ void testOutdoorBranchesAndPersistentBosses() {
     world.loaded_zone_mask = 1U << static_cast<unsigned>(Zone::Field);
     world.player.position = {69.0f, 18.0f};
     game.step(InputFrame{}, kFixedStep);
+    assert(game.world().zone == Zone::Field);
+    assert(game.world().branch_transition);
+    assert(ZoneManager::isLoaded(game.world(), Zone::Field));
+    assert(ZoneManager::isLoaded(game.world(), Zone::BoarValley));
+    finishBranchTransition(game);
     assert(game.world().zone == Zone::BoarValley);
     assert(game.world().boss.health == bossMaximumHealth(Zone::BoarValley));
     assert(!game.world().player.mounted);
+    game.mutableWorld().player.health = 20.0f;
+    game.mutableWorld().player.flasks = 0;
     BossController::damage(game.mutableWorld(), 1000.0f);
     assert(game.world().boar_defeated);
+    assert(game.world().player.health == 55.0f);
+    assert(game.world().player.flasks == 1);
     game.mutableWorld().player.position.z = -42.0f;
     game.step(InputFrame{}, kFixedStep);
+    finishBranchTransition(game);
     assert(game.world().zone == Zone::Field);
     game.mutableWorld().player.position = {69.0f, 18.0f};
     game.step(InputFrame{}, kFixedStep);
+    finishBranchTransition(game);
     assert(game.world().zone == Zone::BoarValley);
     assert(game.world().boss.state == BossState::Dead);
+    assert(game.world().victory_timer > 90.0f);
 
     game.mutableWorld().player.position.z = -42.0f;
     game.step(InputFrame{}, kFixedStep);
+    finishBranchTransition(game);
     assert(game.world().zone == Zone::Field);
     game.mutableWorld().player.position = {-69.0f, 18.0f};
     game.mutableWorld().player.mounted = true;
     game.mutableWorld().active_horse = 0;
     game.step(InputFrame{}, kFixedStep);
+    finishBranchTransition(game);
     assert(game.world().zone == Zone::CloudPlateau);
     assert(game.world().player.mounted);
     assert(zoneGroundHeight(Zone::CloudPlateau, {0.0f, 76.0f}) == 26.0f);
@@ -604,10 +631,76 @@ void testOutdoorBranchesAndPersistentBosses() {
     assert(game.world().ogre_defeated);
     game.mutableWorld().player.position.z = -46.0f;
     game.step(InputFrame{}, kFixedStep);
+    finishBranchTransition(game);
     assert(game.world().zone == Zone::Field);
 }
 
-void testDeathAndRestart() {
+void testCloudbreakKeepsHorseAtBothPortals() {
+    GameSimulation game;
+    WorldState& world = game.mutableWorld();
+    world.zone = Zone::Field;
+    world.loaded_zone_mask = 1U << static_cast<unsigned>(Zone::Field);
+    world.player.position = {-69.0f, 18.0f};
+    world.player.mounted = false;
+    world.active_horse = 2;
+    game.step(InputFrame{}, kFixedStep);
+    finishBranchTransition(game);
+    assert(game.world().zone == Zone::CloudPlateau);
+    assert(!game.world().player.mounted);
+    assert(distance(game.world().player.position,
+                    game.world().horses[game.world().active_horse].position) < 2.0f);
+
+    game.mutableWorld().player.position.z = -46.0f;
+    game.step(InputFrame{}, kFixedStep);
+    finishBranchTransition(game);
+    assert(game.world().zone == Zone::Field);
+    assert(!game.world().player.mounted);
+    assert(distance(game.world().player.position,
+                    game.world().horses[game.world().active_horse].position) < 2.0f);
+}
+
+void testOutdoorStreamingStress() {
+    GameSimulation game;
+    WorldState& world = game.mutableWorld();
+    world.zone = Zone::Field;
+    world.loaded_zone_mask = 1U << static_cast<unsigned>(Zone::Field);
+    world.zone_resident_bytes = AssetRegistry::zone(Zone::Field).runtime_budget_bytes;
+
+    for (int cycle = 0; cycle < 12; ++cycle) {
+        const Zone branch = (cycle & 1) == 0 ? Zone::BoarValley : Zone::CloudPlateau;
+        game.mutableWorld().player.position =
+            branch == Zone::BoarValley ? Vec2{69.0f, 18.0f} : Vec2{-69.0f, 18.0f};
+        game.mutableWorld().player.mounted = branch == Zone::CloudPlateau;
+        game.step(InputFrame{}, kFixedStep);
+        assert(game.world().branch_transition);
+        assert(ZoneManager::isLoaded(game.world(), Zone::Field));
+        assert(ZoneManager::isLoaded(game.world(), branch));
+        finishBranchTransition(game);
+        assert(game.world().zone == branch);
+        assert(game.world().loaded_zone_mask ==
+               (1U << static_cast<unsigned>(branch)));
+        assert(game.world().zone_resident_bytes ==
+               AssetRegistry::zone(branch).runtime_budget_bytes);
+
+        game.mutableWorld().player.position.z =
+            branch == Zone::BoarValley ? -42.0f : -46.0f;
+        game.step(InputFrame{}, kFixedStep);
+        assert(game.world().branch_transition);
+        assert(ZoneManager::isLoaded(game.world(), branch));
+        assert(ZoneManager::isLoaded(game.world(), Zone::Field));
+        finishBranchTransition(game);
+        assert(game.world().zone == Zone::Field);
+        assert(game.world().loaded_zone_mask ==
+               (1U << static_cast<unsigned>(Zone::Field)));
+        assert(game.world().zone_resident_bytes ==
+               AssetRegistry::zone(Zone::Field).runtime_budget_bytes);
+    }
+    assert(game.world().zone_transitions == 24);
+    assert(game.world().zone_loads == 25);
+    assert(game.world().zone_unloads == 24);
+}
+
+void testDeathReturnsToGraceCheckpoint() {
     GameSimulation game;
     WorldState& world = game.mutableWorld();
     world.zone = Zone::Arena;
@@ -621,8 +714,30 @@ void testDeathAndRestart() {
     InputFrame restart{};
     restart.interact = true;
     game.step(restart, kFixedStep);
-    assert(game.world().zone == Zone::Interior);
+    assert(game.world().zone == Zone::Arena);
     assert(game.world().player.health == 100.0f);
+    assert(game.world().player.position.z == -5.5f);
+    assert(game.world().boss.state == BossState::Approach);
+    assert(game.world().boss.health == bossMaximumHealth(Zone::Arena));
+
+    game.mutableWorld().zone = Zone::BoarValley;
+    game.mutableWorld().boar_defeated = false;
+    PlayerController::damage(game.mutableWorld(), 1000.0f);
+    game.step(restart, kFixedStep);
+    assert(game.world().zone == Zone::BoarValley);
+    assert(game.world().player.position.z == -37.0f);
+    assert(game.world().boss.state == BossState::Dormant);
+    assert(game.world().boss.health == bossMaximumHealth(Zone::BoarValley));
+
+    game.mutableWorld().zone = Zone::CloudPlateau;
+    game.mutableWorld().ogre_defeated = false;
+    PlayerController::damage(game.mutableWorld(), 1000.0f);
+    game.step(restart, kFixedStep);
+    assert(game.world().zone == Zone::CloudPlateau);
+    assert(game.world().player.position.z == -42.0f);
+    assert(game.world().player.mounted);
+    assert(game.world().boss.state == BossState::Dormant);
+    assert(game.world().boss.health == bossMaximumHealth(Zone::CloudPlateau));
 }
 
 } // namespace
@@ -649,7 +764,9 @@ int main() {
     testBossDeathClearsLockAndProducesVictory();
     testSunlitReachHorseMountAndGallop();
     testOutdoorBranchesAndPersistentBosses();
-    testDeathAndRestart();
+    testCloudbreakKeepsHorseAtBothPortals();
+    testOutdoorStreamingStress();
+    testDeathReturnsToGraceCheckpoint();
     std::cout << "core_tests: all deterministic gameplay checks passed\n";
     return 0;
 }

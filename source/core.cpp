@@ -15,6 +15,8 @@ constexpr Vec2 kFogGate{0.0f, 27.5f};
 constexpr Vec2 kFieldSpawn{0.0f, -38.0f};
 constexpr Vec2 kBoarSpawn{0.0f, -37.0f};
 constexpr Vec2 kOgreClimbSpawn{0.0f, -42.0f};
+constexpr float kBranchTransitionDuration = 0.72f;
+constexpr float kArrivalFadeDuration = 0.42f;
 constexpr std::array<FieldHorse, kFieldHorseCount> kFieldHorseSpawns{{
     {{2.0f, -28.0f}, 0.0f},
     {{-38.0f, 26.0f}, 1.15f},
@@ -60,12 +62,14 @@ void prepareBoss(WorldState& world, Zone zone) {
     world.boss.health = bossMaximumHealth(zone);
     world.boss.position = zone == Zone::BoarValley ? Vec2{0.0f, 29.0f}
                                                    : Vec2{0.0f, 105.0f};
-    if ((zone == Zone::BoarValley && world.boar_defeated) ||
-        (zone == Zone::CloudPlateau && world.ogre_defeated)) {
+    const bool already_defeated =
+        (zone == Zone::BoarValley && world.boar_defeated) ||
+        (zone == Zone::CloudPlateau && world.ogre_defeated);
+    if (already_defeated) {
         world.boss.health = 0.0f;
         world.boss.state = BossState::Dead;
     }
-    world.victory_timer = 0.0f;
+    world.victory_timer = already_defeated ? 99.0f : 0.0f;
 }
 
 } // namespace
@@ -144,11 +148,14 @@ void ZoneManager::reset(WorldState& world) const {
     world.zone = Zone::Interior;
     world.door_progress = 0.0f;
     world.transition_timer = 0.0f;
+    world.arrival_fade_timer = 0.0f;
     world.door_activated = false;
     world.dialogue_active = false;
     world.dialogue_complete = false;
     world.arena_transition = false;
     world.field_transition = false;
+    world.branch_transition = false;
+    world.pending_zone = Zone::Interior;
     world.boar_defeated = false;
     world.ogre_defeated = false;
     world.horses = kFieldHorseSpawns;
@@ -197,6 +204,16 @@ void ZoneManager::enter(WorldState& world, Zone zone) {
     unload(world, previous);
 }
 
+void ZoneManager::beginBranchTransition(WorldState& world, Zone target) {
+    preload(world, target);
+    world.pending_zone = target;
+    world.branch_transition = true;
+    world.transition_timer = kBranchTransitionDuration;
+    world.player.state = PlayerState::Interact;
+    world.player.state_timer = kBranchTransitionDuration;
+    world.player.lock_on = false;
+}
+
 void ZoneManager::beginPostBossField(WorldState& world) const {
     if (world.zone != Zone::Arena || world.boss.state != BossState::Dead ||
         world.field_transition) {
@@ -210,6 +227,60 @@ void ZoneManager::beginPostBossField(WorldState& world) const {
 }
 
 void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) const {
+    world.arrival_fade_timer = std::max(0.0f, world.arrival_fade_timer - dt);
+
+    if (world.branch_transition) {
+        world.transition_timer -= dt;
+        if (world.transition_timer > 0.0f) {
+            return;
+        }
+
+        const Zone previous = world.zone;
+        const Zone target = world.pending_zone;
+        const bool transfer_mount = world.player.mounted;
+        enter(world, target);
+        world.player.state = PlayerState::Idle;
+        world.player.state_timer = 0.0f;
+        world.player.lock_on = false;
+        world.branch_transition = false;
+        world.arrival_fade_timer = kArrivalFadeDuration;
+
+        if (target == Zone::BoarValley) {
+            world.player.position = kBoarSpawn;
+            world.player.facing = 0.0f;
+            world.player.mounted = false;
+            prepareBoss(world, Zone::BoarValley);
+        } else if (target == Zone::CloudPlateau) {
+            world.player.position = kOgreClimbSpawn;
+            world.player.facing = 0.0f;
+            world.player.mounted = transfer_mount;
+            FieldHorse& horse = world.horses[world.active_horse];
+            horse.position = transfer_mount
+                                 ? world.player.position
+                                 : Vec2{world.player.position.x + 1.8f,
+                                        world.player.position.z};
+            horse.facing = world.player.facing;
+            prepareBoss(world, Zone::CloudPlateau);
+        } else if (target == Zone::Field) {
+            if (previous == Zone::BoarValley) {
+                world.player.position = {66.0f, 18.0f};
+                world.player.facing = -1.5707963f;
+                world.player.mounted = false;
+            } else {
+                world.player.position = {-66.0f, 18.0f};
+                world.player.facing = 1.5707963f;
+                world.player.mounted = transfer_mount;
+                FieldHorse& horse = world.horses[world.active_horse];
+                horse.position = transfer_mount
+                                     ? world.player.position
+                                     : Vec2{world.player.position.x + 1.8f,
+                                            world.player.position.z};
+                horse.facing = world.player.facing;
+            }
+        }
+        return;
+    }
+
     if (world.zone == Zone::Interior) {
         if (input.interact && distance(world.player.position, kDoor) < 2.2f) {
             world.door_activated = true;
@@ -261,6 +332,8 @@ void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) c
                 world.player.state_timer = 0.0f;
                 world.boss = Boss{};
                 world.boss.state = BossState::Approach;
+                world.arena_transition = false;
+                world.arrival_fade_timer = kArrivalFadeDuration;
             }
         }
         return;
@@ -276,9 +349,13 @@ void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) c
                 world.player.state = PlayerState::Idle;
                 world.player.state_timer = 0.0f;
                 world.player.mounted = false;
+                world.player.health = 100.0f;
+                world.player.stamina = 100.0f;
+                world.player.flasks = 3;
                 world.horses = kFieldHorseSpawns;
                 world.active_horse = 0;
                 world.field_transition = false;
+                world.arrival_fade_timer = kArrivalFadeDuration;
             }
         }
         return;
@@ -287,29 +364,12 @@ void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) c
     if (world.zone == Zone::Field && playerCanAct(world.player.state)) {
         if (world.player.position.x > 68.0f &&
             world.player.position.z > -8.0f && world.player.position.z < 54.0f) {
-            preload(world, Zone::BoarValley);
-            enter(world, Zone::BoarValley);
-            world.player.position = kBoarSpawn;
-            world.player.facing = 0.0f;
-            world.player.mounted = false;
-            world.player.state = PlayerState::Idle;
-            prepareBoss(world, Zone::BoarValley);
+            beginBranchTransition(world, Zone::BoarValley);
             return;
         }
         if (world.player.position.x < -68.0f &&
             world.player.position.z > -8.0f && world.player.position.z < 54.0f) {
-            const bool arrived_mounted = world.player.mounted;
-            preload(world, Zone::CloudPlateau);
-            enter(world, Zone::CloudPlateau);
-            world.player.position = kOgreClimbSpawn;
-            world.player.facing = 0.0f;
-            world.player.state = PlayerState::Idle;
-            world.player.mounted = arrived_mounted;
-            if (arrived_mounted) {
-                world.horses[world.active_horse].position = world.player.position;
-                world.horses[world.active_horse].facing = world.player.facing;
-            }
-            prepareBoss(world, Zone::CloudPlateau);
+            beginBranchTransition(world, Zone::CloudPlateau);
             return;
         }
         if (input.lock_toggle && !world.player.mounted) {
@@ -344,29 +404,14 @@ void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) c
 
     if (world.zone == Zone::BoarValley) {
         if (world.player.position.z < -40.0f) {
-            preload(world, Zone::Field);
-            enter(world, Zone::Field);
-            world.player.position = {66.0f, 18.0f};
-            world.player.facing = -1.5707963f;
-            world.player.state = PlayerState::Idle;
-            world.player.lock_on = false;
+            beginBranchTransition(world, Zone::Field);
         }
         return;
     }
 
     if (world.zone == Zone::CloudPlateau) {
         if (world.player.position.z < -44.0f) {
-            const bool leaving_mounted = world.player.mounted;
-            preload(world, Zone::Field);
-            enter(world, Zone::Field);
-            world.player.position = {-66.0f, 18.0f};
-            world.player.facing = 1.5707963f;
-            world.player.state = PlayerState::Idle;
-            world.player.lock_on = false;
-            if (leaving_mounted) {
-                world.horses[world.active_horse].position = world.player.position;
-                world.horses[world.active_horse].facing = world.player.facing;
-            }
+            beginBranchTransition(world, Zone::Field);
             return;
         }
         if (world.player.position.z > 82.0f && world.player.mounted) {
@@ -436,7 +481,7 @@ void GameSimulation::step(const InputFrame& input, float dt) {
 
     if (world_.player.state == PlayerState::Dead) {
         if (input.interact) {
-            reset();
+            restartFromCheckpoint();
         }
         return;
     }
@@ -449,8 +494,54 @@ void GameSimulation::step(const InputFrame& input, float dt) {
 
     zones_.update(world_, input, dt);
     player_controller_.update(world_, input, dt);
-    if (isBossZone(world_.zone) && !world_.field_transition) {
+    if (isBossZone(world_.zone) && !world_.field_transition &&
+        !world_.branch_transition) {
         boss_controller_.update(world_, dt);
+    }
+}
+
+void GameSimulation::restartFromCheckpoint() {
+    const Zone checkpoint = world_.zone;
+    if (!isBossZone(checkpoint) && checkpoint != Zone::Field) {
+        reset();
+        return;
+    }
+
+    const bool debug_overlay = world_.debug_overlay;
+    const bool boar_defeated = world_.boar_defeated;
+    const bool ogre_defeated = world_.ogre_defeated;
+    const unsigned active_horse = world_.active_horse;
+    const auto horses = world_.horses;
+    world_.player = Player{};
+    world_.debug_overlay = debug_overlay;
+    world_.boar_defeated = boar_defeated;
+    world_.ogre_defeated = ogre_defeated;
+    world_.active_horse = active_horse;
+    world_.horses = horses;
+    world_.transition_timer = 0.0f;
+    world_.arrival_fade_timer = kArrivalFadeDuration;
+    world_.arena_transition = false;
+    world_.field_transition = false;
+    world_.branch_transition = false;
+    world_.pending_zone = checkpoint;
+
+    if (checkpoint == Zone::Arena) {
+        world_.player.position = {0.0f, -5.5f};
+        world_.boss = Boss{};
+        world_.boss.state = BossState::Approach;
+    } else if (checkpoint == Zone::BoarValley) {
+        world_.player.position = kBoarSpawn;
+        prepareBoss(world_, Zone::BoarValley);
+    } else if (checkpoint == Zone::CloudPlateau) {
+        world_.player.position = kOgreClimbSpawn;
+        world_.player.mounted = true;
+        world_.horses[world_.active_horse].position = kOgreClimbSpawn;
+        world_.horses[world_.active_horse].facing = 0.0f;
+        prepareBoss(world_, Zone::CloudPlateau);
+    } else {
+        world_.player.position = kFieldSpawn;
+        world_.horses = kFieldHorseSpawns;
+        world_.active_horse = 0;
     }
 }
 
@@ -757,8 +848,12 @@ void BossController::damage(WorldState& world_, float amount) {
         world_.victory_timer = 0.0f;
         if (world_.zone == Zone::BoarValley) {
             world_.boar_defeated = true;
+            world_.player.health = std::min(100.0f, world_.player.health + 35.0f);
+            world_.player.flasks = std::min(3, world_.player.flasks + 1);
         } else if (world_.zone == Zone::CloudPlateau) {
             world_.ogre_defeated = true;
+            world_.player.health = std::min(100.0f, world_.player.health + 35.0f);
+            world_.player.flasks = std::min(3, world_.player.flasks + 1);
         }
     }
 }

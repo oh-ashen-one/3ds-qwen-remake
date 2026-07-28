@@ -64,6 +64,15 @@ const char* objectiveFor(const WorldState& world) {
     if (world.player.state == PlayerState::Dead) {
         return "Return to the ember";
     }
+    if (world.branch_transition) {
+        if (world.pending_zone == Zone::BoarValley) {
+            return "Crossing into Twinfang Ravine";
+        }
+        if (world.pending_zone == Zone::CloudPlateau) {
+            return "Beginning the Cloudbreak ascent";
+        }
+        return "Returning to the Sunlit Reach";
+    }
     if (world.zone == Zone::Arena &&
         (world.player.state == PlayerState::Victory || world.boss.state == BossState::Dead)) {
         return "The Ashen Warden is felled";
@@ -1176,24 +1185,64 @@ void Renderer::renderUi(const WorldState& world, bool title_screen, bool paused,
         }
         if (world.player.state == PlayerState::Dead) {
             drawText("EMBER EXTINGUISHED", 95.0f, 92.0f, 0.75f, C2D_Color32(175, 42, 38, 255));
-            drawText("Press A to restart", 135.0f, 130.0f, 0.45f, C2D_Color32(225, 220, 215, 255));
+            drawText(isBossZone(world.zone) || world.zone == Zone::Field
+                         ? "Press A to return to the last grace"
+                         : "Press A to restart",
+                     isBossZone(world.zone) || world.zone == Zone::Field ? 91.0f : 135.0f,
+                     130.0f, 0.45f, C2D_Color32(225, 220, 215, 255));
         } else if (world.player.state == PlayerState::Victory) {
             drawText("WARDEN FELLED", 124.0f, 92.0f, 0.78f, C2D_Color32(222, 188, 112, 255));
             drawText("Press A to enter the Sunlit Reach", 77.0f, 130.0f, 0.45f,
                      C2D_Color32(225, 220, 215, 255));
+        } else if (world.zone == Zone::BoarValley &&
+                   world.boss.state == BossState::Dead && world.victory_timer < 2.6f) {
+            drawText("VALLEY KING FELLED", 97.0f, 86.0f, 0.72f,
+                     C2D_Color32(231, 194, 112, 255));
+            drawText("Grace restored - return south", 103.0f, 122.0f, 0.42f,
+                     C2D_Color32(235, 232, 218, 255));
+        } else if (world.zone == Zone::CloudPlateau &&
+                   world.boss.state == BossState::Dead && world.victory_timer < 2.6f) {
+            drawText("THE STORM IS BROKEN", 80.0f, 86.0f, 0.72f,
+                     C2D_Color32(215, 225, 236, 255));
+            drawText("Grace restored - descend south", 93.0f, 122.0f, 0.42f,
+                     C2D_Color32(235, 232, 218, 255));
         }
         if (paused) {
             C2D_DrawRectSolid(0.0f, 0.0f, 0.6f, 400.0f, 240.0f, C2D_Color32(0, 0, 0, 155));
             drawText("PAUSED", 163.0f, 96.0f, 0.78f, C2D_Color32(245, 245, 245, 255));
         }
-        if ((world.arena_transition || world.field_transition) &&
+        if ((world.arena_transition || world.field_transition || world.branch_transition) &&
             world.transition_timer > 0.0f) {
-            const float duration = world.field_transition ? 1.05f : 0.85f;
+            const float duration = world.field_transition
+                                       ? 1.05f
+                                       : (world.branch_transition ? 0.72f : 0.85f);
             const float progress = 1.0f - world.transition_timer / duration;
-            const u8 alpha = static_cast<u8>(std::fmax(0.0f, std::fmin(220.0f, progress * 255.0f)));
-            const u32 fade = world.field_transition ? C2D_Color32(244, 221, 154, alpha)
-                                                    : C2D_Color32(8, 6, 10, alpha);
+            const u8 alpha =
+                static_cast<u8>(std::fmax(0.0f, std::fmin(245.0f, progress * 270.0f)));
+            const u32 fade =
+                world.field_transition || world.pending_zone == Zone::Field
+                    ? C2D_Color32(244, 221, 154, alpha)
+                    : (world.pending_zone == Zone::CloudPlateau
+                           ? C2D_Color32(187, 220, 235, alpha)
+                           : C2D_Color32(26, 36, 27, alpha));
             C2D_DrawRectSolid(0.0f, 0.0f, 0.8f, 400.0f, 240.0f, fade);
+        } else if (world.arrival_fade_timer > 0.0f) {
+            const float strength =
+                std::clamp(world.arrival_fade_timer / 0.42f, 0.0f, 1.0f);
+            const u8 alpha = static_cast<u8>(strength * 220.0f);
+            const u32 fade =
+                world.zone == Zone::Field ? C2D_Color32(244, 221, 154, alpha)
+                : (world.zone == Zone::CloudPlateau
+                       ? C2D_Color32(187, 220, 235, alpha)
+                       : (world.zone == Zone::BoarValley
+                              ? C2D_Color32(26, 36, 27, alpha)
+                              : C2D_Color32(8, 6, 10, alpha)));
+            C2D_DrawRectSolid(0.0f, 0.0f, 0.8f, 400.0f, 240.0f, fade);
+            if (strength < 0.78f) {
+                drawText(ZoneManager::name(world.zone), 112.0f, 101.0f, 0.62f,
+                         C2D_Color32(248, 244, 228,
+                                     static_cast<u8>((0.78f - strength) * 326.0f)));
+            }
         }
     }
 

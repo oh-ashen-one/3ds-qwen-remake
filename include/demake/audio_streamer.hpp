@@ -33,6 +33,7 @@ private:
     static constexpr std::size_t kHitSamples = 1400;
 
     bool switchMusic(const char* path, MusicTrack track);
+    static const char* musicPath(MusicTrack track);
     void configureMusicChannel();
     void fillMusic(int index);
 
@@ -45,6 +46,9 @@ private:
     ndspWaveBuf hit_wave_{};
     unsigned underruns_ = 0;
     MusicTrack music_track_ = MusicTrack::DeepHall;
+    MusicTrack pending_track_ = MusicTrack::DeepHall;
+    float music_gain_ = 1.0f;
+    bool music_fading_out_ = false;
 };
 
 } // namespace demake
