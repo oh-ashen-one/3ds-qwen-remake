@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "assets" / "manifest.json"
 OUTPUT = ROOT / "include" / "demake" / "generated" / "asset_registry_data.hpp"
-ZONE_ORDER = ("interior", "vista", "arena")
+ZONE_ORDER = ("interior", "vista", "arena", "field", "boar_valley", "cloud_plateau")
 
 
 def cpp_string(value: str) -> str:

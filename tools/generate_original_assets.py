@@ -14,6 +14,8 @@ TRACKS = (
      ROOT / "romfs" / "audio" / "ashen_deep_hall.pcm"),
     (ROOT / "assets" / "audio" / "ashen_gate.wav",
      ROOT / "romfs" / "audio" / "ashen_gate.pcm"),
+    (ROOT / "assets" / "audio" / "valley_after_dawn.wav",
+     ROOT / "romfs" / "audio" / "valley_after_dawn.pcm"),
 )
 
 

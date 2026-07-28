@@ -28,8 +28,14 @@ def valid_report(artifact_sha256: str) -> dict[str, object]:
         "average_fps": 30.0,
         "minimum_fps": 24.0,
         "sustained_below_24_fps": False,
-        "zone_memory_headroom_percent": {"interior": 25.0, "vista": 26.0, "arena": 24.0},
-        "peak_linear_memory_bytes": {"interior": 200000, "vista": 220000, "arena": 240000},
+        "zone_memory_headroom_percent": {
+            "interior": 25.0, "vista": 26.0, "arena": 24.0, "field": 27.0,
+            "boar_valley": 26.0, "cloud_plateau": 25.0,
+        },
+        "peak_linear_memory_bytes": {
+            "interior": 200000, "vista": 220000, "arena": 240000, "field": 250000,
+            "boar_valley": 230000, "cloud_plateau": 260000,
+        },
         "audio_underruns": 0,
         "visible_unmasked_loads": 0,
         "crashes": 0,
@@ -69,6 +75,8 @@ def valid_report(artifact_sha256: str) -> dict[str, object]:
             "death_during_slash_restart": True,
             "death_during_slam_restart": True,
             "victory_restart": True,
+            "boar_branch_persistence": True,
+            "cloud_ogre_branch_persistence": True,
             "zone_transition_cycles": 5,
         },
         "proof": {

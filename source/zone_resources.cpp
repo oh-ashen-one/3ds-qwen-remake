@@ -15,7 +15,7 @@ namespace {
 constexpr std::size_t kHeaderBytes = 12;
 constexpr std::size_t kRecordBytes = 43;
 constexpr std::uint16_t kFormatVersion = 1;
-constexpr std::size_t kMaximumBoxesPerZone = 256;
+constexpr std::size_t kMaximumBoxesPerZone = 512;
 
 unsigned zoneIndex(Zone zone) {
     return static_cast<unsigned>(zone);
@@ -26,15 +26,24 @@ const char* zonePath(Zone zone) {
     constexpr const char* kInteriorPath = "romfs:/zones/interior.bin";
     constexpr const char* kVistaPath = "romfs:/zones/vista.bin";
     constexpr const char* kArenaPath = "romfs:/zones/arena.bin";
+    constexpr const char* kFieldPath = "romfs:/zones/field.bin";
+    constexpr const char* kBoarValleyPath = "romfs:/zones/boar_valley.bin";
+    constexpr const char* kCloudPlateauPath = "romfs:/zones/cloud_plateau.bin";
 #else
     constexpr const char* kInteriorPath = "romfs/zones/interior.bin";
     constexpr const char* kVistaPath = "romfs/zones/vista.bin";
     constexpr const char* kArenaPath = "romfs/zones/arena.bin";
+    constexpr const char* kFieldPath = "romfs/zones/field.bin";
+    constexpr const char* kBoarValleyPath = "romfs/zones/boar_valley.bin";
+    constexpr const char* kCloudPlateauPath = "romfs/zones/cloud_plateau.bin";
 #endif
     switch (zone) {
         case Zone::Interior: return kInteriorPath;
         case Zone::Vista: return kVistaPath;
         case Zone::Arena: return kArenaPath;
+        case Zone::Field: return kFieldPath;
+        case Zone::BoarValley: return kBoarValleyPath;
+        case Zone::CloudPlateau: return kCloudPlateauPath;
     }
     return nullptr;
 }
@@ -80,7 +89,7 @@ bool readExact(std::FILE* file, void* destination, std::size_t bytes) {
 } // namespace
 
 bool ZoneResources::sync(std::uint8_t requested_mask) {
-    constexpr std::uint8_t kZoneMask = 0x07U;
+    constexpr std::uint8_t kZoneMask = 0x3FU;
     if ((requested_mask & ~kZoneMask) != 0U) {
         return false;
     }

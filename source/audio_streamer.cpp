@@ -1,5 +1,6 @@
 #include "demake/audio_streamer.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 
@@ -19,7 +20,7 @@ bool AudioStreamer::initialize() {
         return false;
     }
 
-    if (!switchMusic("romfs:/audio/ashen_deep_hall.pcm", false)) {
+    if (!switchMusic("romfs:/audio/ashen_deep_hall.pcm", MusicTrack::DeepHall)) {
         shutdown();
         return false;
     }
@@ -46,13 +47,14 @@ void AudioStreamer::configureMusicChannel() {
     ndspChnSetRate(0, static_cast<float>(kSampleRate));
     ndspChnSetFormat(0, NDSP_FORMAT_MONO_PCM16);
     float music_mix[12]{};
-    const float volume = boss_track_ ? 0.32f : 0.24f;
+    const float base_volume = music_track_ == MusicTrack::AshenGate ? 0.32f : 0.24f;
+    const float volume = base_volume * music_gain_;
     music_mix[0] = volume;
     music_mix[1] = volume;
     ndspChnSetMix(0, music_mix);
 }
 
-bool AudioStreamer::switchMusic(const char* path, bool boss_track) {
+bool AudioStreamer::switchMusic(const char* path, MusicTrack track) {
     std::FILE* next_file = std::fopen(path, "rb");
     if (!next_file) {
         return false;
@@ -62,7 +64,7 @@ bool AudioStreamer::switchMusic(const char* path, bool boss_track) {
         std::fclose(music_file_);
     }
     music_file_ = next_file;
-    boss_track_ = boss_track;
+    music_track_ = track;
     std::memset(music_wave_, 0, sizeof(music_wave_));
     configureMusicChannel();
     for (int index = 0; index < 2; ++index) {
@@ -73,14 +75,29 @@ bool AudioStreamer::switchMusic(const char* path, bool boss_track) {
     return true;
 }
 
-void AudioStreamer::setZone(Zone zone) {
-    const bool wants_boss_track = zone == Zone::Arena;
-    if (wants_boss_track == boss_track_) {
+const char* AudioStreamer::musicPath(MusicTrack track) {
+    switch (track) {
+        case MusicTrack::AshenGate: return "romfs:/audio/ashen_gate.pcm";
+        case MusicTrack::ValleyAfterDawn: return "romfs:/audio/valley_after_dawn.pcm";
+        case MusicTrack::DeepHall: return "romfs:/audio/ashen_deep_hall.pcm";
+    }
+    return "romfs:/audio/ashen_deep_hall.pcm";
+}
+
+void AudioStreamer::setZone(Zone zone, float player_z) {
+    const bool summit_combat =
+        zone == Zone::CloudPlateau && player_z >= 76.0f;
+    const MusicTrack wanted_track =
+        (zone == Zone::Arena || zone == Zone::BoarValley || summit_combat)
+            ? MusicTrack::AshenGate
+            : ((zone == Zone::Field || zone == Zone::CloudPlateau)
+                   ? MusicTrack::ValleyAfterDawn
+                   : MusicTrack::DeepHall);
+    if (wanted_track == music_track_ && !music_fading_out_) {
         return;
     }
-    switchMusic(wants_boss_track ? "romfs:/audio/ashen_gate.pcm"
-                                 : "romfs:/audio/ashen_deep_hall.pcm",
-                wants_boss_track);
+    pending_track_ = wanted_track;
+    music_fading_out_ = wanted_track != music_track_;
 }
 
 void AudioStreamer::fillMusic(int index) {
@@ -115,6 +132,22 @@ void AudioStreamer::fillMusic(int index) {
 void AudioStreamer::update() {
     if (!ndsp_ready_ || !music_file_) {
         return;
+    }
+    if (music_fading_out_) {
+        music_gain_ = std::max(0.0f, music_gain_ - 0.065f);
+        configureMusicChannel();
+        if (music_gain_ <= 0.0f) {
+            if (switchMusic(musicPath(pending_track_), pending_track_)) {
+                music_fading_out_ = false;
+            } else {
+                music_gain_ = 1.0f;
+                music_fading_out_ = false;
+                configureMusicChannel();
+            }
+        }
+    } else if (music_gain_ < 1.0f) {
+        music_gain_ = std::min(1.0f, music_gain_ + 0.055f);
+        configureMusicChannel();
     }
     bool any_queued = false;
     for (int index = 0; index < 2; ++index) {
@@ -173,6 +206,8 @@ void AudioStreamer::shutdown() {
         ndspExit();
         ndsp_ready_ = false;
         suspended_ = false;
+        music_fading_out_ = false;
+        music_gain_ = 1.0f;
     }
     if (music_samples_) {
         linearFree(music_samples_);

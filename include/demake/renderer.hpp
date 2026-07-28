@@ -41,10 +41,23 @@ private:
     void renderInterior(const WorldState& world);
     void renderVista(const WorldState& world);
     void renderArena(const WorldState& world);
+    void renderField(const WorldState& world);
+    void renderBoarValley(const WorldState& world);
+    void renderCloudPlateau(const WorldState& world);
+    void renderWildlife(const WorldState& world);
+    void renderPlayer(const Player& player, const RigidPose& pose, float vertical_offset = 0.0f);
     void renderHumanoid(Vec2 position, float facing, float scale, const RigidPose& pose,
-                        float red, float green, float blue, bool weapon);
-    void renderBoss(const Boss& boss, float elapsed);
-    void drawBlobShadow(Vec2 position, float scale);
+                        float red, float green, float blue, bool weapon,
+                        float vertical_offset = 0.0f);
+    void renderHorse(Vec2 position, float facing, float elapsed, bool moving, unsigned coat,
+                     float vertical_offset = 0.0f);
+    void renderDeer(Vec2 position, float facing, float elapsed, float scale);
+    void renderFox(Vec2 position, float facing, float elapsed);
+    void renderCrane(Vec2 position, float facing, float elapsed);
+    void renderWarden(const Boss& boss, float elapsed);
+    void renderBoar(const Boss& boss, float elapsed);
+    void renderMountainOgre(const Boss& boss, float elapsed);
+    void drawBlobShadow(Vec2 position, float scale, float vertical_offset = 0.0f);
     void drawBox(float x, float y, float z, float sx, float sy, float sz,
                  float rotation_y, float red, float green, float blue, bool always = false);
     void renderUi(const WorldState& world, bool title_screen, bool paused,

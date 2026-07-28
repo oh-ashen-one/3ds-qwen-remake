@@ -59,8 +59,26 @@ def git_output(arguments: list[str]) -> bytes:
     return result.stdout
 
 
+def release_history_roots() -> list[str]:
+    """Exclude only GitHub's ephemeral PR merge while auditing both real parents."""
+    parents = git_output(["show", "-s", "--format=%P", "HEAD"]).decode("ascii").split()
+    if len(parents) != 2:
+        return ["HEAD"]
+    metadata = git_output(["show", "-s", "--format=%ce%x00%s", "HEAD"]).split(b"\x00", 1)
+    if len(metadata) != 2:
+        return ["HEAD"]
+    committer_email, subject = metadata
+    synthetic_subject = re.fullmatch(
+        rb"Merge [0-9a-f]{40} into [0-9a-f]{40}", subject.strip()
+    )
+    if committer_email.strip().endswith(b"@github.com") and synthetic_subject:
+        return parents
+    return ["HEAD"]
+
+
 def validate_release_history() -> None:
-    identities = git_output(["log", "--format=%ae%x00%ce", "HEAD"])
+    history_roots = release_history_roots()
+    identities = git_output(["log", "--format=%ae%x00%ce", *history_roots])
     allowed_suffixes = (b"@users.noreply.github.com", b"@github.com")
     emails = {value.strip() for value in identities.split(b"\x00") if value.strip()}
     disallowed = sorted(
@@ -71,7 +89,7 @@ def validate_release_history() -> None:
     if disallowed:
         fail(f"release history contains non-noreply identities: {disallowed}")
 
-    patch_history = git_output(["log", "-p", "--no-ext-diff", "HEAD", "--", "."])
+    patch_history = git_output(["log", "-p", "--no-ext-diff", *history_roots, "--", "."])
     if any(pattern.search(patch_history) for pattern in SECRET_PATTERNS + PERSONAL_PATTERNS):
         fail("release history contains a secret or personal path pattern")
 

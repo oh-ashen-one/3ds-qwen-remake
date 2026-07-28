@@ -218,7 +218,7 @@ void GameApp::run() {
         }
         previous_boss_health = world.boss.health;
         previous_player_health = world.player.health;
-        audio_.setZone(world.zone);
+        audio_.setZone(world.zone, world.player.position.z);
         audio_.update();
         const std::size_t current_free = linearSpaceFree();
         const std::size_t current_used = linear_baseline_ > current_free

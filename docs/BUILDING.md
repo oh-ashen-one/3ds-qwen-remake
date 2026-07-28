@@ -30,7 +30,7 @@ make package-sd
 
 `make verify-build` performs the native build and validates the 3DSX header, SMDH metadata, embedded RomFS markers, linked subsystems, and artifact hashes. The build creates `elden-ring-3ds-demake.3dsx`, plus ELF, map, list, SMDH, and JSON validation files.
 
-The asset phase runs before compilation. It generates the asset registry, expands the authored scene into host-test arrays plus three compact RomFS zone blobs, converts the tracked 22.05 kHz mono WAV music masters to headerless PCM streams, and invokes `tex3ds --atlas` for the original RGB565 environment texture. On hardware, `ZoneResources` allocates the requested blob on preload and frees the prior zone after entry; the static arrays are excluded from the native build and retained only for host validation. Generated files are ignored and recreated by `make clean && make validate-assets`.
+The asset phase runs before compilation. It generates the asset registry, expands the authored scene into host-test arrays plus six compact RomFS zone blobs, converts the tracked 22.05 kHz mono WAV music masters to headerless PCM streams, and invokes `tex3ds --atlas` for the original RGB565 environment texture. On hardware, `ZoneResources` allocates the requested blob on preload and frees the prior zone after entry; the static arrays are excluded from the native build and retained only for host validation. Generated files are ignored and recreated by `make clean && make validate-assets`.
 
 ## Blender source workflow
 

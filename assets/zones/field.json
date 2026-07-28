@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "field",
+  "display_name": "The Sunlit Reach",
+  "runtime_budget_bytes": 786432,
+  "romfs_budget_bytes": 12600000,
+  "draw_call_budget": 204,
+  "grid_cell_size": 6.0,
+  "preload_trigger": "warden_victory_confirm",
+  "unload_after_enter": null,
+  "assets": [
+    "music_valley_after_dawn",
+    "generated_low_poly_geometry",
+    "field_scene_blob",
+    "environment_texture_atlas",
+    "rigid_animation_clips",
+    "field_zone_manifest"
+  ]
+}

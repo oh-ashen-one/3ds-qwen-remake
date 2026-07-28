@@ -22,9 +22,13 @@ GENERATED_BUILD_INPUTS = (
     Path("include/demake/generated/scene_assets.stamp"),
     Path("romfs/audio/ashen_deep_hall.pcm"),
     Path("romfs/audio/ashen_gate.pcm"),
+    Path("romfs/audio/valley_after_dawn.pcm"),
     Path("romfs/zones/interior.bin"),
     Path("romfs/zones/vista.bin"),
     Path("romfs/zones/arena.bin"),
+    Path("romfs/zones/field.bin"),
+    Path("romfs/zones/boar_valley.bin"),
+    Path("romfs/zones/cloud_plateau.bin"),
 )
 
 
@@ -40,7 +44,7 @@ def clean() -> None:
         report = ROOT / report_name
         if report.is_file():
             report.unlink()
-    for track_name in ("ashen_deep_hall.pcm", "ashen_gate.pcm"):
+    for track_name in ("ashen_deep_hall.pcm", "ashen_gate.pcm", "valley_after_dawn.pcm"):
         generated_audio = ROOT / "romfs" / "audio" / track_name
         if generated_audio.is_file():
             generated_audio.unlink()
@@ -56,7 +60,7 @@ def clean() -> None:
     generated_scene_stamp = ROOT / "include" / "demake" / "generated" / "scene_assets.stamp"
     if generated_scene_stamp.is_file():
         generated_scene_stamp.unlink()
-    for zone_id in ("interior", "vista", "arena"):
+    for zone_id in ("interior", "vista", "arena", "field", "boar_valley", "cloud_plateau"):
         zone_blob = ROOT / "romfs" / "zones" / f"{zone_id}.bin"
         if zone_blob.is_file():
             zone_blob.unlink()

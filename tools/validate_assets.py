@@ -80,6 +80,10 @@ def validate_clips() -> int:
 
 def main() -> None:
     data = read_json(MANIFEST, "asset manifest")
+    scene_source = read_json(ROOT / "assets" / "scene_source.json", "scene source")
+    expected_static_objects = sum(
+        len(expand_zone(scene_source["zones"][zone])) for zone in ZONE_ORDER
+    )
     if data.get("schema_version") != 2:
         fail("unsupported asset manifest schema")
 
@@ -147,19 +151,24 @@ def main() -> None:
             if not metadata_path.is_file():
                 fail(f"{asset_id} is missing its Blender source metadata")
             metadata = read_json(metadata_path, f"{asset_id} metadata")
-            scene_source = ROOT / str(metadata.get("scene_source", ""))
-            if not scene_source.is_file():
+            blender_scene_source = ROOT / str(metadata.get("scene_source", ""))
+            if not blender_scene_source.is_file():
                 fail(f"{asset_id} metadata references a missing scene descriptor")
-            if metadata.get("scene_source_sha256") != hashlib.sha256(scene_source.read_bytes()).hexdigest():
+            if (metadata.get("scene_source_sha256") !=
+                    hashlib.sha256(blender_scene_source.read_bytes()).hexdigest()):
                 fail(f"{asset_id} is stale relative to its scene descriptor")
             if metadata.get("author_script_sha256") != hashlib.sha256(source.read_bytes()).hexdigest():
                 fail(f"{asset_id} is stale relative to its Blender authoring script")
-            if metadata.get("rig_bone_count") != 15 or metadata.get("static_object_count") != 53:
-                fail(f"{asset_id} does not contain the expected 53 objects and 15-bone rig")
+            if (metadata.get("rig_bone_count") != 15 or
+                    metadata.get("static_object_count") != expected_static_objects):
+                fail(
+                    f"{asset_id} does not contain the expected "
+                    f"{expected_static_objects} objects and 15-bone rig"
+                )
 
     zone_paths = data.get("zone_manifests", {})
     if tuple(zone_paths.keys()) != ZONE_ORDER:
-        fail("zone manifests must be ordered interior, vista, arena")
+        fail(f"zone manifests must be ordered {', '.join(ZONE_ORDER)}")
     referenced_assets: set[str] = set()
     zone_budget_rows: list[dict[str, object]] = []
     for zone_id in ZONE_ORDER:
@@ -219,7 +228,6 @@ def main() -> None:
         blob_path = BLOB_OUTPUTS[zone_id]
         if not blob_path.is_file() or blob_path.read_bytes() != expected_blob:
             fail(f"generated {zone_id} RomFS scene blob is stale")
-    scene_source = read_json(ROOT / "assets" / "scene_source.json", "scene source")
     scene_counts = {zone: len(expand_zone(scene_source["zones"][zone])) for zone in ZONE_ORDER}
     if any(count < 10 for count in scene_counts.values()):
         fail(f"authored zones are unexpectedly sparse: {scene_counts}")

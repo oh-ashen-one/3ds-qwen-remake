@@ -21,7 +21,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REPORT = ROOT / "docs" / "HARDWARE_REPORT.json"
 ALLOWED_MODELS = {"Nintendo 3DS (CTR-001)"}
-ZONES = ("interior", "vista", "arena")
+ZONES = ("interior", "vista", "arena", "field", "boar_valley", "cloud_plateau")
 TRUE_DEPLOYMENT_CHECKS = (
     "netload_launch_passed",
     "sd_launch_mac_disconnected_passed",
@@ -35,6 +35,8 @@ TRUE_EDGE_CHECKS = (
     "death_during_slash_restart",
     "death_during_slam_restart",
     "victory_restart",
+    "boar_branch_persistence",
+    "cloud_ogre_branch_persistence",
 )
 TRUE_PROOF_CHECKS = (
     "physical_console_visible",

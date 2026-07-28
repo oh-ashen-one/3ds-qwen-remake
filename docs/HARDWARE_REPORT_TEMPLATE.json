@@ -37,11 +37,17 @@
         "interior": null,
         "vista": null,
         "arena": null
+        ,"field": null
+        ,"boar_valley": null
+        ,"cloud_plateau": null
       },
       "peak_linear_memory_bytes": {
         "interior": null,
         "vista": null,
         "arena": null
+        ,"field": null
+        ,"boar_valley": null
+        ,"cloud_plateau": null
       },
       "audio_underruns": null,
       "visible_unmasked_loads": null,
@@ -60,11 +66,17 @@
         "interior": null,
         "vista": null,
         "arena": null
+        ,"field": null
+        ,"boar_valley": null
+        ,"cloud_plateau": null
       },
       "peak_linear_memory_bytes": {
         "interior": null,
         "vista": null,
         "arena": null
+        ,"field": null
+        ,"boar_valley": null
+        ,"cloud_plateau": null
       },
       "audio_underruns": null,
       "visible_unmasked_loads": null,
@@ -83,11 +95,17 @@
         "interior": null,
         "vista": null,
         "arena": null
+        ,"field": null
+        ,"boar_valley": null
+        ,"cloud_plateau": null
       },
       "peak_linear_memory_bytes": {
         "interior": null,
         "vista": null,
         "arena": null
+        ,"field": null
+        ,"boar_valley": null
+        ,"cloud_plateau": null
       },
       "audio_underruns": null,
       "visible_unmasked_loads": null,
@@ -102,6 +120,8 @@
     "death_during_slash_restart": false,
     "death_during_slam_restart": false,
     "victory_restart": false,
+    "boar_branch_persistence": false,
+    "cloud_ogre_branch_persistence": false,
     "zone_transition_cycles": 0
   },
   "proof": {

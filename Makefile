@@ -38,11 +38,13 @@ HOST_SOURCES := source/core.cpp source/asset_registry.cpp source/rigid_animation
 GENERATED_REGISTRY := include/demake/generated/asset_registry_data.hpp
 GENERATED_SCENE := include/demake/generated/scene_asset_data.hpp
 GENERATED_SCENE_STAMP := include/demake/generated/scene_assets.stamp
-SCENE_BLOBS := romfs/zones/interior.bin romfs/zones/vista.bin romfs/zones/arena.bin
+SCENE_BLOBS := romfs/zones/interior.bin romfs/zones/vista.bin romfs/zones/arena.bin \
+               romfs/zones/field.bin
 TEXTURE_ATLAS := data/environment_atlas.t3x
 TEX3DS ?= tex3ds
 REGISTRY_INPUTS := assets/manifest.json assets/animation_clips.json \
                    assets/zones/interior.json assets/zones/vista.json assets/zones/arena.json \
+                   assets/zones/field.json \
                    tools/generate_asset_registry.py
 SCENE_INPUTS := assets/scene_source.json tools/convert_scene_assets.py
 TEXTURE_INPUTS := gfx/environment.t3s gfx/environment.ppm
@@ -139,7 +141,7 @@ $(BUILD):
 
 clean:
 	@echo clean ...
-	@rm -rf $(BUILD) $(HOST_BUILD) $(TARGET).3dsx $(TARGET).smdh $(TARGET).elf $(TARGET).lst $(TARGET).map romfs/audio/ashen_deep_hall.pcm romfs/audio/ashen_gate.pcm $(SCENE_BLOBS) $(TEXTURE_ATLAS) $(GENERATED_REGISTRY) $(GENERATED_SCENE) $(GENERATED_SCENE_STAMP) asset-budget-report.json build-validation.json build-report.txt dist
+	@rm -rf $(BUILD) $(HOST_BUILD) $(TARGET).3dsx $(TARGET).smdh $(TARGET).elf $(TARGET).lst $(TARGET).map romfs/audio/ashen_deep_hall.pcm romfs/audio/ashen_gate.pcm romfs/audio/valley_after_dawn.pcm $(SCENE_BLOBS) $(TEXTURE_ATLAS) $(GENERATED_REGISTRY) $(GENERATED_SCENE) $(GENERATED_SCENE_STAMP) asset-budget-report.json build-validation.json build-report.txt dist
 
 else
 

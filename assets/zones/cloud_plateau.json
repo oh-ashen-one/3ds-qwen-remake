@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "cloud_plateau",
+  "display_name": "Cloudbreak Ascent",
+  "runtime_budget_bytes": 720896,
+  "romfs_budget_bytes": 22500000,
+  "draw_call_budget": 214,
+  "grid_cell_size": 6.0,
+  "preload_trigger": "sunlit_reach_west_exit",
+  "unload_after_enter": "field",
+  "assets": [
+    "music_ashen_gate",
+    "music_valley_after_dawn",
+    "generated_low_poly_geometry",
+    "cloud_plateau_scene_blob",
+    "environment_texture_atlas",
+    "rigid_animation_clips",
+    "cloud_plateau_zone_manifest"
+  ]
+}

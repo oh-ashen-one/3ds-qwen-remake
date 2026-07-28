@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 namespace demake {
@@ -21,7 +22,12 @@ enum class Zone : std::uint8_t {
     Interior,
     Vista,
     Arena,
+    Field,
+    BoarValley,
+    CloudPlateau,
 };
+
+constexpr unsigned kZoneCount = 6;
 
 enum class PlayerState : std::uint8_t {
     Idle,
@@ -43,6 +49,8 @@ enum class BossState : std::uint8_t {
     Slash,
     WindupSlam,
     Slam,
+    WindupMagic,
+    Magic,
     Recover,
     Dead,
 };
@@ -74,18 +82,27 @@ struct Player {
     float state_timer = 0.0f;
     bool action_applied = false;
     bool lock_on = false;
+    bool mounted = false;
 };
 
 const char* quickItemName(int selected_item);
 
 struct Boss {
     Vec2 position{0.0f, 5.0f};
+    Vec2 magic_target{};
     float facing = 3.14159265f;
-    float health = 260.0f;
+    float health = 140.0f;
     BossState state = BossState::Dormant;
     float state_timer = 0.0f;
     unsigned attack_cycle = 0;
 };
+
+struct FieldHorse {
+    Vec2 position{};
+    float facing = 0.0f;
+};
+
+constexpr unsigned kFieldHorseCount = 3;
 
 struct WorldState {
     Zone zone = Zone::Interior;
@@ -94,11 +111,23 @@ struct WorldState {
     float elapsed = 0.0f;
     float door_progress = 0.0f;
     float transition_timer = 0.0f;
+    float arrival_fade_timer = 0.0f;
     float victory_timer = 0.0f;
+    std::array<FieldHorse, kFieldHorseCount> horses{{
+        {{2.0f, -28.0f}, 0.0f},
+        {{-38.0f, 26.0f}, 1.15f},
+        {{36.0f, 68.0f}, -0.80f},
+    }};
+    unsigned active_horse = 0;
     bool door_activated = false;
     bool dialogue_active = false;
     bool dialogue_complete = false;
     bool arena_transition = false;
+    bool field_transition = false;
+    bool branch_transition = false;
+    Zone pending_zone = Zone::Interior;
+    bool boar_defeated = false;
+    bool ogre_defeated = false;
     bool debug_overlay = false;
     std::uint8_t loaded_zone_mask = 0;
     std::uint32_t zone_resident_bytes = 0;
@@ -107,14 +136,21 @@ struct WorldState {
     unsigned zone_transitions = 0;
 };
 
+bool isBossZone(Zone zone);
+float bossMaximumHealth(Zone zone);
+const char* bossDisplayName(Zone zone);
+float zoneGroundHeight(Zone zone, Vec2 position);
+
 class ZoneManager {
 public:
     void reset(WorldState& world) const;
     void update(WorldState& world, const InputFrame& input, float dt) const;
+    void beginPostBossField(WorldState& world) const;
     static const char* name(Zone zone);
     static bool isLoaded(const WorldState& world, Zone zone);
 
 private:
+    static void beginBranchTransition(WorldState& world, Zone target);
     static void preload(WorldState& world, Zone zone);
     static void unload(WorldState& world, Zone zone);
     static void enter(WorldState& world, Zone zone);
@@ -145,6 +181,8 @@ public:
     WorldState& mutableWorld() { return world_; }
 
 private:
+    void restartFromCheckpoint();
+
     WorldState world_{};
     ZoneManager zones_{};
     PlayerController player_controller_{};

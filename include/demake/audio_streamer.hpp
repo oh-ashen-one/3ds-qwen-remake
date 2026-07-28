@@ -11,7 +11,7 @@ namespace demake {
 class AudioStreamer {
 public:
     bool initialize();
-    void setZone(Zone zone);
+    void setZone(Zone zone, float player_z);
     void update();
     void playHit(float pitch = 1.0f);
     void suspend();
@@ -22,11 +22,18 @@ public:
     bool ambientAvailable() const { return music_file_ != nullptr; }
 
 private:
+    enum class MusicTrack {
+        DeepHall,
+        AshenGate,
+        ValleyAfterDawn,
+    };
+
     static constexpr int kSampleRate = 22050;
     static constexpr std::size_t kSamplesPerBuffer = 4096;
     static constexpr std::size_t kHitSamples = 1400;
 
-    bool switchMusic(const char* path, bool boss_track);
+    bool switchMusic(const char* path, MusicTrack track);
+    static const char* musicPath(MusicTrack track);
     void configureMusicChannel();
     void fillMusic(int index);
 
@@ -38,7 +45,10 @@ private:
     ndspWaveBuf music_wave_[2]{};
     ndspWaveBuf hit_wave_{};
     unsigned underruns_ = 0;
-    bool boss_track_ = false;
+    MusicTrack music_track_ = MusicTrack::DeepHall;
+    MusicTrack pending_track_ = MusicTrack::DeepHall;
+    float music_gain_ = 1.0f;
+    bool music_fading_out_ = false;
 };
 
 } // namespace demake

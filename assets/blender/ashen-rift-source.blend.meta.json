@@ -3,7 +3,7 @@
   "blender_version": "5.2.0 LTS",
   "rig_bone_count": 15,
   "scene_source": "assets/scene_source.json",
-  "scene_source_sha256": "cd401908397dee9c75830ce7c4334f5a179d267e6a9de0b59588742c81d871ec",
+  "scene_source_sha256": "f7daf16fb3a0e53e9bb12b020b6d3976662e05c6373d27414e057169da770a9d",
   "schema_version": 1,
-  "static_object_count": 53
+  "static_object_count": 733
 }

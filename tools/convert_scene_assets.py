@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "assets" / "scene_source.json"
 OUTPUT = ROOT / "include" / "demake" / "generated" / "scene_asset_data.hpp"
-ZONE_ORDER = ("interior", "vista", "arena")
+ZONE_ORDER = ("interior", "vista", "arena", "field", "boar_valley", "cloud_plateau")
 BLOB_OUTPUTS = {zone: ROOT / "romfs" / "zones" / f"{zone}.bin" for zone in ZONE_ORDER}
 BLOB_HEADER = struct.Struct("<4sHHI")
 BLOB_RECORD = struct.Struct("<10fbbB")
@@ -78,6 +78,59 @@ def expand_zone(zone: dict) -> list[dict]:
                     math.cos(angle) * radius,
                     angle,
                 ))
+        elif kind == "field_scatter":
+            count = int(generator["count"])
+            x_min = float(generator["x_min"])
+            x_max = float(generator["x_max"])
+            z_min = float(generator["z_min"])
+            z_max = float(generator["z_max"])
+            for index in range(count):
+                # Two co-prime integer walks create a repeatable natural scatter
+                # without runtime random state or a larger authored file.
+                x_phase = ((index * 37 + 11) % 101) / 100.0
+                z_phase = ((index * 61 + 23) % 103) / 102.0
+                x = x_min + (x_max - x_min) * x_phase
+                z = z_min + (z_max - z_min) * z_phase
+                rotation = (index * 1.61803398875) % math.tau
+                for template_index, template in enumerate(generator["templates"]):
+                    boxes.append(normalize_box(
+                        template,
+                        f"{generator['name']}_{index}_{template_index}",
+                        x,
+                        z,
+                        rotation + template_index * math.pi * 0.5,
+                    ))
+        elif kind == "river_curve":
+            count = int(generator["count"])
+            start_z = float(generator["start_z"])
+            step_z = float(generator["step_z"])
+            center_x = float(generator["center_x"])
+            amplitude = float(generator["amplitude"])
+            frequency = float(generator["frequency"])
+            bank_offset = float(generator["bank_offset"])
+            for index in range(count):
+                phase = index * frequency
+                x = center_x + math.sin(phase) * amplitude
+                z = start_z + index * step_z
+                next_x = center_x + math.sin(phase + frequency) * amplitude
+                rotation = math.atan2(next_x - x, step_z)
+                boxes.append(normalize_box(
+                    generator["water"],
+                    f"{generator['name']}_water_{index}",
+                    x,
+                    z,
+                    rotation,
+                ))
+                side_x = math.cos(rotation)
+                side_z = -math.sin(rotation)
+                for side in (-1.0, 1.0):
+                    boxes.append(normalize_box(
+                        generator["bank"],
+                        f"{generator['name']}_bank_{index}_{int(side)}",
+                        x + side_x * bank_offset * side,
+                        z + side_z * bank_offset * side,
+                        rotation,
+                    ))
         else:
             raise ValueError(f"unsupported scene generator {kind!r}")
     return sorted(boxes, key=lambda box: (box["cell_z"], box["cell_x"], box["name"]))
@@ -87,6 +140,10 @@ def format_float(value: float) -> str:
     if abs(value) < 0.0000005:
         value = 0.0
     return f"{value:.6f}f"
+
+
+def cpp_symbol(zone_id: str) -> str:
+    return "".join(part.title() for part in zone_id.split("_"))
 
 
 def generate() -> str:
@@ -99,7 +156,7 @@ def generate() -> str:
     ]
     for zone_id in ZONE_ORDER:
         boxes = expand_zone(data["zones"][zone_id])
-        symbol = zone_id.title()
+        symbol = cpp_symbol(zone_id)
         lines.append(f"inline constexpr SceneBox k{symbol}Boxes[] = {{")
         for box in boxes:
             values = [

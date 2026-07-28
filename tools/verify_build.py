@@ -87,8 +87,11 @@ def verify_asset_budget_report() -> dict[str, object]:
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         fail(f"asset budget report is unreadable: {error}")
     zones = budget.get("zones", [])
-    if [zone.get("id") for zone in zones] != ["interior", "vista", "arena"]:
-        fail("asset budget report must contain the three ordered runtime zones")
+    expected_zones = [
+        "interior", "vista", "arena", "field", "boar_valley", "cloud_plateau"
+    ]
+    if [zone.get("id") for zone in zones] != expected_zones:
+        fail("asset budget report must contain the six ordered runtime zones")
     for zone in zones:
         actual = int(zone.get("actual_romfs_bytes", -1))
         budget_bytes = int(zone.get("romfs_budget_bytes", -1))
@@ -124,13 +127,18 @@ def main() -> None:
     required_romfs_markers = (
         b"ashen_deep_hall.pcm",
         b"ashen_gate.pcm",
+        b"valley_after_dawn.pcm",
         b"keeper.txt",
         b"romfs:/audio/ashen_deep_hall.pcm",
         b"romfs:/audio/ashen_gate.pcm",
+        b"romfs:/audio/valley_after_dawn.pcm",
         b"romfs:/dialogue/keeper.txt",
         b"romfs:/zones/interior.bin",
         b"romfs:/zones/vista.bin",
         b"romfs:/zones/arena.bin",
+        b"romfs:/zones/field.bin",
+        b"romfs:/zones/boar_valley.bin",
+        b"romfs:/zones/cloud_plateau.bin",
     )
     missing_markers = [marker.decode("ascii") for marker in required_romfs_markers if marker not in binary]
     if missing_markers:
