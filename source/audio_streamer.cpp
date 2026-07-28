@@ -19,7 +19,7 @@ bool AudioStreamer::initialize() {
         return false;
     }
 
-    if (!switchMusic("romfs:/audio/ashen_deep_hall.pcm", false)) {
+    if (!switchMusic("romfs:/audio/ashen_deep_hall.pcm", MusicTrack::DeepHall)) {
         shutdown();
         return false;
     }
@@ -46,13 +46,13 @@ void AudioStreamer::configureMusicChannel() {
     ndspChnSetRate(0, static_cast<float>(kSampleRate));
     ndspChnSetFormat(0, NDSP_FORMAT_MONO_PCM16);
     float music_mix[12]{};
-    const float volume = boss_track_ ? 0.32f : 0.24f;
+    const float volume = music_track_ == MusicTrack::AshenGate ? 0.32f : 0.24f;
     music_mix[0] = volume;
     music_mix[1] = volume;
     ndspChnSetMix(0, music_mix);
 }
 
-bool AudioStreamer::switchMusic(const char* path, bool boss_track) {
+bool AudioStreamer::switchMusic(const char* path, MusicTrack track) {
     std::FILE* next_file = std::fopen(path, "rb");
     if (!next_file) {
         return false;
@@ -62,7 +62,7 @@ bool AudioStreamer::switchMusic(const char* path, bool boss_track) {
         std::fclose(music_file_);
     }
     music_file_ = next_file;
-    boss_track_ = boss_track;
+    music_track_ = track;
     std::memset(music_wave_, 0, sizeof(music_wave_));
     configureMusicChannel();
     for (int index = 0; index < 2; ++index) {
@@ -74,13 +74,19 @@ bool AudioStreamer::switchMusic(const char* path, bool boss_track) {
 }
 
 void AudioStreamer::setZone(Zone zone) {
-    const bool wants_boss_track = zone == Zone::Arena;
-    if (wants_boss_track == boss_track_) {
+    const MusicTrack wanted_track =
+        zone == Zone::Arena ? MusicTrack::AshenGate
+                            : (zone == Zone::Field ? MusicTrack::ValleyAfterDawn
+                                                  : MusicTrack::DeepHall);
+    if (wanted_track == music_track_) {
         return;
     }
-    switchMusic(wants_boss_track ? "romfs:/audio/ashen_gate.pcm"
-                                 : "romfs:/audio/ashen_deep_hall.pcm",
-                wants_boss_track);
+    const char* path = wanted_track == MusicTrack::AshenGate
+                           ? "romfs:/audio/ashen_gate.pcm"
+                           : (wanted_track == MusicTrack::ValleyAfterDawn
+                                  ? "romfs:/audio/valley_after_dawn.pcm"
+                                  : "romfs:/audio/ashen_deep_hall.pcm");
+    switchMusic(path, wanted_track);
 }
 
 void AudioStreamer::fillMusic(int index) {

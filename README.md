@@ -37,7 +37,8 @@ make package-sd
 
 The native output is `elden-ring-3ds-demake.3dsx`. `make package-sd` also creates a verified `dist/ashen-rift-sd-bundle.zip` whose paths can be copied directly to the SD-card root. See [BUILDING.md](docs/BUILDING.md) for installation and netloading.
 
-The music-generation brief for the expanded outdoor area is in
+The Sunlit Reach now has its own user-supplied original track, **Valley After
+Dawn**. Its music-generation brief is preserved in
 [SUNO_SUNLIT_REACH_PROMPT.md](docs/SUNO_SUNLIT_REACH_PROMPT.md).
 
 ## Install on a homebrewed 3DS

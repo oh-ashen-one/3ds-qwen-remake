@@ -124,9 +124,11 @@ def main() -> None:
     required_romfs_markers = (
         b"ashen_deep_hall.pcm",
         b"ashen_gate.pcm",
+        b"valley_after_dawn.pcm",
         b"keeper.txt",
         b"romfs:/audio/ashen_deep_hall.pcm",
         b"romfs:/audio/ashen_gate.pcm",
+        b"romfs:/audio/valley_after_dawn.pcm",
         b"romfs:/dialogue/keeper.txt",
         b"romfs:/zones/interior.bin",
         b"romfs:/zones/vista.bin",

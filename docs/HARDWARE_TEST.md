@@ -69,7 +69,7 @@ Required: a coherent 5–8 minute sequence, no crash, no audio underrun, no sust
 - [ ] Mount each of the three horses, gallop, heal while mounted, dismount, recall the selected horse, and reach every field boundary.
 - [ ] Ride the river system from its lower bend past the tributary, bridge, and ford to the mountain pass; confirm flowers, cedars, deer, foxes, cranes, clouds, and snowcaps do not cause sustained drops below 24 FPS.
 - [ ] Verify the bottom-screen map, objective changes, facing/horse/waystone markers, and ACT/RIDE/DISMOUNT, HEAL, LOCK/CALL, DEBUG touch targets.
-- [ ] Confirm Ashen Deep Hall plays in the interior/vista/field and switches once to Ashen Gate at the arena without a crash, long gap, or underrun.
+- [ ] Confirm Ashen Deep Hall plays in the interior/vista, switches to Ashen Gate in the arena, then switches to Valley After Dawn in the Sunlit Reach without a crash, long gap, or underrun.
 
 ## Proof recording
 

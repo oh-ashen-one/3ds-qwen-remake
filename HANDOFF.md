@@ -38,11 +38,15 @@ intentionally not committed. Rebuild them from source on the laptop.
   horse, the pass, objective text, and RIDING status.
 - The fourth zone has its own RomFS scene blob, manifest, generated asset
   registry membership, Blender source objects, streaming/budget validation, and
-  host flow tests. Exploration music continues through the field.
+  host flow tests. The field now switches to its dedicated Valley After Dawn
+  track after the boss.
 
 Primary files:
 
+- `assets/audio/valley_after_dawn.wav`
+- `assets/manifest.json`
 - `assets/scene_source.json`
+- `source/audio_streamer.cpp`
 - `source/core.cpp`
 - `source/renderer.cpp`
 - `include/demake/core.hpp`

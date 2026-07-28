@@ -11,6 +11,7 @@ Ashen Rift uses no extracted commercial assets.
 | Rigid animation clips | `source/rigid_animation.cpp` + `assets/animation_clips.json` | Original idle, locomotion, attack, dodge, hurt, and heal transforms |
 | Exploration music: Ashen Deep Hall | `assets/audio/ashen_deep_hall.wav` | User-supplied original Suno composition authorized for this project; 22.05 kHz mono PCM16 master |
 | Boss music: Ashen Gate | `assets/audio/ashen_gate.wav` | User-supplied original Suno composition authorized for this project; 22.05 kHz mono PCM16 master |
+| Sunlit Reach music: Valley After Dawn | `assets/audio/valley_after_dawn.wav` | User-supplied original Suno composition authorized for this project; cover art and source metadata removed, then converted to a 22.05 kHz mono PCM16 master |
 | Combat hit sound | Runtime synthesis in `source/audio_streamer.cpp` | Original deterministic synthesis |
 | Veiled Keeper dialogue | `romfs/dialogue/keeper.txt` | Original writing |
 | UI | citro2d primitives and 3DS system font | Runtime primitives; no bundled font asset |

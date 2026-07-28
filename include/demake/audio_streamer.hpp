@@ -22,11 +22,17 @@ public:
     bool ambientAvailable() const { return music_file_ != nullptr; }
 
 private:
+    enum class MusicTrack {
+        DeepHall,
+        AshenGate,
+        ValleyAfterDawn,
+    };
+
     static constexpr int kSampleRate = 22050;
     static constexpr std::size_t kSamplesPerBuffer = 4096;
     static constexpr std::size_t kHitSamples = 1400;
 
-    bool switchMusic(const char* path, bool boss_track);
+    bool switchMusic(const char* path, MusicTrack track);
     void configureMusicChannel();
     void fillMusic(int index);
 
@@ -38,7 +44,7 @@ private:
     ndspWaveBuf music_wave_[2]{};
     ndspWaveBuf hit_wave_{};
     unsigned underruns_ = 0;
-    bool boss_track_ = false;
+    MusicTrack music_track_ = MusicTrack::DeepHall;
 };
 
 } // namespace demake

@@ -29,18 +29,23 @@ void testMathAndCollision() {
 }
 
 void testGeneratedAssetRegistry() {
-    assert(AssetRegistry::assetCount() == 15);
+    assert(AssetRegistry::assetCount() == 16);
     const AssetRecord* exploration_music = AssetRegistry::find("music_ashen_deep_hall");
     assert(exploration_music != nullptr);
     assert(AssetRegistry::assetBelongsToZone(*exploration_music, Zone::Interior));
     assert(AssetRegistry::assetBelongsToZone(*exploration_music, Zone::Vista));
     assert(!AssetRegistry::assetBelongsToZone(*exploration_music, Zone::Arena));
-    assert(AssetRegistry::assetBelongsToZone(*exploration_music, Zone::Field));
+    assert(!AssetRegistry::assetBelongsToZone(*exploration_music, Zone::Field));
     const AssetRecord* boss_music = AssetRegistry::find("music_ashen_gate");
     assert(boss_music != nullptr);
     assert(!AssetRegistry::assetBelongsToZone(*boss_music, Zone::Interior));
     assert(!AssetRegistry::assetBelongsToZone(*boss_music, Zone::Vista));
     assert(AssetRegistry::assetBelongsToZone(*boss_music, Zone::Arena));
+    const AssetRecord* field_music = AssetRegistry::find("music_valley_after_dawn");
+    assert(field_music != nullptr);
+    assert(!AssetRegistry::assetBelongsToZone(*field_music, Zone::Interior));
+    assert(!AssetRegistry::assetBelongsToZone(*field_music, Zone::Arena));
+    assert(AssetRegistry::assetBelongsToZone(*field_music, Zone::Field));
     const AssetRecord* dialogue = AssetRegistry::find("veiled_keeper_dialogue");
     assert(dialogue != nullptr);
     assert(!AssetRegistry::assetBelongsToZone(*dialogue, Zone::Interior));

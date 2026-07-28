@@ -14,7 +14,7 @@
       "sample_rate": 22050,
       "channels": 1,
       "sample_width_bytes": 2,
-      "zones": ["interior", "vista", "field"]
+      "zones": ["interior", "vista"]
     },
     {
       "id": "music_ashen_gate",
@@ -28,6 +28,19 @@
       "channels": 1,
       "sample_width_bytes": 2,
       "zones": ["arena"]
+    },
+    {
+      "id": "music_valley_after_dawn",
+      "kind": "audio_pcm16_mono",
+      "source": "assets/audio/valley_after_dawn.wav",
+      "output": "romfs/audio/valley_after_dawn.pcm",
+      "provenance": "User-supplied original Suno composition authorized by the project owner and converted to a metadata-free PCM16 mono master",
+      "license": "project-original",
+      "max_bytes": 8000000,
+      "sample_rate": 22050,
+      "channels": 1,
+      "sample_width_bytes": 2,
+      "zones": ["field"]
     },
     {
       "id": "veiled_keeper_dialogue",

@@ -9,7 +9,7 @@
   "preload_trigger": "warden_victory_confirm",
   "unload_after_enter": null,
   "assets": [
-    "music_ashen_deep_hall",
+    "music_valley_after_dawn",
     "generated_low_poly_geometry",
     "field_scene_blob",
     "environment_texture_atlas",
