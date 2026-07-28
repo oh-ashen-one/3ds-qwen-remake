@@ -106,7 +106,7 @@ bool isBossZone(Zone zone) {
 
 float bossMaximumHealth(Zone zone) {
     switch (zone) {
-        case Zone::Arena: return 140.0f;
+        case Zone::Arena: return kWardenMaximumHealth;
         case Zone::BoarValley: return 105.0f;
         case Zone::CloudPlateau: return 185.0f;
         default: return 1.0f;
@@ -351,7 +351,7 @@ void ZoneManager::update(WorldState& world, const InputFrame& input, float dt) c
                 world.player.mounted = false;
                 world.player.health = 100.0f;
                 world.player.stamina = 100.0f;
-                world.player.flasks = 3;
+                world.player.flasks = kMaximumFlasks;
                 world.horses = kFieldHorseSpawns;
                 world.active_horse = 0;
                 world.field_transition = false;
@@ -849,11 +849,13 @@ void BossController::damage(WorldState& world_, float amount) {
         if (world_.zone == Zone::BoarValley) {
             world_.boar_defeated = true;
             world_.player.health = std::min(100.0f, world_.player.health + 35.0f);
-            world_.player.flasks = std::min(3, world_.player.flasks + 1);
+            world_.player.flasks =
+                std::min(kMaximumFlasks, world_.player.flasks + 1);
         } else if (world_.zone == Zone::CloudPlateau) {
             world_.ogre_defeated = true;
             world_.player.health = std::min(100.0f, world_.player.health + 35.0f);
-            world_.player.flasks = std::min(3, world_.player.flasks + 1);
+            world_.player.flasks =
+                std::min(kMaximumFlasks, world_.player.flasks + 1);
         }
     }
 }

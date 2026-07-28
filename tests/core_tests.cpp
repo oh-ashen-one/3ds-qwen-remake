@@ -200,7 +200,7 @@ void testControllerDamageBoundaries() {
     assert(world.player.health == 75.0f);
 
     BossController::damage(world, 60.0f);
-    assert(world.boss.health == 80.0f);
+    assert(world.boss.health == 40.0f);
     BossController::damage(world, 250.0f);
     assert(world.boss.health == 0.0f);
     assert(world.boss.state == BossState::Dead);
@@ -485,7 +485,7 @@ void testHealing() {
     InputFrame heal{};
     heal.heal = true;
     game.step(heal, kFixedStep);
-    assert(game.world().player.flasks == 2);
+    assert(game.world().player.flasks == kMaximumFlasks - 1);
     stepMany(game, InputFrame{}, 24);
     assert(game.world().player.health > 80.0f);
 }
@@ -530,7 +530,7 @@ void testSunlitReachHorseMountAndGallop() {
     assert(!game.world().player.mounted);
     assert(game.world().player.health == 100.0f);
     assert(game.world().player.stamina == 100.0f);
-    assert(game.world().player.flasks == 3);
+    assert(game.world().player.flasks == kMaximumFlasks);
 
     assert(game.world().horses.size() == kFieldHorseCount);
     game.mutableWorld().player.position = game.world().horses[1].position;
@@ -552,7 +552,7 @@ void testSunlitReachHorseMountAndGallop() {
     InputFrame mounted_heal{};
     mounted_heal.heal = true;
     game.step(mounted_heal, kFixedStep);
-    assert(game.world().player.flasks == 2);
+    assert(game.world().player.flasks == kMaximumFlasks - 1);
     stepMany(game, InputFrame{}, 24);
     assert(game.world().player.health > 80.0f);
     assert(game.world().player.mounted);
@@ -719,6 +719,7 @@ void testDeathReturnsToGraceCheckpoint() {
     assert(game.world().player.position.z == -5.5f);
     assert(game.world().boss.state == BossState::Approach);
     assert(game.world().boss.health == bossMaximumHealth(Zone::Arena));
+    assert(game.world().player.flasks == kMaximumFlasks);
 
     game.mutableWorld().zone = Zone::BoarValley;
     game.mutableWorld().boar_defeated = false;

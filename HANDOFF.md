@@ -20,9 +20,10 @@ intentionally not committed. Rebuild them from source on the laptop.
   models with distinct silhouettes, armor layers, weapons, and rigid animation.
 - The whole game uses brighter clear colors, stone, sky, ground, character, and
   UI palettes so shapes remain readable on the dimmer CTR-001 display.
-- The Warden has 140 health, slower and clearer attack telegraphs, lower damage,
+- The Warden has 100 health, slower and clearer attack telegraphs, lower damage,
   smaller hit radii, gentler pursuit, and longer recovery. Light/heavy player
-  attacks now deal 20/38 damage, and the dodge travels farther.
+  attacks now deal 20/38 damage, the dodge travels farther, and the player
+  starts and restores with five healing flasks.
 - Victory no longer immediately ends the slice. Pressing A begins a golden,
   preload-before-unload transition into the fourth streamed zone: **The Sunlit
   Reach**.

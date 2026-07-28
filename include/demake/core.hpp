@@ -71,12 +71,15 @@ struct InputFrame {
     int item_delta = 0;
 };
 
+constexpr int kMaximumFlasks = 5;
+constexpr float kWardenMaximumHealth = 100.0f;
+
 struct Player {
     Vec2 position{0.0f, -7.0f};
     float facing = 0.0f;
     float health = 100.0f;
     float stamina = 100.0f;
-    int flasks = 3;
+    int flasks = kMaximumFlasks;
     int selected_item = 0;
     PlayerState state = PlayerState::Idle;
     float state_timer = 0.0f;
@@ -91,7 +94,7 @@ struct Boss {
     Vec2 position{0.0f, 5.0f};
     Vec2 magic_target{};
     float facing = 3.14159265f;
-    float health = 140.0f;
+    float health = kWardenMaximumHealth;
     BossState state = BossState::Dormant;
     float state_timer = 0.0f;
     unsigned attack_cycle = 0;
