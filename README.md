@@ -6,6 +6,10 @@ The playable sequence connects six memory-bounded zones: a sunken interior, an o
 
 The complete project contract is preserved in [MASTER_GOAL_PROMPT.md](MASTER_GOAL_PROMPT.md); [GOAL_PROMPT.md](GOAL_PROMPT.md) is its reusable sub-4,000-character `/goal` launcher.
 
+See [OPEN_SOURCE_CREDITS.md](OPEN_SOURCE_CREDITS.md) for the complete,
+linked list of console-enablement projects, homebrew applications, development
+libraries, asset tools, emulator, and CI infrastructure used during the build.
+
 ## Status
 
 - Native fixed-step gameplay, six-zone streaming state, combat, lifecycle handling, dual-screen UI, and NDSP audio are implemented.
