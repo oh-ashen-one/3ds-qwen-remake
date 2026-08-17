@@ -4,14 +4,22 @@
 set -uo pipefail
 cd "$(dirname "$0")/../.."
 
+# HARD RULE: release our ralph slot when the loop stops for any reason.
+trap 'bash ~/ralph-slots/release.sh 3ds-remake 2>/dev/null || true' EXIT
+
 while true; do
   bash scripts/ralph/ralph.sh
   CODE=$?
   if [ $CODE -eq 42 ]; then
     P=$(cat PHASE)
-    scripts/ops/notify.sh "🛑 CHECKPOINT: phase $P stories all pass. Loop parked — manager must enrich next-phase stories and bump PHASE to resume." || true
+    # Parked = not generating: give the slot back so the queue moves (HARD RULE).
+    bash ~/ralph-slots/release.sh 3ds-remake 2>/dev/null || true
+    scripts/ops/notify.sh "🛑 CHECKPOINT: phase $P stories all pass. Loop parked, slot released — manager must enrich next-phase stories and bump PHASE to resume." || true
     while [ "$(cat PHASE)" = "$P" ]; do sleep 60; done
-    scripts/ops/notify.sh "▶️ resuming at phase $(cat PHASE)" || true
+    scripts/ops/notify.sh "▶️ PHASE bumped to $(cat PHASE) — re-queueing for a slot" || true
+    grep -qx "3ds-remake" ~/ralph-slots/QUEUE 2>/dev/null || echo "3ds-remake" >> ~/ralph-slots/QUEUE
+    bash ~/ralph-slots/claim.sh "3ds-remake" "3ds-qwen-remake/scripts/ops/"
+    scripts/ops/notify.sh "▶️ slot re-claimed — resuming at phase $(cat PHASE)" || true
   elif [ $CODE -eq 0 ]; then
     scripts/ops/notify.sh "🏁 supervisor: all stories complete. Exiting." || true
     exit 0
