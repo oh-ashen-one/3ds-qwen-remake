@@ -12,8 +12,8 @@ SSH=(ssh -o ConnectTimeout=12 -o BatchMode=yes studio)
 
 VITALS=$("${SSH[@]}" 'export PATH="$HOME/.lmstudio/bin:/opt/homebrew/bin:/usr/bin:/bin"
   B=$HOME/3ds-qwen-remake
-  tmux has-session -t =ralph-3ds 2>/dev/null && echo LOOP=up || echo LOOP=down
-  tmux has-session -t =ralph-3ds-wait 2>/dev/null && echo WAIT=up || echo WAIT=down
+  tmux has-session -t "=ralph-3ds" 2>/dev/null && echo LOOP=up || echo LOOP=down
+  tmux has-session -t "=ralph-3ds-wait" 2>/dev/null && echo WAIT=up || echo WAIT=down
   lms ps 2>/dev/null | grep -q "^ralph-3ds " && echo MODEL=loaded || echo MODEL=missing
   curl -sf --max-time 5 http://127.0.0.1:1234/v1/models >/dev/null && echo API=up || echo API=down
   echo PRD_AGE=$(( $(date +%s) - $(stat -f %m "$B/progress.txt" 2>/dev/null || echo 0) ))
