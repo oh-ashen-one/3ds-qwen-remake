@@ -9,14 +9,14 @@ The playbook is `oh-ashen-one/gaming-ralph-loops` — laws there are binding.
 - Toolchain: self-contained at `~/.local/share/elden-ring-3ds-devkit` (tools/env.sh points at it). `/opt/devkitpro` on the studio is GBA-only — wrong one.
 - Baseline verified green on the studio: validate-assets, test-host, 3DSX build (33,166,632 bytes, ~2s), verify-build.
 - Model: LM Studio `qwen3.8-27b@8bit` loaded as dedicated instance `ralph-3ds` by launch.sh. NEVER touch instances `fifa-ralph`, `ralph-showcase`, or clipper aliases.
-- Queued behind fifa: `scripts/ops/wait-for-fifa.sh` polls `~/fifa-2026/scripts/ralph/prd.json` unpassed==0 (or fifa tmux gone x3), then execs launch.sh.
+- Queued behind fifa: `scripts/ops/wait-for-slot.sh` polls `lms ps`: launches only when ≤2 peer loops (fifa-ralph, ralph-showcase, driftwood-ralph) are active — cap 3 concurrent incl. ours. driftwood counts as reserved until it has generated once; a peer is ended after 30 min sustained IDLE or unload.
 
 ## Start it (human go required)
 
 ```bash
 ssh studio
 cd ~/3ds-qwen-remake && git pull
-tmux new -d -s ralph-3ds-wait 'caffeinate -i scripts/ops/wait-for-fifa.sh >> ralph.log 2>&1'   # queued start
+tmux new -d -s ralph-3ds-wait 'caffeinate -i scripts/ops/wait-for-slot.sh >> ralph.log 2>&1'   # queued start
 # or immediately: scripts/ops/launch.sh
 ```
 
