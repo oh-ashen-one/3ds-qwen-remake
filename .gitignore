@@ -20,3 +20,8 @@ __pycache__/
 *.blend1
 .idea/
 .vscode/
+scripts/ralph/LAST_REPLY.md
+scripts/ralph/LAST_THINKING.md
+scripts/ralph/LAST_VERIFY.txt
+ralph.log
+progress.txt.lock

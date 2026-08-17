@@ -1,0 +1,83 @@
+{
+  "project": "3ds-qwen-remake",
+  "goal": "Enhance the shipped Ashen Rift 3DS game: feel, density, variety, audio, polish — without ever breaking the build or the 30fps floor.",
+  "notes": "Phase-gated. Phase 0 = harness calibration. Phase 1 = modularization (big files must shrink before enhancement). Phase 2 = enhancements. Manager enriches phase 1/2 stories with exact symbol names BEFORE bumping PHASE — derive protect lists by grepping the CURRENT files (never from convention).",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Calibration: build probe constant wired through main",
+      "phase": "0",
+      "priority": 1,
+      "passes": false,
+      "description": "Create include/demake/build_probe.hpp declaring exactly: `namespace demake { constexpr int kRalphLoopGeneration = 1; }` with a header guard. In source/main.cpp, add `#include \"demake/build_probe.hpp\"` and a `static_assert(demake::kRalphLoopGeneration >= 1, \"ralph probe\");` at file scope. Touch nothing else. main.cpp is 20 lines; re-emit it completely.",
+      "acceptanceCriteria": [
+        "build_probe.hpp exists with the constant",
+        "main.cpp includes and static_asserts it",
+        "full verify chain green"
+      ],
+      "verify": "tools/ralph-verify.sh quick && grep -q 'kRalphLoopGeneration' include/demake/build_probe.hpp && grep -q 'demake/build_probe.hpp' source/main.cpp && grep -q 'static_assert(demake::kRalphLoopGeneration' source/main.cpp",
+      "allowedFiles": ["include/demake/build_probe.hpp", "source/main.cpp"],
+      "protect": {}
+    },
+    {
+      "id": "US-010",
+      "title": "Extract HUD/2D drawing from renderer.cpp into renderer_hud.cpp",
+      "phase": "1",
+      "priority": 10,
+      "passes": false,
+      "description": "ENRICH-BEFORE-RUN: manager must list the exact HUD/citro2d function names to move, the new header include/demake/renderer_hud.hpp API, and a protect list grepped from the current renderer.hpp. Goal: renderer.cpp under 900 lines, new module under 200 lines per file, zero behavior change.",
+      "acceptanceCriteria": ["renderer.cpp shrinks", "new module compiles", "verify chain green"],
+      "verify": "tools/ralph-verify.sh && test -f source/renderer_hud.cpp && [ $(wc -l < source/renderer.cpp) -lt 1100 ]",
+      "allowedFiles": ["source/renderer.cpp", "source/renderer_hud.cpp", "include/demake/renderer_hud.hpp", "include/demake/renderer.hpp"],
+      "protect": {}
+    },
+    {
+      "id": "US-011",
+      "title": "Extract boss combat state machines from core.cpp into boss_logic.cpp",
+      "phase": "1",
+      "priority": 11,
+      "passes": false,
+      "description": "ENRICH-BEFORE-RUN: manager must name the boss state-machine functions/structs in core.cpp to move into source/boss_logic.cpp + include/demake/boss_logic.hpp, with a protect list grepped from current core.hpp. Zero behavior change; host tests must stay green untouched.",
+      "acceptanceCriteria": ["core.cpp shrinks", "host tests green", "verify chain green"],
+      "verify": "tools/ralph-verify.sh && test -f source/boss_logic.cpp && [ $(wc -l < source/core.cpp) -lt 700 ]",
+      "allowedFiles": ["source/core.cpp", "source/boss_logic.cpp", "include/demake/boss_logic.hpp", "include/demake/core.hpp"],
+      "protect": {}
+    },
+    {
+      "id": "US-020",
+      "title": "Hit-pause on melee connect",
+      "phase": "2",
+      "priority": 20,
+      "passes": false,
+      "description": "ENRICH-BEFORE-RUN after phase 1 lands: a 3-tick hit-stop when a player attack connects (named constant kHitPauseTicks), applied in the fixed-step update, excluded from camera update so the camera stays smooth. Manager names the exact combat-resolution function first.",
+      "acceptanceCriteria": ["kHitPauseTicks constant exists and is used", "verify chain green"],
+      "verify": "tools/ralph-verify.sh && grep -rq 'kHitPauseTicks' include/demake source",
+      "allowedFiles": [],
+      "protect": {}
+    },
+    {
+      "id": "US-021",
+      "title": "Boss phase-transition audio stingers",
+      "phase": "2",
+      "priority": 21,
+      "passes": false,
+      "description": "ENRICH-BEFORE-RUN: one-shot stinger cue when a boss crosses its phase threshold, through the existing AudioStreamer double-buffer path (no new allocation per frame). Manager stages the stinger PCM into assets first and names the phase-threshold code site.",
+      "acceptanceCriteria": ["stinger triggers on phase change", "verify chain green"],
+      "verify": "tools/ralph-verify.sh",
+      "allowedFiles": [],
+      "protect": {}
+    },
+    {
+      "id": "US-022",
+      "title": "Sunlit Reach ambient density pass within zone budget",
+      "phase": "2",
+      "priority": 22,
+      "passes": false,
+      "description": "ENRICH-BEFORE-RUN: raise prop/wildlife density in assets/zones/field.json (grass tufts, stones, birds) while validate-assets budget stays green. Values from BRIEF.md palette; no new asset types, only more instances of existing IDs.",
+      "acceptanceCriteria": ["field.json prop count rises", "budget report green", "verify chain green"],
+      "verify": "tools/ralph-verify.sh",
+      "allowedFiles": ["assets/zones/field.json"],
+      "protect": {}
+    }
+  ]
+}
