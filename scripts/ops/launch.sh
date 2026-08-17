@@ -15,7 +15,7 @@ fi
 python3 scripts/ralph/qwen_iteration.py --ping \
   || { scripts/ops/notify.sh "🚨 launch: --ping failed (model up but not answering)"; exit 1; }
 
-if ! tmux has-session -t ralph-3ds 2>/dev/null; then
+if ! tmux has-session -t =ralph-3ds 2>/dev/null; then
   tmux new -d -s ralph-3ds "caffeinate -i $PWD/scripts/ops/supervisor.sh >> $PWD/ralph.log 2>&1"
 fi
 scripts/ops/notify.sh "🚀 ralph-3ds launched: $(lms ps | grep ralph-3ds | head -1)"
